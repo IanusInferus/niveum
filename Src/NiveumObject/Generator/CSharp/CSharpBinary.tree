@@ -4,7 +4,7 @@
       File:        CSharpBinary.tree
       Location:    Niveum.Object <Tree>
       Description: 对象类型结构C#二进制通讯模板
-      Version:     2022.11.01.
+      Version:     2022.11.26.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -1329,16 +1329,24 @@
     ${BinaryTranslator_Enum(TagName, TagTypeString, "Int", "Int", NamespaceName)}
     public static ${TypeString} [[${Name}FromBinary]](IReadableStream s)
     {
-        var o = new ${TypeString}();
-        o._Tag = [[${TagName}FromBinary]](s);
+        var _Tag = [[${TagName}FromBinary]](s);
         $$
             foreach (var a in Alternatives)
             {
                 ##
-                    if (o._Tag == ${TagTypeString}.[[${a.Name}]])
+                    if (_Tag == ${TagTypeString}.[[${a.Name}]])
                     {
-                        o.[[${a.Name}]] = [[${a.Type.SimpleName(NamespaceName)}FromBinary]](s);
-                        return o;
+                        $$
+                            if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
+                            {
+                                ##
+                                    return ${TypeString}.[[Create${a.Name}]]();
+                            }
+                            else
+                            {
+                                ##
+                                    return ${TypeString}.[[Create${a.Name}]]([[${a.Type.SimpleName(NamespaceName)}FromBinary]](s));
+                            }
                     }
             }
         throw new InvalidOperationException();
@@ -1475,16 +1483,24 @@
         var TypeString = GetTypeString(o, NamespaceName);
     public static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream s)
     {
-        var o = new ${TypeString}();
-        o._Tag = OptionalTagFromBinary(s);
+        var _Tag = OptionalTagFromBinary(s);
         $$
             foreach (var a in Alternatives)
             {
                 ##
-                    if (o._Tag == OptionalTag.[[${a.Name}]])
+                    if (_Tag == OptionalTag.[[${a.Name}]])
                     {
-                        o.[[${a.Name}]] = [[${a.Type.SimpleName(NamespaceName)}FromBinary]](s);
-                        return o;
+                        $$
+                            if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
+                            {
+                                ##
+                                    return ${TypeString}.[[Create${a.Name}]]();
+                            }
+                            else
+                            {
+                                ##
+                                    return ${TypeString}.[[Create${a.Name}]]([[${a.Type.SimpleName(NamespaceName)}FromBinary]](s));
+                            }
                     }
             }
         throw new InvalidOperationException();

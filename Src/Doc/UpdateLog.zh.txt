@@ -1,4 +1,8 @@
-﻿2022.11.21
+﻿2022.11.26
+Niveum.Object:
+修正C#序列化代码中对TaggedUnion的处理。
+
+2022.11.21
 Niveum.TcpSendReceive:
 修正运行错误。
 

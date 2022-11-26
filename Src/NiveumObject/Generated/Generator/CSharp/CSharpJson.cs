@@ -848,10 +848,6 @@ namespace Niveum.ObjectSchema.CSharpJson
             yield return "    if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }";
             yield return "    var jo = j as JObject;";
             yield return "    if (jo == null) { throw new InvalidOperationException(); }";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var o = new "), TypeString), "();"))
-            {
-                yield return _Line;
-            }
             yield return "    var d = (IDictionary<string, JToken>)(jo);";
             foreach (var a in Alternatives)
             {
@@ -860,15 +856,20 @@ namespace Niveum.ObjectSchema.CSharpJson
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "{";
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    o._Tag = "), TagTypeString), "."), GetEscapedIdentifier(a.Name)), ";"))
+                if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
                 {
-                    yield return _Line == "" ? "" : "    " + _Line;
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "return "), TypeString), "."), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "();"))
+                    {
+                        yield return _Line == "" ? "" : "        " + _Line;
+                    }
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    o."), GetEscapedIdentifier(a.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.SimpleName(NamespaceName)), "FromJson"))), "(jo["), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), "]);"))
+                else
                 {
-                    yield return _Line == "" ? "" : "    " + _Line;
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "return "), TypeString), "."), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "("), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.SimpleName(NamespaceName)), "FromJson"))), "(jo["), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), "]));"))
+                    {
+                        yield return _Line == "" ? "" : "        " + _Line;
+                    }
                 }
-                yield return "    " + "    return o;";
                 yield return "    " + "}";
             }
             yield return "    throw new InvalidOperationException();";
@@ -1006,10 +1007,6 @@ namespace Niveum.ObjectSchema.CSharpJson
             yield return "    if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }";
             yield return "    var jo = j as JObject;";
             yield return "    if (jo == null) { throw new InvalidOperationException(); }";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var o = new "), TypeString), "();"))
-            {
-                yield return _Line;
-            }
             yield return "    var d = (IDictionary<string, JToken>)(jo);";
             foreach (var a in Alternatives)
             {
@@ -1018,15 +1015,20 @@ namespace Niveum.ObjectSchema.CSharpJson
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "{";
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "    o._Tag = OptionalTag."), GetEscapedIdentifier(a.Name)), ";"))
+                if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
                 {
-                    yield return _Line == "" ? "" : "    " + _Line;
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "return "), TypeString), "."), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "();"))
+                    {
+                        yield return _Line == "" ? "" : "        " + _Line;
+                    }
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    o."), GetEscapedIdentifier(a.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.SimpleName(NamespaceName)), "FromJson"))), "(jo["), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), "]);"))
+                else
                 {
-                    yield return _Line == "" ? "" : "    " + _Line;
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "return "), TypeString), "."), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "("), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.SimpleName(NamespaceName)), "FromJson"))), "(jo["), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), "]));"))
+                    {
+                        yield return _Line == "" ? "" : "        " + _Line;
+                    }
                 }
-                yield return "    " + "    return o;";
                 yield return "    " + "}";
             }
             yield return "    throw new InvalidOperationException();";

@@ -1527,26 +1527,31 @@ namespace Niveum.ObjectSchema.CSharpBinary
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var o = new "), TypeString), "();"))
-            {
-                yield return _Line;
-            }
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    o._Tag = "), GetEscapedIdentifier(Combine(Combine(Begin(), TagName), "FromBinary"))), "(s);"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var _Tag = "), GetEscapedIdentifier(Combine(Combine(Begin(), TagName), "FromBinary"))), "(s);"))
             {
                 yield return _Line;
             }
             foreach (var a in Alternatives)
             {
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "if (o._Tag == "), TagTypeString), "."), GetEscapedIdentifier(a.Name)), ")"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "if (_Tag == "), TagTypeString), "."), GetEscapedIdentifier(a.Name)), ")"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "{";
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    o."), GetEscapedIdentifier(a.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.SimpleName(NamespaceName)), "FromBinary"))), "(s);"))
+                if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
                 {
-                    yield return _Line == "" ? "" : "    " + _Line;
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "return "), TypeString), "."), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "();"))
+                    {
+                        yield return _Line == "" ? "" : "        " + _Line;
+                    }
                 }
-                yield return "    " + "    return o;";
+                else
+                {
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "return "), TypeString), "."), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "("), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.SimpleName(NamespaceName)), "FromBinary"))), "(s));"))
+                    {
+                        yield return _Line == "" ? "" : "        " + _Line;
+                    }
+                }
                 yield return "    " + "}";
             }
             yield return "    throw new InvalidOperationException();";
@@ -1771,23 +1776,28 @@ namespace Niveum.ObjectSchema.CSharpBinary
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    var o = new "), TypeString), "();"))
-            {
-                yield return _Line;
-            }
-            yield return "    o._Tag = OptionalTagFromBinary(s);";
+            yield return "    var _Tag = OptionalTagFromBinary(s);";
             foreach (var a in Alternatives)
             {
-                foreach (var _Line in Combine(Combine(Combine(Begin(), "if (o._Tag == OptionalTag."), GetEscapedIdentifier(a.Name)), ")"))
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "if (_Tag == OptionalTag."), GetEscapedIdentifier(a.Name)), ")"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "{";
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    o."), GetEscapedIdentifier(a.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.SimpleName(NamespaceName)), "FromBinary"))), "(s);"))
+                if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
                 {
-                    yield return _Line == "" ? "" : "    " + _Line;
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "return "), TypeString), "."), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "();"))
+                    {
+                        yield return _Line == "" ? "" : "        " + _Line;
+                    }
                 }
-                yield return "    " + "    return o;";
+                else
+                {
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "return "), TypeString), "."), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "("), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.SimpleName(NamespaceName)), "FromBinary"))), "(s));"))
+                    {
+                        yield return _Line == "" ? "" : "        " + _Line;
+                    }
+                }
                 yield return "    " + "}";
             }
             yield return "    throw new InvalidOperationException();";

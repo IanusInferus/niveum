@@ -4,7 +4,7 @@
       File:        CSharpJson.tree
       Location:    Niveum.Object <Tree>
       Description: 对象类型结构C# JSON通讯模板
-      Version:     2022.11.01.
+      Version:     2022.11.26.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -659,7 +659,6 @@
         if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
         var jo = j as JObject;
         if (jo == null) { throw new InvalidOperationException(); }
-        var o = new ${TypeString}();
         var d = (IDictionary<string, JToken>)(jo);
         $$
             foreach (var a in Alternatives)
@@ -667,9 +666,17 @@
                 ##
                     if (d.ContainsKey(${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}))
                     {
-                        o._Tag = ${TagTypeString}.[[${a.Name}]];
-                        o.[[${a.Name}]] = [[${a.Type.SimpleName(NamespaceName)}FromJson]](jo[${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}]);
-                        return o;
+                        $$
+                            if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
+                            {
+                                ##
+                                    return ${TypeString}.[[Create${a.Name}]]();
+                            }
+                            else
+                            {
+                                ##
+                                    return ${TypeString}.[[Create${a.Name}]]([[${a.Type.SimpleName(NamespaceName)}FromJson]](jo[${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}]));
+                            }
                     }
             }
         throw new InvalidOperationException();
@@ -761,7 +768,6 @@
         if (j.Type != JTokenType.Object) { throw new InvalidOperationException(); }
         var jo = j as JObject;
         if (jo == null) { throw new InvalidOperationException(); }
-        var o = new ${TypeString}();
         var d = (IDictionary<string, JToken>)(jo);
         $$
             foreach (var a in Alternatives)
@@ -769,9 +775,17 @@
                 ##
                     if (d.ContainsKey(${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}))
                     {
-                        o._Tag = OptionalTag.[[${a.Name}]];
-                        o.[[${a.Name}]] = [[${a.Type.SimpleName(NamespaceName)}FromJson]](jo[${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}]);
-                        return o;
+                        $$
+                            if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
+                            {
+                                ##
+                                    return ${TypeString}.[[Create${a.Name}]]();
+                            }
+                            else
+                            {
+                                ##
+                                    return ${TypeString}.[[Create${a.Name}]]([[${a.Type.SimpleName(NamespaceName)}FromJson]](jo[${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}]));
+                            }
                     }
             }
         throw new InvalidOperationException();
