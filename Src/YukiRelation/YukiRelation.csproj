@@ -9,7 +9,7 @@
     <Product>Yuki.Relation</Product>
     <Copyright>Copyright(C) F.R.C., under BSD license</Copyright>
     <AssemblyName>Yuki.Relation</AssemblyName>
-    <AssemblyVersion>2021.12.18.0</AssemblyVersion>
+    <AssemblyVersion>2022.12.04.0</AssemblyVersion>
     <BaseIntermediateOutputPath>..\..\Obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
     <OutputPath>..\..\Bin\</OutputPath>
   </PropertyGroup>

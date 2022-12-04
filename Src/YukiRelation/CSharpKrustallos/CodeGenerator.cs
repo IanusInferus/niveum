@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Krustallos代码生成器
-//  Version:     2018.12.22.
+//  Version:     2022.12.04.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -437,8 +437,8 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     foreach (var k in Keys)
                     {
                         var IndexName = e.Name + GetByIndex(k.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
-                        var PartitionIndex = KeyCanBePartitioned[k] ? "v.[[" + k.Columns.First().Name + "]] % this.Data.[[" + IndexName + "]].NumPartition" : "0";
-                        var Key = String.Join(", ", k.Columns.Select(c => "v.[[{0}]]".Formats(c.Name)));
+                        var PartitionIndex = KeyCanBePartitioned[k] ? "_v_.[[" + k.Columns.First().Name + "]] % this.Data.[[" + IndexName + "]].NumPartition" : "0";
+                        var Key = String.Join(", ", k.Columns.Select(c => "_v_.[[{0}]]".Formats(c.Name)));
                         UpdateStatements.AddRange(GetTemplate("Insert_UpdateStatement").Substitute("IndexName", IndexName).Substitute("Function", Function).Substitute("PartitionIndex", PartitionIndex).Substitute("Key", Key));
                     }
                     Content = Template.Substitute("IdentityStatements", IdentityStatements).Substitute("UpdateStatements", UpdateStatements);
@@ -497,7 +497,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     }
                     {
                         var IndexName = e.Name + GetByIndex(SearchKey.Columns.Select(c => c.IsDescending ? c.Name + "Desc" : c.Name));
-                        var PartitionIndex = KeyCanBePartitioned[SearchKey] ? "v.[[" + By.First() + "]] % this.Data.[[" + IndexName + "]].NumPartition" : "0";
+                        var PartitionIndex = KeyCanBePartitioned[SearchKey] ? "_v_.[[" + By.First() + "]] % this.Data.[[" + IndexName + "]].NumPartition" : "0";
                         var Filters = GetFilters(new QueryDef { EntityName = q.EntityName, Verb = q.Verb, Numeral = q.Numeral, By = By, OrderBy = q.OrderBy }, SearchKey.Columns.Count, true);
                         Content = Template.Substitute("IndexName", IndexName).Substitute("Parameters", Parameters).Substitute("PartitionIndex", PartitionIndex).Substitute("Filters", Filters).Substitute("DeleteStatements", DeleteStatements).Substitute("UpdateStatements", UpdateStatements);
                     }

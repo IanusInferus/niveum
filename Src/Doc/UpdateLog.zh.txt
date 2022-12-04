@@ -1,4 +1,8 @@
-﻿2022.11.26
+﻿2022.12.04
+Yuki.Relation:
+修正C# Krustallos插入数据后外部修改传入的数据结构导致提交时使用错误数据而出错的问题。
+
+2022.11.26
 Niveum.Object:
 修正C#序列化代码中对TaggedUnion的处理。
 
