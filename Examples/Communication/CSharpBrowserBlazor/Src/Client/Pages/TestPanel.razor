@@ -3,13 +3,14 @@
 @using Communication
 @using Communication.Json
 @using Client
-@inject HttpClient Http
+@inject HttpClient hc
+@inject IApplicationClient ac
 @inject IJSRuntime JS
 
-<p><button class="btn btn-primary" onclick="@ButtonAlertClicked">Test Alert</button></p>
+<p><button class="btn btn-primary" @onclick="ButtonAlertClicked">Test Alert</button></p>
 
 <p>
-    <button class="btn btn-primary" onclick="@ButtonTemplateClicked">Test Template</button>
+    <button class="btn btn-primary" @onclick="ButtonTemplateClicked">Test Template</button>
     <div>
         <table class="table">
             <tbody>
@@ -23,7 +24,7 @@
 </p>
 
 <p>
-    <button class="btn btn-primary" onclick="@ButtonAjaxClicked">Test AJAX</button>
+    <button class="btn btn-primary" @onclick="ButtonAjaxClicked">Test AJAX</button>
     <div>
         <table class="table">
             <tbody>
@@ -37,7 +38,7 @@
 </p>
 
 <p>
-    <button class="btn btn-primary" onclick="@ButtonServerTimeClicked">Test ServerTime</button>
+    <button class="btn btn-primary" @onclick="ButtonServerTimeClicked">Test ServerTime</button>
     <p>@serverTime</p>
 </p>
 
@@ -54,6 +55,11 @@
     List<User> usersAjax = new List<User> { };
     String serverTime = "";
 
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.FromResult(0);
+    }
+
     async Task ButtonAlertClicked()
     {
         await JS.InvokeAsync<object>("alert", new object[] { "Test Alert Message" });
@@ -64,21 +70,12 @@
     }
     async Task ButtonAjaxClicked()
     {
-        usersAjax.AddRange((await Http.GetFromJsonAsync<User[]>("users.json"))!);
-    }
-
-    IApplicationClient? jc = null;
-    protected override async Task OnInitializedAsync()
-    {
-        var jsca = new JsonSerializationClientAdapter();
-        var jhc = new JsonHttpClient(jsca, "http://127.0.0.1:8003/api/", "q", false, Http);
-        jc = jsca.GetApplicationClient();
-        await Task.FromResult(0);
+        usersAjax.AddRange((await hc.GetFromJsonAsync<User[]>("users.json"))!);
     }
 
     async Task ButtonServerTimeClicked()
     {
-        var r = await jc!.ServerTime(new ServerTimeRequest { });
+        var r = await ac.ServerTime(new ServerTimeRequest { });
         Console.WriteLine("test2");
         if (r.OnSuccess)
         {
