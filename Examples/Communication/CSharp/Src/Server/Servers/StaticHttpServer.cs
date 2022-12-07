@@ -277,7 +277,12 @@ namespace Server
                     }
 
                     a.Response.ContentLength64 = Length;
-                    a.Response.ContentType = GetMimeType(FileNameHandling.GetExtendedFileName(Path));
+                    var Extension = FileNameHandling.GetExtendedFileName(Path);
+                    a.Response.ContentType = GetMimeType(Extension);
+                    if (Extension.Equals("txt", StringComparison.OrdinalIgnoreCase))
+                    {
+                        a.Response.ContentEncoding = System.Text.Encoding.UTF8;
+                    }
                     a.Response.Headers.Add("Accept-Ranges", "bytes");
                     a.Response.Headers.Add("Last-Modified", LastWriteTimeStr);
                     a.Response.Headers.Add("ETag", ETag);
@@ -303,7 +308,7 @@ namespace Server
                 OnSuccess();
             };
 
-            Inner = new ExternalHttpServer(ServerContext, RequestHandler, QueueUserWorkItem, 8 * 1024);
+            Inner = new ExternalHttpServer(ServerContext, RequestHandler, QueueUserWorkItem, ReadBufferSize);
             Inner.Bindings = Bindings;
             Inner.SessionIdleTimeout = SessionIdleTimeout;
             Inner.MaxConnections = MaxConnections;
