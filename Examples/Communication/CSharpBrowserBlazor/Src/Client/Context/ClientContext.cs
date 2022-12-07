@@ -25,5 +25,6 @@ public class ClientContext
         }, new AutoResetEvent(false), 20000, 20000);
     }
 
+    public JsonHttpClient JsonHttpClient { get { return jhc; } }
     public IApplicationClient ApplicationClient { get { return ac; } }
 }

@@ -1,11 +1,16 @@
-﻿@page "/testpanel"
+﻿@page "/debug"
 @using System.Net.Http.Json;
 @using Communication
 @using Communication.Json
 @using Client
 @inject HttpClient hc
+@inject ClientContext cc
 @inject IApplicationClient ac
 @inject IJSRuntime JS
+
+<PageTitle>Debug</PageTitle>
+
+<h1>Debug</h1>
 
 <p><button class="btn btn-primary" @onclick="ButtonAlertClicked">Test Alert</button></p>
 
@@ -42,6 +47,22 @@
     <p>@serverTime</p>
 </p>
 
+<EditForm Model="@dummy" OnValidSubmit="@ButtonSendCommandClicked">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <p>
+        Command
+        <button class="btn btn-primary" type="submit">Send</button>
+    </p>
+    <p>
+        <InputTextArea @bind-Value="commandText" style="width: 100%" rows="10" />
+    </p>
+    <p>
+        @commandResult
+    </p>
+</EditForm>
+
 @code {
     #pragma warning disable 8618
 
@@ -53,7 +74,11 @@
 
     List<User> users = new List<User> { };
     List<User> usersAjax = new List<User> { };
+
+    Object dummy = new Object();
     String serverTime = "";
+    String commandText = "/Communication.ServerTime {}";
+    String commandResult = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -81,5 +106,35 @@
         {
             serverTime = r.Success;
         }
+    }
+
+    async Task ButtonSendCommandClicked()
+    {
+        var jhc = cc.JsonHttpClient;
+
+        foreach (var line in commandText.Replace("\r\n", "\n").Split("\n"))
+        {
+            var trimmed = line.Trim(' ');
+            if (trimmed == "") { continue; }
+            var parts = trimmed.Split(" ", 2);
+            if (!parts[0].StartsWith("/"))
+            {
+                commandResult = "Command shall start with '/'.";
+                return;
+            }
+            var command = parts[0].Substring(1);
+            var parameters = parts[1];
+            jhc.Send(command, parameters, (command, parameters) =>
+            {
+                commandResult = $"/{command} {parameters}";
+                StateHasChanged();
+            }, ex =>
+            {
+                commandResult = ex.ToString();
+                StateHasChanged();
+            });
+        }
+
+        await Task.FromResult(0);
     }
 }

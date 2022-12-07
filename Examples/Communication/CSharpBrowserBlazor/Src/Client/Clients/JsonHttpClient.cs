@@ -20,7 +20,7 @@ namespace Client
         private class Command
         {
             public Object jo;
-            public Action<String, UInt32, String> Callback;
+            public Action<String, UInt32?, String> Callback;
             public Action<Exception> OnError;
         }
         private Queue<Command> CommandQueue;
@@ -38,7 +38,7 @@ namespace Client
             jc.ClientEvent += (CommandName, CommandHash, Parameters, OnError) =>
             {
                 var jo = new { commandName = CommandName, commandHash = CommandHash.ToString("X8", System.Globalization.CultureInfo.InvariantCulture), parameters = Parameters };
-                SendWithHash(jo, jc.HandleResult, OnError);
+                SendWithHash(jo, (CommandName, CommandHash, Parameters) => jc.HandleResult(CommandName, CommandHash.Value, Parameters), OnError);
             };
         }
 
@@ -49,7 +49,7 @@ namespace Client
             var Random = random.Next(10000).ToString("0000");
             return Time + Random;
         }
-        private void SendRaw<T>(T jo, Action<String, UInt32, String> Callback, Action<Exception> OnError)
+        private void SendRaw<T>(T jo, Action<String, UInt32?, String> Callback, Action<Exception> OnError)
         {
             Action<ResponsePacket> OnSuccess = r =>
             {
@@ -57,7 +57,7 @@ namespace Client
                 SessionId = r.sessionid;
                 foreach (var c in commands)
                 {
-                    Callback(c.commandName, uint.Parse(c.commandHash, System.Globalization.NumberStyles.HexNumber), c.parameters);
+                    Callback(c.commandName, c.commandHash == null ? null : uint.Parse(c.commandHash, System.Globalization.NumberStyles.HexNumber), c.parameters);
                 }
                 CommandQueue.Dequeue();
                 if (CommandQueue.Count > 0)
@@ -83,9 +83,8 @@ namespace Client
                 try
                 {
                     var Result = await t.Result.Content.ReadAsStringAsync();
-                    Console.WriteLine("Result: " + Result);
+                    //Console.WriteLine("Result: " + Result);
                     var r = JsonSerializer.Deserialize<ResponsePacket>(Result);
-                    Console.WriteLine("r: " + JsonSerializer.Serialize(r));
                     OnSuccess(JsonSerializer.Deserialize<ResponsePacket>(Result));
                 }
                 catch (Exception ex)
@@ -97,7 +96,7 @@ namespace Client
                 }
             });
         }
-        private void SendWithHash<T>(T jo, Action<String, UInt32, String> Callback, Action<Exception> OnError)
+        private void SendWithHash<T>(T jo, Action<String, UInt32?, String> Callback, Action<Exception> OnError)
         {
             if (CommandQueue.Count > 0)
             {
@@ -112,7 +111,7 @@ namespace Client
 
         public void Send(String CommandName, String Parameters, Action<String, String> Callback, Action<Exception> OnError)
         {
-            Action<String, UInt32, String> c = (CommandNameInner, CommandHashInner, ParametersInner) =>
+            Action<String, UInt32?, String> c = (CommandNameInner, CommandHashInner, ParametersInner) =>
             {
                 Callback(CommandNameInner, ParametersInner);
             };

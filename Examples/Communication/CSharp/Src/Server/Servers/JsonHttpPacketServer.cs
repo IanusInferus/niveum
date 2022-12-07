@@ -59,13 +59,13 @@ namespace Server
         public HttpVirtualTransportServerHandleResult Handle(JObject CommandObject)
         {
             var jo = CommandObject;
-            if (jo["commandName"] == null || jo["commandName"].Type != JTokenType.String || (jo["commandHash"] != null && jo["commandHash"].Type != JTokenType.String) || jo["parameters"] == null || jo["parameters"].Type != JTokenType.String)
+            if (!jo.ContainsKey("commandName") || jo["commandName"].Type != JTokenType.String || (jo.ContainsKey("commandHash") && jo["commandHash"].Type != JTokenType.String) || !jo.ContainsKey("parameters") || jo["parameters"].Type != JTokenType.String)
             {
                 return HttpVirtualTransportServerHandleResult.CreateBadCommandLine(new HttpVirtualTransportServerHandleResultBadCommandLine { CommandLine = jo.ToString(Formatting.None) });
             }
             var CommandName = StringFromJson(jo["commandName"]);
             var CommandHash = Optional<UInt32>.Empty;
-            if (jo["commandHash"] != null)
+            if (jo.ContainsKey("commandHash") && (jo["commandHash"] != null))
             {
                 UInt32 ch;
                 if (!UInt32.TryParse(StringFromJson(jo["commandHash"]), System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out ch))

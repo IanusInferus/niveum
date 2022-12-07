@@ -1,6 +1,7 @@
 ﻿2022.12.07
 Examples:
 结束C#通讯浏览器示例对Bridge.NET支持。
+C#通讯浏览器Blazor示例增加直接发送命令功能。
 
 2022.12.05
 Examples:
