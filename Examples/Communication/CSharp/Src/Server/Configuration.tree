@@ -102,22 +102,6 @@
                         HttpStatic
                             Bindings
                                 Binding
-                                    Prefix http://+:8003/cs/
-                            SessionIdleTimeout 120
-                            UnauthenticatedSessionIdleTimeout 30
-                            MaxConnections 32768
-                            MaxConnectionsPerIP 32768
-                            MaxUnauthenticatedPerIP 32768
-                            MaxBadCommands 8
-                            TimeoutCheckPeriod 30
-                            ServiceVirtualPath .*
-                            PhysicalPath ../../CSharpBrowser/Bin/
-                            Indices index.html
-                            EnableClientRewrite False
-                    Protocol
-                        HttpStatic
-                            Bindings
-                                Binding
                                     Prefix http://+:8003/
                             SessionIdleTimeout 120
                             UnauthenticatedSessionIdleTimeout 30
