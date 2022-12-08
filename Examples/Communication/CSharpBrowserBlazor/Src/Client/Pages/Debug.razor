@@ -8,44 +8,50 @@
 @inject IApplicationClient ac
 @inject IJSRuntime JS
 
-<PageTitle>Debug</PageTitle>
+<PageTitle>Debug - @cc.SystemName</PageTitle>
 
 <h1>Debug</h1>
 
-<p><button class="btn btn-primary" @onclick="ButtonAlertClicked">Test Alert</button></p>
+<div>
+    <p>
+        <button class="btn btn-primary" @onclick="ButtonAlertClicked">Test Alert</button>
+    </p>
+</div>
 
-<p>
-    <button class="btn btn-primary" @onclick="ButtonTemplateClicked">Test Template</button>
-    <div>
-        <table class="table">
-            <tbody>
-                @foreach (var user in users)
-                {
-                    <tr><td>@user.id</td><td>@user.name</td></tr>
-                }
-            </tbody>
-        </table>
-    </div>
-</p>
+<div>
+    <p>
+        <button class="btn btn-primary" @onclick="ButtonTemplateClicked">Test Template</button>
+    </p>
+    <table class="table">
+        <tbody>
+            @foreach (var user in users)
+            {
+                <tr><td>@user.id</td><td>@user.name</td></tr>
+            }
+        </tbody>
+    </table>
+</div>
 
-<p>
-    <button class="btn btn-primary" @onclick="ButtonAjaxClicked">Test AJAX</button>
-    <div>
-        <table class="table">
-            <tbody>
-                @foreach (var user in usersAjax)
-                {
-                    <tr><td>@user.id</td><td>@user.name</td></tr>
-                }
-            </tbody>
-        </table>
-    </div>
-</p>
+<div>
+    <p>
+        <button class="btn btn-primary" @onclick="ButtonAjaxClicked">Test AJAX</button>
+    </p>
+    <table class="table">
+        <tbody>
+            @foreach (var user in usersAjax)
+            {
+                <tr><td>@user.id</td><td>@user.name</td></tr>
+            }
+        </tbody>
+    </table>
+</div>
 
-<p>
-    <button class="btn btn-primary" @onclick="ButtonServerTimeClicked">Test ServerTime</button>
-    <p>@serverTime</p>
-</p>
+<div>
+    <p>
+        <button class="btn btn-primary" @onclick="ButtonServerTimeClicked">Test ServerTime</button>
+    </p>
+    <p>@serverTime<br /></p>
+</div>
 
 <EditForm Model="@dummy" OnValidSubmit="@ButtonSendCommandClicked">
     <DataAnnotationsValidator />
@@ -59,7 +65,10 @@
         <InputTextArea @bind-Value="commandText" style="width: 100%" rows="10" />
     </p>
     <p>
-        @commandResult
+        @foreach (var r in commandResults)
+        {
+            @r<br />
+        }
     </p>
 </EditForm>
 
@@ -78,7 +87,7 @@
     Object dummy = new Object();
     String serverTime = "";
     String commandText = "/Communication.ServerTime {}";
-    String commandResult = "";
+    List<String> commandResults = new List<String>();
 
     protected override async Task OnInitializedAsync()
     {
@@ -100,8 +109,9 @@
 
     async Task ButtonServerTimeClicked()
     {
+        serverTime = "";
         var r = await ac.ServerTime(new ServerTimeRequest { });
-        Console.WriteLine("test2");
+        Console.WriteLine("ButtonServerTimeClicked");
         if (r.OnSuccess)
         {
             serverTime = r.Success;
@@ -112,6 +122,8 @@
     {
         var jhc = cc.JsonHttpClient;
 
+        commandResults.Clear();
+        var commands = new List<KeyValuePair<String, String>>();
         foreach (var line in commandText.Replace("\r\n", "\n").Split("\n"))
         {
             var trimmed = line.Trim(' ');
@@ -119,18 +131,22 @@
             var parts = trimmed.Split(" ", 2);
             if (!parts[0].StartsWith("/"))
             {
-                commandResult = "Command shall start with '/'.";
+                commandResults.Add("命令应以/起始");
                 return;
             }
             var command = parts[0].Substring(1);
             var parameters = parts[1];
+            commands.Add(new KeyValuePair<String, String>(command, parameters));
+        }
+        foreach (var (command, parameters) in commands)
+        {
             jhc.Send(command, parameters, (command, parameters) =>
             {
-                commandResult = $"/{command} {parameters}";
+                commandResults.Add($"/{command} {parameters}");
                 StateHasChanged();
             }, ex =>
             {
-                commandResult = ex.ToString();
+                commandResults.Add(ex.ToString());
                 StateHasChanged();
             });
         }

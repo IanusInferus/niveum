@@ -1,7 +1,8 @@
 ﻿@page "/fetchdata"
 @inject HttpClient Http
+@inject ClientContext cc
 
-<PageTitle>Weather forecast</PageTitle>
+<PageTitle>Weather forecast - @cc.SystemName</PageTitle>
 
 <h1>Weather forecast</h1>
 

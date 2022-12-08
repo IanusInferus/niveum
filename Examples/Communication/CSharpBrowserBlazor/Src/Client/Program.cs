@@ -8,6 +8,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 var hc = new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) };
 var cc = new ClientContext(hc, builder.HostEnvironment.BaseAddress);
+cc.SystemName = "Client";
 builder.Services.AddScoped(sp => hc);
 builder.Services.AddScoped(sp => cc);
 builder.Services.AddScoped(sp => cc.ApplicationClient);
