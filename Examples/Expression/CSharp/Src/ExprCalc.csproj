@@ -1,9 +1,9 @@
 ﻿<Project>
   <PropertyGroup>
     <TargetFrameworks>net48</TargetFrameworks>
-	<LangVersion>10.0</LangVersion>
-	<ImplicitUsings>disable</ImplicitUsings>
-	<Nullable>enable</Nullable>
+    <LangVersion>10.0</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
     <RootNamespace>ExprCalc</RootNamespace>
     <PackageId>Example.ExprCalc</PackageId>
     <Product>Example.ExprCalc</Product>
