@@ -252,6 +252,10 @@ namespace Server
             {
                 Console.WriteLine("SetTimerFailed");
             }
+            catch (PlatformNotSupportedException)
+            {
+                Console.WriteLine("SetTimerFailed");
+            }
         }
 
         public void Start()

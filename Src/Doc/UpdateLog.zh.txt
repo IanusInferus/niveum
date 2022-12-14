@@ -4,8 +4,10 @@
 Nivea, Niveum.SchemaManipulator:
 修复编译警告。
 简化编译脚本。
+修正编译脚本权限。
 Examples:
 修正C#通讯示例编译警告。
+修正C#通讯示例。
 
 2022.12.08
 Examples:
