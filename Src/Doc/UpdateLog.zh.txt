@@ -1,6 +1,7 @@
 ﻿2022.12.14
 *:
 增加.Net 7.0和C# 11.0编译。
+修正文件编码。
 Nivea, Niveum.SchemaManipulator:
 修复编译警告。
 简化编译脚本。

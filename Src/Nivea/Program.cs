@@ -202,7 +202,7 @@ namespace Nivea.CUI
                 var OriginalContent = File.ReadAllText(Path);
                 if (OriginalContent == Content) { return; }
             }
-            File.WriteAllText(Path, Content);
+            File.WriteAllText(Path, Content, System.Text.Encoding.UTF8);
         }
     }
 }
