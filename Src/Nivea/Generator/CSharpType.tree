@@ -4,7 +4,7 @@
       File:        CSharpType.tree
       Location:    Nivea <Tree>
       Description: C#类型代码生成
-      Version:     2021.12.21.
+      Version:     2022.12.14.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -97,7 +97,7 @@
         {
             return !Equals(Left, Right);
         }
-        public override Boolean Equals(Object obj)
+        public override Boolean Equals(Object? obj)
         {
             if (obj == null) { return Equals(this, null); }
             if (obj.GetType() != typeof(Optional<T>)) { return false; }
@@ -165,7 +165,7 @@
         {
             if (OnSome)
             {
-                return Some!.ToString();
+                return Some!.ToString()!;
             }
             else
             {

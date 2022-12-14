@@ -90,7 +90,7 @@ public struct Optional<T>
     {
         return !Equals(Left, Right);
     }
-    public override Boolean Equals(Object obj)
+    public override Boolean Equals(Object? obj)
     {
         if (obj == null) { return Equals(this, null); }
         if (obj.GetType() != typeof(Optional<T>)) { return false; }
@@ -158,7 +158,7 @@ public struct Optional<T>
     {
         if (OnSome)
         {
-            return Some!.ToString();
+            return Some!.ToString()!;
         }
         else
         {

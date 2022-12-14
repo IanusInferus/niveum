@@ -3,7 +3,7 @@
 //  File:        ExprParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 表达式解析器
-//  Version:     2021.12.21.
+//  Version:     2022.12.14.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -390,7 +390,7 @@ namespace Nivea.Template.Syntax
             var LineQueue = new LinkedList<TextLine>(Lines);
             while (LineQueue.Count > 0)
             {
-                var Line = LineQueue.First.Value;
+                var Line = LineQueue.First!.Value;
                 LineQueue.RemoveFirst();
                 var LineText = Line.Text.Substring(Math.Min(LinesIndentSpace, Line.Text.Length));
                 var Trimmed = LineText.Trim(' ');
@@ -434,7 +434,7 @@ namespace Nivea.Template.Syntax
                     {
                         while (IndentedExprLines.Count > 0)
                         {
-                            var ChildLine = IndentedExprLines.Last.Value;
+                            var ChildLine = IndentedExprLines.Last!.Value;
                             var ChildLineText = ChildLine.Text.Substring(Math.Min(LinesIndentSpace, ChildLine.Text.Length));
                             var SpaceCount = ChildLineText.TakeWhile(c => c == ' ').Count();
                             if (TokenParser.IsBlankLine(ChildLineText))
@@ -635,7 +635,7 @@ namespace Nivea.Template.Syntax
                 var LineQueue = new LinkedList<TextLine>(Lines);
                 while (LineQueue.Count > 0)
                 {
-                    var Line = LineQueue.First.Value;
+                    var Line = LineQueue.First!.Value;
                     LineQueue.RemoveFirst();
                     var LineText = Line.Text.Substring(Math.Min(LinesIndentSpace, Line.Text.Length));
                     var Trimmed = LineText.Trim(' ');
@@ -679,7 +679,7 @@ namespace Nivea.Template.Syntax
                         {
                             while (IndentedExprLines.Count > 0)
                             {
-                                var ChildLine = IndentedExprLines.Last.Value;
+                                var ChildLine = IndentedExprLines.Last!.Value;
                                 var ChildLineText = ChildLine.Text.Substring(Math.Min(LinesIndentSpace, ChildLine.Text.Length));
                                 var SpaceCount = ChildLineText.TakeWhile(c => c == ' ').Count();
                                 if (TokenParser.IsBlankLine(ChildLineText))

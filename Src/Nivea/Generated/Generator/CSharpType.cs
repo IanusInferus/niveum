@@ -169,7 +169,7 @@ namespace Nivea.Generator.CSharpType
             yield return "    {";
             yield return "        return !Equals(Left, Right);";
             yield return "    }";
-            yield return "    public override Boolean Equals(Object obj)";
+            yield return "    public override Boolean Equals(Object? obj)";
             yield return "    {";
             yield return "        if (obj == null) { return Equals(this, null); }";
             yield return "        if (obj.GetType() != typeof(Optional<T>)) { return false; }";
@@ -237,7 +237,7 @@ namespace Nivea.Generator.CSharpType
             yield return "    {";
             yield return "        if (OnSome)";
             yield return "        {";
-            yield return "            return Some!.ToString();";
+            yield return "            return Some!.ToString()!;";
             yield return "        }";
             yield return "        else";
             yield return "        {";
