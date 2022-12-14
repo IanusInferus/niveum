@@ -39,9 +39,7 @@
 ## 环境要求
 
 本框架使用 C# 编写，开发时需要 Visual Studio 2022 或 BuildTool 支持。
-本框架运行需要 Microsoft .Net Framework 4.8 运行时。
-Microsoft .Net Framework 4.8 (x86/x64)
-https://dotnet.microsoft.com/en-us/download/dotnet-framework/net48
+本框架运行需要 [Microsoft .Net Framework 4.8](https://dotnet.microsoft.com/en-us/download/dotnet-framework/net48) 或 [.Net 7.0](https://dotnet.microsoft.com/en-us/download/dotnet/7.0) 运行时。
 
 ## 用户使用协议
 
