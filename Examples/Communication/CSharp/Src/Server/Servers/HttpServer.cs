@@ -335,10 +335,12 @@ namespace Server
                 var ts = TimeSpan.FromSeconds(Seconds);
                 var tm = Listener.TimeoutManager;
                 tm.DrainEntityBody = ts;
+                tm.IdleConnection = ts;
+#pragma warning disable CA1416
                 tm.EntityBody = ts;
                 tm.HeaderWait = ts;
-                tm.IdleConnection = ts;
                 tm.RequestQueue = ts;
+#pragma warning restore CA1416
             }
             catch (NotImplementedException)
             {

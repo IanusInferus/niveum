@@ -5,6 +5,7 @@ using System.Text;
 using System.Net;
 using System.Threading.Tasks;
 using Niveum.Json;
+using System.Net.Http;
 
 namespace Client
 {
@@ -26,6 +27,7 @@ namespace Client
 
         public sealed class HttpClient : IDisposable
         {
+            private System.Net.Http.HttpClient c;
             public IHttpVirtualTransportClient VirtualTransportClient { get; private set; }
 
             private String SessionId;
@@ -33,12 +35,13 @@ namespace Client
             public HttpClient(String Prefix, String ServiceVirtualPath, IHttpVirtualTransportClient VirtualTransportClient)
             {
                 if (!Prefix.EndsWith("/")) { throw new InvalidOperationException(String.Format("PrefixNotEndWithSlash: '{0}'", Prefix)); }
+                this.c = new System.Net.Http.HttpClient();
                 this.VirtualTransportClient = VirtualTransportClient;
                 VirtualTransportClient.ClientMethod += OnError =>
                 {
                     Func<Task> t = async () =>
                     {
-                        var Bytes = System.Text.Encoding.UTF8.GetBytes((new JArray(VirtualTransportClient.TakeWriteBuffer())).ToString(Formatting.None));
+                        var s = (new JArray(VirtualTransportClient.TakeWriteBuffer())).ToString(Formatting.None);
 
                         Uri u;
                         if (SessionId == null)
@@ -50,35 +53,15 @@ namespace Client
                             u = new Uri(Prefix + ServiceVirtualPath + "?sessionid=" + Uri.EscapeDataString(SessionId));
                         }
 
-                        var req = (HttpWebRequest)(WebRequest.Create(u));
-                        req.Method = "POST";
-                        req.ContentType = "application/json; charset=utf-8";
-                        req.ContentLength = Bytes.Length;
-                        req.MediaType = "application/json";
-                        req.Headers.Add("Accept-Charset", "utf-8");
-
-                        using (var OutputStream = await req.GetRequestStreamAsync())
-                        {
-                            await OutputStream.WriteAsync(Bytes, 0, Bytes.Length);
-                        }
-
                         String ResultString;
-                        using (var resp = (HttpWebResponse)(await req.GetResponseAsync()))
+                        using (var req = new HttpRequestMessage(HttpMethod.Post, u))
                         {
-                            var Length = (int)(resp.ContentLength);
-                            Encoding e;
-                            if (resp.CharacterSet == "")
+                            req.Content = new StringContent(s, System.Text.Encoding.UTF8, "application/json");
+                            req.Headers.Add("Accept-Charset", "utf-8");
+
+                            using (var resp = await c.SendAsync(req))
                             {
-                                e = System.Text.Encoding.UTF8;
-                            }
-                            else
-                            {
-                                e = Encoding.GetEncoding(resp.CharacterSet);
-                            }
-                            using (var InputStream = resp.GetResponseStream())
-                            {
-                                var ResultBytes = Read(InputStream, Length);
-                                ResultString = e.GetString(ResultBytes);
+                                ResultString = await resp.Content.ReadAsStringAsync();
                             }
                         }
 
@@ -116,6 +99,7 @@ namespace Client
             {
                 if (IsDisposed) { return; }
                 IsDisposed = true;
+                c.Dispose();
             }
         }
     }
