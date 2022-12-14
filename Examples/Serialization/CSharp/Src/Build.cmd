@@ -10,4 +10,4 @@ if not "%NO_PAUSE_SYMBOL%"=="1" pause
 exit /b %EXIT_CODE%
 
 :main
-dotnet build --configuration Release || exit /b 1
+dotnet build --configuration Release --no-incremental || exit /b 1

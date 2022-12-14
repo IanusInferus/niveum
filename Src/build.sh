@@ -8,4 +8,4 @@ DOTNET=$(command -v dotnet) || {
   echo MacOS: see https://learn.microsoft.com/en-us/dotnet/core/install/macos
   exit 1
 }
-$DOTNET build --configuration Release
+$DOTNET build --configuration Release --no-incremental
