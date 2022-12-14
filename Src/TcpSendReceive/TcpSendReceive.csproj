@@ -5,6 +5,7 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <UseWPF>true</UseWPF>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <RootNamespace>TcpSendReceive</RootNamespace>
     <PackageId>TcpSendReceive</PackageId>
     <Product>Niveum.TcpSendReceive</Product>

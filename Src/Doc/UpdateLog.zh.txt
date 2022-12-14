@@ -3,6 +3,7 @@
 增加.Net 7.0和C# 11.0编译。
 Nivea, Niveum.SchemaManipulator:
 修复编译警告。
+简化编译脚本。
 Examples:
 修正C#通讯示例编译警告。
 
