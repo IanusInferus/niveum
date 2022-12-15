@@ -64,7 +64,7 @@ namespace Server
             MimeTypes.Add("xml", "text/xml");
             MimeTypes.Add("css", "text/css");
             MimeTypes.Add("js", "application/x-javascript");
-            MimeTypes.Add("txt", "text/plain");
+            MimeTypes.Add("txt", "text/plain; charset=utf-8");
             MimeTypes.Add("gif", "image/gif");
             MimeTypes.Add("jpg", "image/jpeg");
             MimeTypes.Add("jpeg", "image/jpeg");
