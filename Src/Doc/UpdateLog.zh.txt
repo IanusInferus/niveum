@@ -1,4 +1,8 @@
-﻿2022.12.22
+﻿2022.12.23
+Yuki.Relation, Yuki.DatabaseRegenerator:
+支持导出数据Sqlite、PostgreSQL。
+
+2022.12.22
 Examples:
 C#通讯示例绕过Blazor参数中不能包含点(.)的问题。
 

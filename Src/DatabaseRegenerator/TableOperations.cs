@@ -3,7 +3,7 @@
 //  File:        TableOperations.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据表操作
-//  Version:     2019.04.28.
+//  Version:     2022.12.23.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -20,6 +20,7 @@ namespace Yuki.DatabaseRegenerator
 {
     public enum DatabaseType
     {
+        Sqlite,
         SqlServer,
         PostgreSQL,
         MySQL
@@ -29,7 +30,11 @@ namespace Yuki.DatabaseRegenerator
         public static void ImportTable(Dictionary<String, EntityDef> EntityMetas, Dictionary<String, String> EnumUnderlyingTypes, IDbConnection c, IDbTransaction b, KeyValuePair<String, TableVal> t, DatabaseType Type)
         {
             Func<String, String> Escape;
-            if (Type == DatabaseType.SqlServer)
+            if (Type == DatabaseType.Sqlite)
+            {
+                Escape = s => "\"" + s.ToLowerInvariant() + "\"";
+            }
+            else if (Type == DatabaseType.SqlServer)
             {
                 Escape = s => "[" + s + "]";
             }
@@ -316,7 +321,11 @@ namespace Yuki.DatabaseRegenerator
         public static TableVal ExportTable(Dictionary<String, EntityDef> EntityMetas, Dictionary<String, String> EnumUnderlyingTypes, IDbConnection c, IDbTransaction b, String EntityName, DatabaseType Type)
         {
             Func<String, String> Escape;
-            if (Type == DatabaseType.SqlServer)
+            if (Type == DatabaseType.Sqlite)
+            {
+                Escape = s => "\"" + s.ToLowerInvariant() + "\"";
+            }
+            else if (Type == DatabaseType.SqlServer)
             {
                 Escape = s => "[" + s + "]";
             }

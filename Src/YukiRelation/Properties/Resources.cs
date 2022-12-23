@@ -37,6 +37,8 @@ namespace Yuki.RelationSchema.Properties
         public static Byte[] CSharpPlain { get { return GetResource("CSharpPlain"); } }
         public static Byte[] CSharpSqlServer { get { return GetResource("CSharpSqlServer"); } }
         public static Byte[] MySql { get { return GetResource("MySql"); } }
+        public static Byte[] PostgreSql { get { return GetResource("PostgreSql"); } }
+        public static Byte[] Sqlite { get { return GetResource("Sqlite"); } }
         public static Byte[] TSql { get { return GetResource("TSql"); } }
         public static Byte[] Xhtml { get { return GetResource("Xhtml"); } }
     }

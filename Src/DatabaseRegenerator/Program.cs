@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2019.04.28.
+//  Version:     2022.12.23.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -22,7 +22,9 @@ using Firefly.Texting.TreeFormat;
 using Syntax = Firefly.Texting.TreeFormat.Syntax;
 using Firefly.Texting.TreeFormat.Semantics;
 using Yuki.RelationSchema;
+using Yuki.RelationSchema.Sqlite;
 using Yuki.RelationSchema.TSql;
+using Yuki.RelationSchema.PostgreSql;
 using Yuki.RelationSchema.MySql;
 using Yuki.RelationValue;
 using Yuki.RelationSchemaDiff;
@@ -206,6 +208,19 @@ namespace Yuki.DatabaseRegenerator
                         return -1;
                     }
                 }
+                else if (optNameLower == "regensqlite")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length >= 0)
+                    {
+                        RegenSqlite(Schema(), ConnectionString, DatabaseName, args);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else if (optNameLower == "regenmssql")
                 {
                     var args = opt.Arguments;
@@ -219,12 +234,38 @@ namespace Yuki.DatabaseRegenerator
                         return -1;
                     }
                 }
+                else if (optNameLower == "regenpgsql")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length >= 0)
+                    {
+                        RegenPostgreSQL(Schema(), ConnectionString, DatabaseName, args);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else if (optNameLower == "regenmysql")
                 {
                     var args = opt.Arguments;
                     if (args.Length >= 0)
                     {
                         RegenMySQL(Schema(), ConnectionString, DatabaseName, args);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
+                else if (optNameLower == "exportsqlite")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 1)
+                    {
+                        ExportSqlite(Schema(), ConnectionString, DatabaseName, args[0]);
                     }
                     else
                     {
@@ -329,10 +370,16 @@ namespace Yuki.DatabaseRegenerator
             Console.WriteLine(@"/exportcoll:<DataDir>[,<EntityName>*]");
             Console.WriteLine(@"导入数据集，无需加载类型");
             Console.WriteLine(@"/importcoll:<DataDir>+");
+            Console.WriteLine(@"重建Sqlite数据库");
+            Console.WriteLine(@"/regensqlite:(<DataDir>|<MemoryDatabaseFile>)*");
             Console.WriteLine(@"重建SQL Server数据库");
             Console.WriteLine(@"/regenmssql:(<DataDir>|<MemoryDatabaseFile>)*");
+            Console.WriteLine(@"重建PostgreSQL数据库");
+            Console.WriteLine(@"/regenpgsql:(<DataDir>|<MemoryDatabaseFile>)*");
             Console.WriteLine(@"重建MySQL数据库");
             Console.WriteLine(@"/regenmysql:(<DataDir>|<MemoryDatabaseFile>)*");
+            Console.WriteLine(@"导出Sqlite数据库");
+            Console.WriteLine(@"/exportsqlite:<MemoryDatabaseFile>");
             Console.WriteLine(@"导出SQL Server数据库");
             Console.WriteLine(@"/exportmssql:<MemoryDatabaseFile>");
             Console.WriteLine(@"导出PostgreSQL数据库");
@@ -645,6 +692,91 @@ namespace Yuki.DatabaseRegenerator
             SaveData(s, ConnectionString, Value, bs);
         }
 
+        public static void RegenSqlite(Schema s, String ConnectionString, String DatabaseName, String[] DataDirOrMemoryDatabaseFiles)
+        {
+            var Value = LoadData(s, DataDirOrMemoryDatabaseFiles);
+
+            var GenSqls = s.CompileToSqlite(DatabaseName, true);
+            var RegenSqls = Regex.Split(GenSqls, @"\r\n;(\r\n)+", RegexOptions.ExplicitCapture).ToList();
+            var DeleteTables = RegenSqls.Where(q => q.StartsWith("PRAGMA")).ToList();
+            RegenSqls = RegenSqls.SkipWhile(q => !q.StartsWith("CREATE TABLE")).ToList();
+            var Creates = RegenSqls.Where(q => q.StartsWith("CREATE")).ToList();
+
+            var cf = GetConnectionFactory(DatabaseType.Sqlite);
+            using (var c = cf(ConnectionString))
+            {
+                c.Open();
+                foreach (var Sql in DeleteTables)
+                {
+                    if (Sql == "") { continue; }
+
+                    var cmd = c.CreateCommand();
+                    cmd.CommandText = Sql;
+                    cmd.CommandType = CommandType.Text;
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            using (var c = cf(ConnectionString))
+            {
+                c.Open();
+                foreach (var Sql in Creates)
+                {
+                    if (Sql == "") { continue; }
+
+                    var cmd = c.CreateCommand();
+                    cmd.CommandText = Sql;
+                    cmd.CommandType = CommandType.Text;
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            var TableInfo = TableOperations.GetTableInfo(s);
+            var EntityMetas = TableInfo.EntityMetas;
+            var EnumUnderlyingTypes = TableInfo.EnumUnderlyingTypes;
+            var Tables = TableOperations.GetTableDictionary(s, EntityMetas, Value);
+
+            using (var c = cf(ConnectionString))
+            {
+                c.Open();
+
+                {
+                    var cmd = c.CreateCommand();
+                    cmd.CommandText = "PRAGMA foreign_keys = OFF;";
+                    cmd.CommandType = CommandType.Text;
+                    cmd.ExecuteNonQuery();
+                }
+
+                using (var b = c.BeginTransaction())
+                {
+                    var Success = false;
+                    try
+                    {
+                        foreach (var t in Tables)
+                        {
+                            TableOperations.ImportTable(EntityMetas, EnumUnderlyingTypes, c, b, t, DatabaseType.Sqlite);
+                        }
+
+                        b.Commit();
+                        Success = true;
+                    }
+                    finally
+                    {
+                        if (!Success)
+                        {
+                            b.Rollback();
+                        }
+                    }
+                }
+
+                {
+                    var cmd = c.CreateCommand();
+                    cmd.CommandText = "PRAGMA foreign_keys = ON;";
+                    cmd.CommandType = CommandType.Text;
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
         public static void RegenSqlServer(Schema s, String ConnectionString, String DatabaseName, String[] DataDirOrMemoryDatabaseFiles)
         {
             if (DatabaseName == "")
@@ -727,6 +859,94 @@ namespace Yuki.DatabaseRegenerator
             }
         }
 
+        public static void RegenPostgreSQL(Schema s, String ConnectionString, String DatabaseName, String[] DataDirOrMemoryDatabaseFiles)
+        {
+            var Value = LoadData(s, DataDirOrMemoryDatabaseFiles);
+
+            var GenSqls = s.CompileToPostgreSql(DatabaseName, true);
+            var RegenSqls = Regex.Split(GenSqls, @"\r\n;(\r\n)+", RegexOptions.ExplicitCapture).ToList();
+            RegenSqls = RegenSqls.SkipWhile(q => !q.StartsWith("CREATE TABLE")).ToList();
+            var CreateDatabases = new String[] { String.Format("DROP DATABASE IF EXISTS \"{0}\"", DatabaseName.ToLowerInvariant()), String.Format("CREATE DATABASE \"{0}\"", DatabaseName.ToLowerInvariant()) };
+            var Creates = RegenSqls.Where(q => q.StartsWith("CREATE")).ToList();
+            var Alters = RegenSqls.Where(q => q.StartsWith("ALTER") || q.StartsWith("COMMENT")).ToList();
+
+            var cf = GetConnectionFactory(DatabaseType.PostgreSQL);
+            using (var c = cf(ConnectionString))
+            {
+                c.Open();
+                foreach (var Sql in CreateDatabases)
+                {
+                    if (Sql == "") { continue; }
+
+                    var cmd = c.CreateCommand();
+                    cmd.CommandText = Sql;
+                    cmd.CommandType = CommandType.Text;
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            using (var c = cf(ConnectionString))
+            {
+                c.Open();
+                c.ChangeDatabase(DatabaseName.ToLowerInvariant());
+                foreach (var Sql in Creates)
+                {
+                    if (Sql == "") { continue; }
+
+                    var cmd = c.CreateCommand();
+                    cmd.CommandText = Sql;
+                    cmd.CommandType = CommandType.Text;
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            var TableInfo = TableOperations.GetTableInfo(s);
+            var EntityMetas = TableInfo.EntityMetas;
+            var EnumUnderlyingTypes = TableInfo.EnumUnderlyingTypes;
+            var Tables = TableOperations.GetTableDictionary(s, EntityMetas, Value);
+
+            using (var c = cf(ConnectionString))
+            {
+                c.Open();
+                c.ChangeDatabase(DatabaseName.ToLowerInvariant());
+                using (var b = c.BeginTransaction())
+                {
+                    var Success = false;
+                    try
+                    {
+                        foreach (var t in Tables)
+                        {
+                            TableOperations.ImportTable(EntityMetas, EnumUnderlyingTypes, c, b, t, DatabaseType.PostgreSQL);
+                        }
+
+                        b.Commit();
+                        Success = true;
+                    }
+                    finally
+                    {
+                        if (!Success)
+                        {
+                            b.Rollback();
+                        }
+                    }
+                }
+            }
+
+            using (var c = cf(ConnectionString))
+            {
+                c.Open();
+                c.ChangeDatabase(DatabaseName.ToLowerInvariant());
+                foreach (var Sql in Alters)
+                {
+                    if (Sql == "") { continue; }
+
+                    var cmd = c.CreateCommand();
+                    cmd.CommandText = Sql;
+                    cmd.CommandType = CommandType.Text;
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
         public static void RegenMySQL(Schema s, String ConnectionString, String DatabaseName, String[] DataDirOrMemoryDatabaseFiles)
         {
             var Value = LoadData(s, DataDirOrMemoryDatabaseFiles);
@@ -797,6 +1017,46 @@ namespace Yuki.DatabaseRegenerator
                     cmd.ExecuteNonQuery();
                 }
             }
+        }
+
+        public static void ExportSqlite(Schema s, String ConnectionString, String DatabaseName, String MemoryDatabaseFile)
+        {
+            if (DatabaseName == "")
+            {
+                throw new InvalidOperationException("数据库名称没有指定。");
+            }
+
+            var bs = Niveum.ObjectSchema.BinarySerializerWithString.Create();
+
+            var cf = GetConnectionFactory(DatabaseType.Sqlite);
+
+            var TableInfo = TableOperations.GetTableInfo(s);
+            var EntityMetas = TableInfo.EntityMetas;
+            var EnumUnderlyingTypes = TableInfo.EnumUnderlyingTypes;
+
+            var Value = new RelationVal { Tables = new List<TableVal>() };
+            using (var c = cf(ConnectionString))
+            {
+                c.Open();
+                c.ChangeDatabase(DatabaseName);
+                using (var b = c.BeginTransaction())
+                {
+                    try
+                    {
+                        foreach (var t in EntityMetas)
+                        {
+                            var Table = TableOperations.ExportTable(EntityMetas, EnumUnderlyingTypes, c, b, t.Value.Name, DatabaseType.Sqlite);
+                            Value.Tables.Add(Table);
+                        }
+                    }
+                    finally
+                    {
+                        b.Rollback();
+                    }
+                }
+            }
+
+            SaveData(s, MemoryDatabaseFile, Value, bs);
         }
 
         public static void ExportSqlServer(Schema s, String ConnectionString, String DatabaseName, String MemoryDatabaseFile)
@@ -911,7 +1171,11 @@ namespace Yuki.DatabaseRegenerator
 
         private static Func<String, IDbConnection> GetConnectionFactory(DatabaseType Type)
         {
-            if (Type == DatabaseType.SqlServer)
+            if (Type == DatabaseType.Sqlite)
+            {
+                return GetConnectionFactorySqlite();
+            }
+            else if (Type == DatabaseType.SqlServer)
             {
                 return GetConnectionFactorySqlServer();
             }
@@ -929,6 +1193,10 @@ namespace Yuki.DatabaseRegenerator
             }
         }
 
+        private static Func<String, IDbConnection> GetConnectionFactorySqlite()
+        {
+            return ConnectionString => new Microsoft.Data.Sqlite.SqliteConnection(ConnectionString);
+        }
         private static Func<String, IDbConnection> GetConnectionFactorySqlServer()
         {
             return ConnectionString => new System.Data.SqlClient.SqlConnection(ConnectionString);

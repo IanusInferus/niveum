@@ -4,7 +4,7 @@
       File:        Schema.tree
       Location:    Yuki.Relation <Tree>
       Description: 关系类型结构T-SQL(SQL Server)数据库模板数据
-      Version:     2014.12.06.
+      Version:     2022.12.23.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -108,7 +108,7 @@ ObjectSchemaTemplate
                     (
                         ${ThisKeyColumns}
                     )
-                    References [dbo].[${OtherTableName}]
+                    REFERENCES [dbo].[${OtherTableName}]
                     (
                         ${OtherKeyColumns}
                     )

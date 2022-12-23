@@ -9,7 +9,7 @@
     <Product>Yuki.Relation</Product>
     <Copyright>Copyright(C) F.R.C., under BSD license</Copyright>
     <AssemblyName>Yuki.Relation</AssemblyName>
-    <AssemblyVersion>2022.12.04.0</AssemblyVersion>
+    <AssemblyVersion>2022.12.23.0</AssemblyVersion>
     <BaseIntermediateOutputPath>..\..\Obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
     <OutputPath>..\..\Bin\</OutputPath>
   </PropertyGroup>
@@ -49,6 +49,8 @@
     <EmbeddedResource Include="CppMemory\Schema.tree" />
     <EmbeddedResource Include="CSharpCounted\Schema.tree" />
     <EmbeddedResource Include="CSharpKrustallos\Schema.tree" />
+    <EmbeddedResource Include="PostgreSql\Schema.tree" />
+    <EmbeddedResource Include="Sqlite\Schema.tree" />
     <EmbeddedResource Include="TSql\Schema.tree" />
     <EmbeddedResource Include="Xhtml\Schema.tree" />
   </ItemGroup>
