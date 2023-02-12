@@ -2,7 +2,7 @@
 //
 //  File:        ExceptionStackTrace.cpp
 //  Description: C++异常捕捉时获得代码栈
-//  Version:     2021.03.24.
+//  Version:     2023.02.12.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -33,7 +33,70 @@
 
 #include "ExceptionStackTrace.h"
 
-#if defined(_WIN32)
+#ifdef __has_include
+# if __has_include(<version>)
+#   include <version>
+# endif
+#endif
+
+#if defined(_WIN32) && defined(__cpp_lib_stacktrace)
+
+#include <stacktrace>
+
+#include <Windows.h>
+
+static thread_local std::string ThreadLocalExceptionInfo = "";
+
+// Exception handling and stack-walking example:
+static LONG WINAPI ExpFilter(EXCEPTION_POINTERS* pExp, DWORD dwExpCode)
+{
+    ThreadLocalExceptionInfo = std::to_string(std::stacktrace::current());
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
+bool ExceptionStackTrace::IsDebuggerAttached()
+{
+    return IsDebuggerPresent() != 0;
+}
+
+std::string ExceptionStackTrace::GetStackTrace()
+{
+    return ThreadLocalExceptionInfo;
+}
+
+void *ExceptionStackTrace::detail::Execute(void *obj, void *(*f)(void *))
+{
+    __try
+    {
+        return f(obj);
+    }
+    __except (ExpFilter(GetExceptionInformation(), GetExceptionCode()))
+    {
+        return nullptr; //Will not be executed with EXCEPTION_CONTINUE_SEARCH
+    }
+}
+
+std::string ExceptionStackTrace::GetStackFrame(int Skip)
+{
+    auto trace = std::stacktrace::current();
+    int k = 0;
+    std::string s;
+    for (auto & e : trace)
+    {
+        if (k >= Skip)
+        {
+            s += std::to_string(e) + "\n";
+        }
+        k += 1;
+    }
+    if (s.size() > 0)
+    {
+        s.pop_back();
+    }
+    return s;
+}
+
+#elif defined(_WIN32)
 
 #pragma warning(push)
 #pragma warning(disable: 4091)
@@ -1653,7 +1716,7 @@ std::string ExceptionStackTrace::GetStackFrame(int Skip)
     }
 }
 
-#elif defined(__linux__) && !defined(__ANDROID__)
+#elif defined(__linux__) && defined(__GLIBC__) && !defined(__ANDROID__)
 
 #include "AutoRelease.h"
 
@@ -1710,6 +1773,8 @@ static int gdb_check()
     }
     return res;
 }
+
+extern "C" void __cxa_throw(void *thrown_exception, void *pvtinfo, void(*dest)(void *));
 
 static std::mutex Lockee;
 static std::shared_ptr<bool> GdbCheckResult;
