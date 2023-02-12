@@ -1,4 +1,8 @@
-﻿2022.12.23
+﻿2023.02.12
+Examples:
+修正C++通讯示例编译错误。
+
+2022.12.23
 Yuki.Relation, Yuki.DatabaseRegenerator:
 支持导出数据Sqlite、PostgreSQL。
 

@@ -510,7 +510,7 @@ namespace Client
                     (*Buffer)[10] = static_cast<std::uint8_t>((Verification >> 16) & 0xFF);
                     (*Buffer)[11] = static_cast<std::uint8_t>((Verification >> 24) & 0xFF);
 
-                    auto Part = std::make_shared<class Part>();
+                    auto Part = std::make_shared<UdpClient::Part>();
                     Part->Index = Index;
                     Part->ResendTime = Time + std::chrono::milliseconds(GetTimeoutMilliseconds(0));
                     Part->Data = Buffer;

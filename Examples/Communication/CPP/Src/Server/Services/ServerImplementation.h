@@ -121,7 +121,7 @@ namespace Server
             /// <summary>检测类型结构版本</summary>
             std::shared_ptr<Communication::CheckSchemaVersionReply> CheckSchemaVersion(std::shared_ptr<Communication::CheckSchemaVersionRequest> r) override;
             /// <summary>获取用户信息</summary>
-            std::shared_ptr<class GetUserProfileReply> GetUserProfile(std::shared_ptr<class GetUserProfileRequest> r) override;
+            std::shared_ptr<Communication::GetUserProfileReply> GetUserProfile(std::shared_ptr<Communication::GetUserProfileRequest> r) override;
             /// <summary>发送消息</summary>
             std::shared_ptr<Communication::SendMessageReply> SendMessage(std::shared_ptr<Communication::SendMessageRequest> r) override;
             /// <summary>加法</summary>
@@ -129,13 +129,13 @@ namespace Server
             /// <summary>两百万次浮点乘法</summary>
             std::shared_ptr<Communication::TestMultiplyReply> TestMultiply(std::shared_ptr<Communication::TestMultiplyRequest> r) override;
             /// <summary>测试平均数</summary>
-            std::shared_ptr<class Communication::TestAverageReply> TestAverage(std::shared_ptr<class Communication::TestAverageRequest> r) override;
+            std::shared_ptr<Communication::TestAverageReply> TestAverage(std::shared_ptr<Communication::TestAverageRequest> r) override;
             /// <summary>文本原样返回</summary>
             std::shared_ptr<Communication::TestTextReply> TestText(std::shared_ptr<Communication::TestTextRequest> r) override;
             /// <summary>群发消息</summary>
             std::shared_ptr<Communication::TestMessageReply> TestMessage(std::shared_ptr<Communication::TestMessageRequest> r) override;
             /// <summary>服务器时间</summary>
-            std::shared_ptr<class CommunicationDuplication::ServerTimeReply> CommunicationDuplicationDotServerTime(std::shared_ptr<class CommunicationDuplication::ServerTimeRequest> r) override;
+            std::shared_ptr<CommunicationDuplication::ServerTimeReply> CommunicationDuplicationDotServerTime(std::shared_ptr<CommunicationDuplication::ServerTimeRequest> r) override;
 
             /// <summary>发送消息</summary>
             std::shared_ptr<Communication::SendMessageAt1Reply> SendMessageAt1(std::shared_ptr<Communication::SendMessageAt1Request> r) override;
@@ -150,19 +150,19 @@ namespace Server
             std::shared_ptr<Communication::TestAddRequest> TestAddAt1RequestToHead(std::shared_ptr<Communication::TestAddAt1Request> o);
             std::shared_ptr<Communication::TestAddAt1Reply> TestAddAt1ReplyFromHead(std::shared_ptr<Communication::TestAddReply> ho);
             /// <summary>加法</summary>
-            void TestAddAt2(std::shared_ptr<class Communication::TestAddAt2Request> r, std::function<void(std::shared_ptr<class Communication::TestAddAt2Reply>)> Callback, std::function<void(const std::exception&)> OnFailure) override;
-            std::shared_ptr<class Communication::TestAddRequest> TestAddAt2RequestToHead(std::shared_ptr<class Communication::TestAddAt2Request> o);
-            std::shared_ptr<class Communication::TestAddAt2Reply> TestAddAt2ReplyFromHead(std::shared_ptr<class Communication::TestAddReply> ho);
+            void TestAddAt2(std::shared_ptr<Communication::TestAddAt2Request> r, std::function<void(std::shared_ptr<Communication::TestAddAt2Reply>)> Callback, std::function<void(const std::exception&)> OnFailure) override;
+            std::shared_ptr<Communication::TestAddRequest> TestAddAt2RequestToHead(std::shared_ptr<Communication::TestAddAt2Request> o);
+            std::shared_ptr<Communication::TestAddAt2Reply> TestAddAt2ReplyFromHead(std::shared_ptr<Communication::TestAddReply> ho);
             /// <summary>测试平均数</summary>
-            std::shared_ptr<class Communication::TestAverageAt1Reply> TestAverageAt1(std::shared_ptr<class Communication::TestAverageAt1Request> r) override;
-            std::shared_ptr<class Communication::TestAverageRequest> TestAverageAt1RequestToHead(std::shared_ptr<class Communication::TestAverageAt1Request> o);
-            std::shared_ptr<class Communication::TestAverageAt1Reply> TestAverageAt1ReplyFromHead(std::shared_ptr<class Communication::TestAverageReply> ho);
-            std::shared_ptr<class Communication::AverageResultAt1> AverageResultAt1FromHead(std::shared_ptr<class Communication::AverageResult> ho);
-            std::shared_ptr<class Communication::AverageInput> AverageInputAt1ToHead(std::shared_ptr<class Communication::AverageInputAt1> o);
-            std::optional<std::shared_ptr<class Communication::AverageResultAt1>> OptionalOfAverageResultAt1FromHead(std::optional<std::shared_ptr<class Communication::AverageResult>> ho);
-            std::vector<std::shared_ptr<class Communication::AverageInput>> ListOfAverageInputAt1ToHead(std::vector<std::shared_ptr<class Communication::AverageInputAt1>> o);
+            std::shared_ptr<Communication::TestAverageAt1Reply> TestAverageAt1(std::shared_ptr<Communication::TestAverageAt1Request> r) override;
+            std::shared_ptr<Communication::TestAverageRequest> TestAverageAt1RequestToHead(std::shared_ptr<Communication::TestAverageAt1Request> o);
+            std::shared_ptr<Communication::TestAverageAt1Reply> TestAverageAt1ReplyFromHead(std::shared_ptr<Communication::TestAverageReply> ho);
+            std::shared_ptr<Communication::AverageResultAt1> AverageResultAt1FromHead(std::shared_ptr<Communication::AverageResult> ho);
+            std::shared_ptr<Communication::AverageInput> AverageInputAt1ToHead(std::shared_ptr<Communication::AverageInputAt1> o);
+            std::optional<std::shared_ptr<Communication::AverageResultAt1>> OptionalOfAverageResultAt1FromHead(std::optional<std::shared_ptr<Communication::AverageResult>> ho);
+            std::vector<std::shared_ptr<Communication::AverageInput>> ListOfAverageInputAt1ToHead(std::vector<std::shared_ptr<Communication::AverageInputAt1>> o);
             /// <summary>测试和</summary>
-            std::shared_ptr<class Communication::TestSumAt2Reply> TestSumAt2(std::shared_ptr<class Communication::TestSumAt2Request> r) override;
+            std::shared_ptr<Communication::TestSumAt2Reply> TestSumAt2(std::shared_ptr<Communication::TestSumAt2Request> r) override;
         };
     }
 }
