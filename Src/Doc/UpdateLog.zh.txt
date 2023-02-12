@@ -1,6 +1,7 @@
 ﻿2023.02.12
 Examples:
 修正C++通讯示例编译错误。
+升级C++通讯示例asio库。
 
 2022.12.23
 Yuki.Relation, Yuki.DatabaseRegenerator:
