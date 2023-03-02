@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Niveum.Examples <Visual C#>
 //  Description: 聊天服务器
-//  Version:     2022.11.01.
+//  Version:     2023.03.02.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -176,7 +176,7 @@ namespace Server
 
                             var Protocols = new List<IServer>();
                             var Factory = new TaskFactory(tp);
-                            var PurifierFactory = new TaskFactory(tp);
+                            var PurifierFactory = new TaskFactory(tpPurifier);
                             foreach (var p in ss.Protocols)
                             {
                                 if (System.Diagnostics.Debugger.IsAttached)
