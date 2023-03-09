@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Niveum.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2022.12.14.
+//  Version:     2023.03.09.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -1088,7 +1088,7 @@ namespace Niveum.SchemaManipulator
         public static void GenerateTypeCompatibilityTreeFile(List<KeyValuePair<String, String>> ListOfObjectSchemaDirOrCookedObjectSchemaFileAndVersion, String CompatibilityObjectSchemaFile, bool CommunicationOnly = false)
         {
             var HeadObjectSchema = GetObjectSchema();
-            var HeadSchema = HeadObjectSchema.GetSubSchema(HeadObjectSchema.Types.Where(t => (!CommunicationOnly || (t.OnPrimitive || t.OnClientCommand || t.OnServerCommand)) && (t.Version() == "")), new TypeSpec[] { });
+            var HeadSchema = HeadObjectSchema.GetSubSchema(HeadObjectSchema.Types.Where(t => (!CommunicationOnly || (t.OnClientCommand || t.OnServerCommand)) && (t.Version() == "")), new TypeSpec[] { });
             var Versions = ListOfObjectSchemaDirOrCookedObjectSchemaFileAndVersion.Select(p =>
             {
                 var vosl = new ObjectSchemaLoader();
@@ -1108,7 +1108,7 @@ namespace Niveum.SchemaManipulator
                     throw new InvalidOperationException("InvalidPath: " + p.Key);
                 }
                 var Schema = vosl.GetResult().Schema;
-                return new KeyValuePair<String, Schema>(p.Value, Schema.GetSubSchema(Schema.Types.Where(t => (!CommunicationOnly || (t.OnPrimitive || t.OnClientCommand || t.OnServerCommand)) && (t.Version() == "")), new TypeSpec[] { }));
+                return new KeyValuePair<String, Schema>(p.Value, Schema.GetSubSchema(Schema.Types.Where(t => (!CommunicationOnly || (t.OnClientCommand || t.OnServerCommand)) && (t.Version() == "")), new TypeSpec[] { }));
             }).ToList();
 
             var Comment = ""
