@@ -59,6 +59,7 @@
     <Compile Include="Generated\CommunicationCompatibility.cs" />
     <Compile Include="Generated\CommunicationJson.cs" />
     <Compile Include="Generated\Configuration.cs" />
+    <Compile Include="Net\StreamedAsyncSocket.cs" />
     <Compile Include="Servers\Concept.cs">
       <SubType>Code</SubType>
     </Compile>

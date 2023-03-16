@@ -12,8 +12,6 @@ namespace Client
 {
     class PerformanceTest
     {
-        private static Action<Action> QueueUserWorkItem = a => ThreadPool.QueueUserWorkItem(o => a());
-
         public class ClientContext
         {
         }
@@ -93,7 +91,7 @@ namespace Client
                 {
                     throw new InvalidOperationException();
                 }
-                var bc = new TcpClient(RemoteEndPoint, vtc, QueueUserWorkItem);
+                var bc = new TcpClient(RemoteEndPoint, vtc, new TaskFactory());
                 var cc = new ClientContext();
                 ac.Error += e =>
                 {
@@ -116,14 +114,7 @@ namespace Client
                     vCompleted.Update(i => i + 1);
                     Check.Set();
                 };
-                bc.ReceiveAsync
-                (
-                    a =>
-                    {
-                        a();
-                    },
-                    UnknownFaulted
-                );
+                bc.ReceiveAsync(UnknownFaulted);
                 ac.ServerTime(new ServerTimeRequest { }).ContinueWith(tt =>
                 {
                     vConnected.Update(i => i + 1);
@@ -240,7 +231,7 @@ namespace Client
                 {
                     throw new InvalidOperationException();
                 }
-                var bc = new UdpClient(RemoteEndPoint, vtc, QueueUserWorkItem);
+                var bc = new UdpClient(RemoteEndPoint, vtc, new TaskFactory());
                 var cc = new ClientContext();
                 ac.Error += e =>
                 {
@@ -263,14 +254,7 @@ namespace Client
                     vCompleted.Update(i => i + 1);
                     Check.Set();
                 };
-                bc.ReceiveAsync
-                (
-                    a =>
-                    {
-                        a();
-                    },
-                    UnknownFaulted
-                );
+                bc.ReceiveAsync(UnknownFaulted);
                 ac.ServerTime(new ServerTimeRequest { }).ContinueWith(tt =>
                 {
                     vConnected.Update(i => i + 1);

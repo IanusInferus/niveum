@@ -55,7 +55,6 @@
     <Compile Include="BaseSystem\ThreadLocalRandom.cs" />
     <Compile Include="BaseSystem\CountedThreadPool.cs" />
     <Compile Include="BaseSystem\Times.cs" />
-    <Compile Include="Net\StreamedAsyncSocket.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup />

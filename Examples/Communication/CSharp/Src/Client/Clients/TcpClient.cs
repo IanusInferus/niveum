@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using BaseSystem;
-using Net;
 
 namespace Client
 {
@@ -14,8 +14,8 @@ namespace Client
         public IStreamedVirtualTransportClient VirtualTransportClient { get; private set; }
 
         private IPEndPoint RemoteEndPoint;
-        private StreamedAsyncSocket Socket;
-        //private Action<Action> QueueUserWorkItem;
+        private Socket Socket;
+        private TaskFactory Factory;
         private LockedVariable<Boolean> IsRunningValue = new LockedVariable<Boolean>(false);
         public Boolean IsRunning
         {
@@ -26,11 +26,11 @@ namespace Client
         }
         private Byte[] WriteBuffer;
 
-        public TcpClient(IPEndPoint RemoteEndPoint, IStreamedVirtualTransportClient VirtualTransportClient, Action<Action> QueueUserWorkItem)
+        public TcpClient(IPEndPoint RemoteEndPoint, IStreamedVirtualTransportClient VirtualTransportClient, TaskFactory Factory)
         {
             this.RemoteEndPoint = RemoteEndPoint;
-            Socket = new StreamedAsyncSocket(new Socket(RemoteEndPoint.AddressFamily, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp), null, QueueUserWorkItem);
-            //this.QueueUserWorkItem = QueueUserWorkItem;
+            Socket = new Socket(RemoteEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            this.Factory = Factory;
             this.VirtualTransportClient = VirtualTransportClient;
             VirtualTransportClient.ClientMethod += OnError =>
             {
@@ -49,7 +49,8 @@ namespace Client
                         Offset += b.Length;
                     }
 
-                    Socket.SendAsync(WriteBuffer, 0, TotalLength, () => { }, OnError);
+                    var t = Socket.SendAsync(new ArraySegment<Byte>(WriteBuffer, 0, TotalLength), SocketFlags.None);
+                    t.ContinueWith(tt => Factory.StartNew(() => OnError(tt.Exception)), TaskContinuationOptions.OnlyOnFaulted);
                 }
             };
         }
@@ -80,25 +81,7 @@ namespace Client
                     return true;
                 }
             );
-            using (var h = new AutoResetEvent(false))
-            {
-                Exception Exception = null;
-                Action Completed = () =>
-                {
-                    h.Set();
-                };
-                Action<Exception> Faulted = ex =>
-                {
-                    Exception = ex;
-                    h.Set();
-                };
-                Socket.ConnectAsync(RemoteEndPoint, Completed, Faulted);
-                h.WaitOne();
-                if (Exception != null)
-                {
-                    throw new AggregateException(Exception);
-                }
-            }
+            Socket.Connect(RemoteEndPoint);
         }
 
         private static Boolean IsSocketErrorKnown(Exception ex)
@@ -115,10 +98,7 @@ namespace Client
             return false;
         }
 
-        /// <summary>接收消息</summary>
-        /// <param name="DoResultHandle">运行处理消息函数，应保证不多线程同时访问BinarySocketClient</param>
-        /// <param name="UnknownFaulted">未知错误处理函数</param>
-        public void ReceiveAsync(Action<Action> DoResultHandle, Action<Exception> UnknownFaulted)
+        public void ReceiveAsync(Action<Exception> UnknownFaulted)
         {
             Action<Exception> Faulted = ex =>
             {
@@ -145,7 +125,7 @@ namespace Client
                         }
                         else if (r.OnCommand)
                         {
-                            DoResultHandle(r.Command.HandleResult);
+                            Factory.StartNew(r.Command.HandleResult);
                             var RemainCount = VirtualTransportClient.GetReadBuffer().Count;
                             if (RemainCount <= 0)
                             {
@@ -164,7 +144,9 @@ namespace Client
                     {
                         if (b)
                         {
-                            Socket.ReceiveAsync(Buffer.Array, BufferLength, Buffer.Array.Length - BufferLength, Completed, Faulted);
+                            var t = Socket.ReceiveAsync(new ArraySegment<byte>(Buffer.Array, BufferLength, Buffer.Array.Length - BufferLength), SocketFlags.None);
+                            t.ContinueWith(tt => Factory.StartNew(() => Faulted(tt.Exception)), TaskContinuationOptions.OnlyOnFaulted);
+                            t.ContinueWith(tt => Factory.StartNew(() => Completed(tt.Result)), TaskContinuationOptions.OnlyOnRanToCompletion);
                         }
                     });
                 };
@@ -188,7 +170,9 @@ namespace Client
             {
                 var Buffer = VirtualTransportClient.GetReadBuffer();
                 var BufferLength = Buffer.Offset + Buffer.Count;
-                Socket.ReceiveAsync(Buffer.Array, BufferLength, Buffer.Array.Length - BufferLength, Completed, Faulted);
+                var t = Socket.ReceiveAsync(new ArraySegment<byte>(Buffer.Array, BufferLength, Buffer.Array.Length - BufferLength), SocketFlags.None);
+                t.ContinueWith(tt => Factory.StartNew(() => Faulted(tt.Exception)), TaskContinuationOptions.OnlyOnFaulted);
+                t.ContinueWith(tt => Factory.StartNew(() => Completed(tt.Result)), TaskContinuationOptions.OnlyOnRanToCompletion);
             }
         }
 
@@ -204,44 +188,25 @@ namespace Client
                 Connected = b;
                 return false;
             });
-            try
+            if (Connected)
             {
-                if (Connected)
+                try
                 {
                     Socket.Shutdown(SocketShutdown.Both);
                 }
-            }
-            catch
-            {
-            }
-            try
-            {
-                if (Connected)
+                catch
                 {
-                    using (var h = new AutoResetEvent(false))
-                    {
-                        Exception Exception = null;
-                        Action Completed = () =>
-                        {
-                            h.Set();
-                        };
-                        Action<Exception> Faulted = ex =>
-                        {
-                            Exception = ex;
-                            h.Set();
-                        };
-                        Socket.DisconnectAsync(Completed, Faulted);
-                        h.WaitOne();
-                        if (Exception != null)
-                        {
-                            throw new AggregateException(Exception);
-                        }
-                    }
-                    Connected = false;
                 }
             }
-            catch
+            if (Connected)
             {
+                try
+                {
+                    Socket.Disconnect(true);
+                }
+                catch
+                {
+                }
             }
             try
             {

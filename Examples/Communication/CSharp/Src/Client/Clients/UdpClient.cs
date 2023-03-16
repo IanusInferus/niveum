@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using Algorithms;
@@ -61,7 +62,7 @@ namespace Client
             }
         }
         private Socket Socket;
-        private Action<Action> QueueUserWorkItem;
+        private TaskFactory Factory;
         private Byte[] ReadBuffer = new Byte[MaxPacketLength];
 
         public const int MaxPacketLength = 1400;
@@ -227,12 +228,12 @@ namespace Client
         private LockedVariable<UdpReadContext> RawReadingContext = new LockedVariable<UdpReadContext>(new UdpReadContext { Parts = new PartContext(ReadingWindowSize) });
         private LockedVariable<UdpWriteContext> CookedWritingContext = new LockedVariable<UdpWriteContext>(new UdpWriteContext { Parts = new PartContext(WritingWindowSize), WritenIndex = IndexSpace - 1, Timer = null });
 
-        public UdpClient(IPEndPoint RemoteEndPoint, IStreamedVirtualTransportClient VirtualTransportClient, Action<Action> QueueUserWorkItem)
+        public UdpClient(IPEndPoint RemoteEndPoint, IStreamedVirtualTransportClient VirtualTransportClient, TaskFactory Factory)
         {
             this.RemoteEndPoint = RemoteEndPoint;
             this.VirtualTransportClient = VirtualTransportClient;
             this.Socket = new Socket(RemoteEndPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-            this.QueueUserWorkItem = QueueUserWorkItem;
+            this.Factory = Factory;
 
             //在Windows下关闭SIO_UDP_CONNRESET报告，防止接受数据出错
             //http://support.microsoft.com/kb/263823/en-us
@@ -621,10 +622,7 @@ namespace Client
             return false;
         }
 
-        /// <summary>接收消息</summary>
-        /// <param name="DoResultHandle">运行处理消息函数，应保证不多线程同时访问BinarySocketClient</param>
-        /// <param name="UnknownFaulted">未知错误处理函数</param>
-        public void ReceiveAsync(Action<Action> DoResultHandle, Action<Exception> UnknownFaulted)
+        public void ReceiveAsync(Action<Exception> UnknownFaulted)
         {
             Action<Exception> Faulted = ex =>
             {
@@ -785,7 +783,7 @@ namespace Client
                             }
                             else if (r.OnCommand)
                             {
-                                DoResultHandle(r.Command.HandleResult);
+                                Factory.StartNew(r.Command.HandleResult);
                                 var RemainCount = VirtualTransportClient.GetReadBuffer().Count;
                                 if (RemainCount <= 0)
                                 {
@@ -848,7 +846,7 @@ namespace Client
                     var willRaiseEvent = Socket.ReceiveFromAsync(ae);
                     if (!willRaiseEvent)
                     {
-                        QueueUserWorkItem(() => Completed(null, ae));
+                        Factory.StartNew(() => Completed(null, ae));
                     }
                 }
                 catch (Exception ex)

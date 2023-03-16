@@ -1,4 +1,8 @@
-﻿2023.03.09
+﻿2023.03.17
+Examples:
+改进C#通讯示例客户端，TcpClient不再依赖StreamedAsyncSocket并不再要求释放时使用非当前线程池线程。
+
+2023.03.09
 Niveum.SchemaManipulator:
 修正兼容代码文件中显示的版本和实际版本不一致的问题。
 

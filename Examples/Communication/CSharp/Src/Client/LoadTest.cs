@@ -12,8 +12,6 @@ namespace Client
 {
     class LoadTest
     {
-        private static Action<Action> QueueUserWorkItem = a => ThreadPool.QueueUserWorkItem(o => a());
-
         public class ClientContext
         {
             public Object Lockee = new Object();
@@ -148,7 +146,7 @@ namespace Client
                 {
                     throw new InvalidOperationException();
                 }
-                var bc = new TcpClient(RemoteEndPoint, vtc, QueueUserWorkItem);
+                var bc = new TcpClient(RemoteEndPoint, vtc, new TaskFactory());
                 var cc = new ClientContext();
                 var bCompleted = new LockedVariable<Boolean>(false);
                 Action Completed = () =>
@@ -179,14 +177,7 @@ namespace Client
                     }
                     Completed();
                 };
-                bc.ReceiveAsync
-                (
-                    a =>
-                    {
-                        a();
-                    },
-                    UnknownFaulted
-                );
+                bc.ReceiveAsync(UnknownFaulted);
                 ac.ServerTime(new ServerTimeRequest { }).ContinueWith(tt =>
                 {
                     vConnected.Update(i => i + 1);
@@ -324,7 +315,7 @@ namespace Client
                 {
                     throw new InvalidOperationException();
                 }
-                var bc = new UdpClient(RemoteEndPoint, vtc, QueueUserWorkItem);
+                var bc = new UdpClient(RemoteEndPoint, vtc, new TaskFactory());
                 var cc = new ClientContext();
                 var bCompleted = new LockedVariable<Boolean>(false);
                 Action Completed;
@@ -379,14 +370,7 @@ namespace Client
                     }
                     FaultedCompleted();
                 };
-                bc.ReceiveAsync
-                (
-                    a =>
-                    {
-                        a();
-                    },
-                    UnknownFaulted
-                );
+                bc.ReceiveAsync(UnknownFaulted);
                 ac.ServerTime(new ServerTimeRequest { }).ContinueWith(tt =>
                 {
                     vConnected.Update(i => i + 1);

@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Niveum.Examples <Visual C#>
 //  Description: 聊天客户端
-//  Version:     2019.03.22.
+//  Version:     2023.03.17.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using System.Net;
 using Firefly;
 using Communication;
+using BaseSystem;
 
 namespace Client
 {
@@ -268,7 +269,6 @@ namespace Client
             Console.WriteLine(@"/stable 自动化稳定性测试");
         }
 
-        private static Action<Action> QueueUserWorkItem = a => ThreadPool.QueueUserWorkItem(o => a());
         public static void RunTcp(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType, Boolean UseOld)
         {
             if (!(ProtocolType == SerializationProtocolType.Binary || ProtocolType == SerializationProtocolType.Json))
@@ -294,25 +294,17 @@ namespace Client
             {
                 throw new InvalidOperationException();
             }
-            using (var bc = new TcpClient(RemoteEndPoint, vtc, QueueUserWorkItem))
+            using (var bc = new TcpClient(RemoteEndPoint, vtc, new TaskFactory()))
             {
                 bc.Connect();
                 Console.WriteLine("连接成功。输入login登录，输入secure启用安全连接。");
 
-                var Lockee = new Object();
-                Action<Action> DoHandle = a =>
-                {
-                    lock (Lockee)
-                    {
-                        a();
-                    }
-                };
-                bc.ReceiveAsync(DoHandle, ex => Console.WriteLine(ex.Message));
+                bc.ReceiveAsync(ex => Console.WriteLine(ex.Message));
                 Action<SecureContext> SetSecureContext = c =>
                 {
                     bt.SetSecureContext(c);
                 };
-                ReadLineAndSendLoop(ac, SetSecureContext, UseOld, Lockee);
+                ReadLineAndSendLoop(ac, SetSecureContext, UseOld).Wait();
             }
         }
 
@@ -341,26 +333,18 @@ namespace Client
             {
                 throw new InvalidOperationException();
             }
-            using (var bc = new UdpClient(RemoteEndPoint, vtc, QueueUserWorkItem))
+            using (var bc = new UdpClient(RemoteEndPoint, vtc, new TaskFactory()))
             {
                 bc.Connect();
                 Console.WriteLine("输入login登录，输入secure启用安全连接。");
 
-                var Lockee = new Object();
-                Action<Action> DoHandle = a =>
-                {
-                    lock (Lockee)
-                    {
-                        a();
-                    }
-                };
-                bc.ReceiveAsync(DoHandle, ex => Console.WriteLine(ex.Message));
+                bc.ReceiveAsync(ex => Console.WriteLine(ex.Message));
                 Action<SecureContext> SetSecureContext = c =>
                 {
                     bt.SetSecureContext(c);
                     bc.SecureContext = c;
                 };
-                ReadLineAndSendLoop(ac, SetSecureContext, UseOld, Lockee);
+                ReadLineAndSendLoop(ac, SetSecureContext, UseOld).Wait();
             }
         }
 
@@ -375,27 +359,23 @@ namespace Client
             {
                 Console.WriteLine("输入login登录。");
 
-                var Lockee = new Object();
                 Action<SecureContext> SetSecureContext = c =>
                 {
                     throw new InvalidOperationException();
                 };
-                ReadLineAndSendLoop(ac, SetSecureContext, UseOld, Lockee);
+                ReadLineAndSendLoop(ac, SetSecureContext, UseOld).Wait();
             }
         }
 
-        public static void ReadLineAndSendLoop(IApplicationClient InnerClient, Action<SecureContext> SetSecureContext, Boolean UseOld, Object Lockee)
+        public static async Task ReadLineAndSendLoop(IApplicationClient InnerClient, Action<SecureContext> SetSecureContext, Boolean UseOld)
         {
-            var NeedToExit = false;
-            AutoResetEvent NeedToCheck = new AutoResetEvent(false);
-            System.Runtime.ExceptionServices.ExceptionDispatchInfo edi = null;
+            var NeedToExit = new CancellationTokenSource();
+            var NeedToExitToken = NeedToExit.Token;
+            var NeedToCheck = new AutoResetEvent(false);
             InnerClient.ServerShutdown += e =>
             {
                 Console.WriteLine("服务器已关闭。");
-                lock (Lockee)
-                {
-                    NeedToExit = true;
-                }
+                NeedToExit.Cancel();
                 NeedToCheck.Set();
             };
             InnerClient.Error += e =>
@@ -415,77 +395,53 @@ namespace Client
                     Console.WriteLine(Line);
                 }
             };
-            ((Func<Task>)(async () =>
+            var r = await InnerClient.CheckSchemaVersion(new CheckSchemaVersionRequest { Hash = UseOld ? "D7FFBD0D2E5D7274" : InnerClient.Hash.ToString("X16") });
+            if (r.OnHead)
             {
-                var r = await InnerClient.CheckSchemaVersion(new CheckSchemaVersionRequest { Hash = UseOld ? "D7FFBD0D2E5D7274" : InnerClient.Hash.ToString("X16") });
-                if (r.OnHead)
-                {
-                }
-                else if (r.OnSupported)
-                {
-                    Console.WriteLine("客户端不是最新版本，但服务器可以支持。");
-                }
-                else if (r.OnNotSupported)
-                {
-                    Console.WriteLine("客户端版本不受支持。");
-                    lock (Lockee)
-                    {
-                        NeedToExit = true;
-                    }
-                    NeedToCheck.Set();
-                }
-                else
-                {
-                    throw new InvalidOperationException();
-                }
-            }))();
-            while (true)
+            }
+            else if (r.OnSupported)
             {
-                String Line = null;
-                ThreadPool.QueueUserWorkItem(o =>
-                {
-                    var l = Console.ReadLine();
-                    lock (Lockee)
-                    {
-                        Line = l;
-                    }
-                    NeedToCheck.Set();
-                });
+                Console.WriteLine("客户端不是最新版本，但服务器可以支持。");
+            }
+            else if (r.OnNotSupported)
+            {
+                Console.WriteLine("客户端版本不受支持。");
+                return;
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+            var Factory = new TaskFactory();
+            try
+            {
                 while (true)
                 {
-                    if (NeedToExit) { return; }
-                    String l;
-                    lock (Lockee)
+                    var LockedLine = new LockedVariable<String>(null);
+                    _ = Factory.StartNew(() =>
                     {
-                        l = Line;
-                    }
-                    if (l != null) { break; }
-                    NeedToCheck.WaitOne();
-                    if (edi != null)
-                    {
-                        edi.Throw();
-                    }
-                }
-                lock (Lockee)
-                {
-                    HandleLine(InnerClient, SetSecureContext, UseOld, Line).ContinueWith(tt =>
-                    {
-                        if (tt.IsFaulted)
-                        {
-                            edi = System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(tt.Exception.InnerException ?? tt.Exception);
-                            NeedToCheck.Set();
-                            return;
-                        }
-                        if (!tt.Result)
-                        {
-                            lock (Lockee)
-                            {
-                                NeedToExit = true;
-                            }
-                            NeedToCheck.Set();
-                        }
+                        var Line = Console.ReadLine();
+                        LockedLine.Update(OldLine => Line);
+                        NeedToCheck.Set();
                     });
+
+                    String CurrentLine = null;
+                    while (true)
+                    {
+                        if (NeedToExitToken.IsCancellationRequested) { return; }
+                        CurrentLine = LockedLine.Check(l => l);
+                        if (CurrentLine != null) { break; }
+                        NeedToCheck.WaitOne();
+                    }
+
+                    if (!await HandleLine(InnerClient, SetSecureContext, UseOld, CurrentLine))
+                    {
+                        break;
+                    }
                 }
+            }
+            catch (TaskCanceledException)
+            {
             }
         }
 
