@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading;
+using BaseSystem;
 using Communication;
 using Communication.Binary;
 using Communication.Json;
@@ -21,13 +23,65 @@ namespace Client
         }
 
         public UInt64 Hash { get { return bc.GetApplicationClient().Hash; } }
-        public void HandleResult(String CommandName, UInt32 CommandHash, Byte[] Parameters) { bc.HandleResult(CommandName, CommandHash, Parameters); }
+
+        private LockedVariable<(String CommandName, UInt32 CommandHash, Timer Timer)?> ResponseTimer = new LockedVariable<(String CommandName, UInt32 CommandHash, Timer Timer)?>(null);
+        private LockedVariable<int?> ResponseTimeoutSecondsValue = new LockedVariable<int?>(null);
+        public int? ResponseTimeoutSeconds
+        {
+            get
+            {
+                return ResponseTimeoutSecondsValue.Check(v => v);
+            }
+            set
+            {
+                ResponseTimeoutSecondsValue.Update(v => value);
+            }
+        }
+
+        public void HandleResult(String CommandName, UInt32 CommandHash, Byte[] Parameters)
+        {
+            Timer tm = null;
+            ResponseTimer.Update(OldTriple =>
+            {
+                if (OldTriple != null)
+                {
+                    var t = OldTriple.Value;
+                    if ((CommandName == t.CommandName) && (CommandHash == t.CommandHash))
+                    {
+                        tm = t.Timer;
+                        return null;
+                    }
+                }
+                return OldTriple;
+            });
+            if (tm != null)
+            {
+                tm.Dispose();
+            }
+            bc.HandleResult(CommandName, CommandHash, Parameters);
+        }
         public event BinaryClientEventDelegate ClientEvent;
 
         void IBinarySender.Send(String CommandName, UInt32 CommandHash, Byte[] Parameters, Action<Exception> OnError)
         {
             if (ClientEvent != null)
             {
+                var TimeoutSeconds = this.ResponseTimeoutSeconds;
+                if (TimeoutSeconds != null)
+                {
+                    var tm = new Timer(o =>
+                    {
+                        OnError(new TimeoutException());
+                    }, null, ResponseTimeoutSeconds.Value * 1000, Timeout.Infinite);
+                    ResponseTimer.Update(OldTriple =>
+                    {
+                        if (OldTriple != null)
+                        {
+                            OldTriple.Value.Timer.Dispose();
+                        }
+                        return (CommandName, CommandHash, tm);
+                    });
+                }
                 ClientEvent(CommandName, CommandHash, Parameters, OnError);
             }
         }
@@ -49,13 +103,65 @@ namespace Client
         }
 
         public UInt64 Hash { get { return jc.GetApplicationClient().Hash; } }
-        public void HandleResult(String CommandName, UInt32 CommandHash, String Parameters) { jc.HandleResult(CommandName, CommandHash, Parameters); }
+
+        private LockedVariable<(String CommandName, UInt32 CommandHash, Timer Timer)?> ResponseTimer = new LockedVariable<(String CommandName, UInt32 CommandHash, Timer Timer)?>(null);
+        private LockedVariable<int?> ResponseTimeoutSecondsValue = new LockedVariable<int?>(null);
+        public int? ResponseTimeoutSeconds
+        {
+            get
+            {
+                return ResponseTimeoutSecondsValue.Check(v => v);
+            }
+            set
+            {
+                ResponseTimeoutSecondsValue.Update(v => value);
+            }
+        }
+
+        public void HandleResult(String CommandName, UInt32 CommandHash, String Parameters)
+        {
+            Timer tm = null;
+            ResponseTimer.Update(OldTriple =>
+            {
+                if (OldTriple != null)
+                {
+                    var t = OldTriple.Value;
+                    if ((CommandName == t.CommandName) && (CommandHash == t.CommandHash))
+                    {
+                        tm = t.Timer;
+                        return null;
+                    }
+                }
+                return OldTriple;
+            });
+            if (tm != null)
+            {
+                tm.Dispose();
+            }
+            jc.HandleResult(CommandName, CommandHash, Parameters);
+        }
         public event JsonClientEventDelegate ClientEvent;
 
         void IJsonSender.Send(String CommandName, UInt32 CommandHash, String Parameters, Action<Exception> OnError)
         {
             if (ClientEvent != null)
             {
+                var TimeoutSeconds = this.ResponseTimeoutSeconds;
+                if (TimeoutSeconds != null)
+                {
+                    var tm = new Timer(o =>
+                    {
+                        OnError(new TimeoutException());
+                    }, null, ResponseTimeoutSeconds.Value * 1000, Timeout.Infinite);
+                    ResponseTimer.Update(OldTriple =>
+                    {
+                        if (OldTriple != null)
+                        {
+                            OldTriple.Value.Timer.Dispose();
+                        }
+                        return (CommandName, CommandHash, tm);
+                    });
+                }
                 ClientEvent(CommandName, CommandHash, Parameters, OnError);
             }
         }

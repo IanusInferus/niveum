@@ -184,15 +184,16 @@ namespace Net
         }
         private void ReleaseAsyncOperation(SocketAsyncOperation OperationIdentifier)
         {
+            AsyncOperationContext Context;
             lock (Lockee)
             {
-                var Context = AsyncOperations[OperationIdentifier];
+                Context = AsyncOperations[OperationIdentifier];
                 if (!AsyncOperations.Remove(OperationIdentifier))
                 {
                     throw new InvalidOperationException();
                 }
-                Context.Dispose();
             }
+            Context.Dispose();
         }
 
         private void DoAsync(SocketAsyncOperation OperationIdentifier, Func<SocketAsyncEventArgs, Boolean> Operation, Func<SocketAsyncEventArgs, Action> ResultToCompleted, Action<Exception> Faulted)
@@ -351,6 +352,7 @@ namespace Net
 
         public void Dispose()
         {
+            List<AsyncOperationContext> AsyncOperations;
             lock (Lockee)
             {
                 if (IsDisposed) { return; }
@@ -363,6 +365,11 @@ namespace Net
                 {
                     InnerSocket.Dispose();
                 }
+                AsyncOperations = this.AsyncOperations.Values.ToList();
+            }
+            foreach (var Context in AsyncOperations)
+            {
+                Context.Dispose();
             }
         }
     }

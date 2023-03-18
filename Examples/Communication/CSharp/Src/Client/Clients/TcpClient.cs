@@ -138,17 +138,10 @@ namespace Client
                             throw new InvalidOperationException();
                         }
                     }
-                    var Buffer = VirtualTransportClient.GetReadBuffer();
-                    var BufferLength = Buffer.Offset + Buffer.Count;
-                    IsRunningValue.DoAction(b =>
+                    if (IsRunningValue.Check(b => b))
                     {
-                        if (b)
-                        {
-                            var t = Socket.ReceiveAsync(new ArraySegment<byte>(Buffer.Array, BufferLength, Buffer.Array.Length - BufferLength), SocketFlags.None);
-                            t.ContinueWith(tt => Factory.StartNew(() => Faulted(tt.Exception)), TaskContinuationOptions.OnlyOnFaulted);
-                            t.ContinueWith(tt => Factory.StartNew(() => Completed(tt.Result)), TaskContinuationOptions.OnlyOnRanToCompletion);
-                        }
-                    });
+                        ReceiveAsync(UnknownFaulted);
+                    }
                 };
                 if (System.Diagnostics.Debugger.IsAttached)
                 {

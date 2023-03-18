@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Niveum.Examples <Visual C#>
 //  Description: 聊天客户端
-//  Version:     2023.03.17.
+//  Version:     2023.03.19.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -269,6 +269,7 @@ namespace Client
             Console.WriteLine(@"/stable 自动化稳定性测试");
         }
 
+        private const int ResponseTimeoutSeconds = 30;
         public static void RunTcp(IPEndPoint RemoteEndPoint, SerializationProtocolType ProtocolType, Boolean UseOld)
         {
             if (!(ProtocolType == SerializationProtocolType.Binary || ProtocolType == SerializationProtocolType.Json))
@@ -281,12 +282,14 @@ namespace Client
             if (ProtocolType == SerializationProtocolType.Binary)
             {
                 var a = new BinarySerializationClientAdapter();
+                a.ResponseTimeoutSeconds = ResponseTimeoutSeconds;
                 ac = a.GetApplicationClient();
                 vtc = new BinaryCountPacketClient(a, bt);
             }
             else if (ProtocolType == SerializationProtocolType.Json)
             {
                 var a = new JsonSerializationClientAdapter();
+                a.ResponseTimeoutSeconds = ResponseTimeoutSeconds;
                 ac = a.GetApplicationClient();
                 vtc = new JsonLinePacketClient(a, bt);
             }
@@ -299,7 +302,11 @@ namespace Client
                 bc.Connect();
                 Console.WriteLine("连接成功。输入login登录，输入secure启用安全连接。");
 
-                bc.ReceiveAsync(ex => Console.WriteLine(ex.Message));
+                bc.ReceiveAsync(ex =>
+                {
+                    Console.WriteLine(ex.Message);
+                    bc.Dispose();
+                });
                 Action<SecureContext> SetSecureContext = c =>
                 {
                     bt.SetSecureContext(c);
@@ -320,12 +327,14 @@ namespace Client
             if (ProtocolType == SerializationProtocolType.Binary)
             {
                 var a = new BinarySerializationClientAdapter();
+                a.ResponseTimeoutSeconds = ResponseTimeoutSeconds;
                 ac = a.GetApplicationClient();
                 vtc = new BinaryCountPacketClient(a, bt);
             }
             else if (ProtocolType == SerializationProtocolType.Json)
             {
                 var a = new JsonSerializationClientAdapter();
+                a.ResponseTimeoutSeconds = ResponseTimeoutSeconds;
                 ac = a.GetApplicationClient();
                 vtc = new JsonLinePacketClient(a, bt);
             }
@@ -338,7 +347,11 @@ namespace Client
                 bc.Connect();
                 Console.WriteLine("输入login登录，输入secure启用安全连接。");
 
-                bc.ReceiveAsync(ex => Console.WriteLine(ex.Message));
+                bc.ReceiveAsync(ex =>
+                {
+                    Console.WriteLine(ex.Message);
+                    bc.Dispose();
+                });
                 Action<SecureContext> SetSecureContext = c =>
                 {
                     bt.SetSecureContext(c);
@@ -353,6 +366,7 @@ namespace Client
             IApplicationClient ac;
             Http.IHttpVirtualTransportClient vtc;
             var a = new JsonSerializationClientAdapter();
+            a.ResponseTimeoutSeconds = ResponseTimeoutSeconds;
             ac = a.GetApplicationClient();
             vtc = new Http.JsonHttpPacketClient(a);
             using (var bc = new Http.HttpClient(UrlPrefix, ServiceVirtualPath, vtc))
