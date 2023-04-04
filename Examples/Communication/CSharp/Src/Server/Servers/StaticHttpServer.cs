@@ -233,7 +233,7 @@ namespace Server
                     return;
                 }
 
-                var Buffer = new Byte[512 * 1024];
+                var Buffer = new Byte[4 * 1024 * 1024];
                 using (var fs = Streams.OpenReadable(Path))
                 {
                     var LastWriteTime = File.GetLastWriteTimeUtc(Path);
@@ -290,11 +290,11 @@ namespace Server
                     {
                         using (var ros = a.Response.OutputStream)
                         {
-                            var Count = (Length + Buffer.Length - 1) / Buffer.Length;
+                            var Count = (Length + Buffer.LongLength - 1) / Buffer.LongLength;
                             fs.Position = Start;
                             for (int k = 0; k < Count; k += 1)
                             {
-                                var ChunkSize = (int)(Math.Min(Buffer.Length, Length - Buffer.Length * k));
+                                var ChunkSize = (int)(Math.Min(Buffer.LongLength, Length - Buffer.LongLength * k));
                                 fs.Read(Buffer, 0, ChunkSize);
                                 ros.Write(Buffer, 0, ChunkSize);
                             }
@@ -302,6 +302,11 @@ namespace Server
                     }
                     catch (System.Net.HttpListenerException)
                     {
+                    }
+                    catch (Exception ex)
+                    {
+                        OnFailure(ex);
+                        return;
                     }
                 }
 
