@@ -3,7 +3,7 @@
 //  File:        Formatter.cs
 //  Location:    Niveum.Json <Visual C#>
 //  Description: 格式化器
-//  Version:     2018.09.19.
+//  Version:     2023.04.04.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -172,6 +172,11 @@ namespace Niveum.Json.Semantics
                 else if (c == '\t')
                 {
                     Output.Append(@"\t");
+                }
+                else if ((c >= '\0') && (c <= '\u001F'))
+                {
+                    // the control characters (U+0000 through U+001F) https://www.rfc-editor.org/rfc/rfc7159
+                    Output.Append("\\u" + String.Format("{0:X4}", (UInt16)(c)));
                 }
                 else
                 {
