@@ -66,12 +66,23 @@ namespace Client
         {
             if (ClientEvent != null)
             {
+                var OnErrorLocked = new LockedVariable<Action<Exception>>(OnError);
                 var TimeoutSeconds = this.ResponseTimeoutSeconds;
                 if (TimeoutSeconds != null)
                 {
                     var tm = new Timer(o =>
                     {
-                        OnError(new TimeoutException());
+                        Action<Exception> OnErrorFunc = null;
+                        OnErrorLocked.Update(f =>
+                        {
+                            OnErrorFunc = f;
+                            return null;
+                        });
+
+                        if (OnErrorFunc != null)
+                        {
+                            OnErrorFunc(new TimeoutException());
+                        }
                     }, null, ResponseTimeoutSeconds.Value * 1000, Timeout.Infinite);
                     ResponseTimer.Update(OldTriple =>
                     {
@@ -82,7 +93,20 @@ namespace Client
                         return (CommandName, CommandHash, tm);
                     });
                 }
-                ClientEvent(CommandName, CommandHash, Parameters, OnError);
+                ClientEvent(CommandName, CommandHash, Parameters, ex =>
+                {
+                    Action<Exception> OnErrorFunc = null;
+                    OnErrorLocked.Update(f =>
+                    {
+                        OnErrorFunc = f;
+                        return null;
+                    });
+
+                    if (OnErrorFunc != null)
+                    {
+                        OnErrorFunc(ex);
+                    }
+                });
             }
         }
     }
@@ -146,12 +170,23 @@ namespace Client
         {
             if (ClientEvent != null)
             {
+                var OnErrorLocked = new LockedVariable<Action<Exception>>(OnError);
                 var TimeoutSeconds = this.ResponseTimeoutSeconds;
                 if (TimeoutSeconds != null)
                 {
                     var tm = new Timer(o =>
                     {
-                        OnError(new TimeoutException());
+                        Action<Exception> OnErrorFunc = null;
+                        OnErrorLocked.Update(f =>
+                        {
+                            OnErrorFunc = f;
+                            return null;
+                        });
+
+                        if (OnErrorFunc != null)
+                        {
+                            OnErrorFunc(new TimeoutException());
+                        }
                     }, null, ResponseTimeoutSeconds.Value * 1000, Timeout.Infinite);
                     ResponseTimer.Update(OldTriple =>
                     {
@@ -162,7 +197,20 @@ namespace Client
                         return (CommandName, CommandHash, tm);
                     });
                 }
-                ClientEvent(CommandName, CommandHash, Parameters, OnError);
+                ClientEvent(CommandName, CommandHash, Parameters, ex =>
+                {
+                    Action<Exception> OnErrorFunc = null;
+                    OnErrorLocked.Update(f =>
+                    {
+                        OnErrorFunc = f;
+                        return null;
+                    });
+
+                    if (OnErrorFunc != null)
+                    {
+                        OnErrorFunc(ex);
+                    }
+                });
             }
         }
     }
