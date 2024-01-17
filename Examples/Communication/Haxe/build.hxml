@@ -1,6 +1,0 @@
--js bin/Client.js
--cp src
--cp generated
--main Main
--dce full
--debug
