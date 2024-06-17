@@ -3,7 +3,7 @@
 '  File:        CommandLine.vb
 '  Location:    Firefly.Core <Visual Basic .Net>
 '  Description: 控制台
-'  Version:     2016.04.11.
+'  Version:     2024.06.17.
 '  Copyright(C) F.R.C.
 '
 '==========================================================================
@@ -87,16 +87,16 @@ Public NotInheritable Class CommandLine
             If arg.StartsWith("/") Then
                 Dim OptionLine = arg.Substring(1)
                 Dim Name As String
-                Dim ParameterLine As String
+                Dim OptionArguments As New List(Of String)
                 Dim Index = OptionLine.IndexOf(":")
                 If Index >= 0 Then
                     Name = DescapeQuote(OptionLine.Substring(0, Index))
-                    ParameterLine = OptionLine.Substring(Index + 1)
+                    Dim ParameterLine = OptionLine.Substring(Index + 1)
+                    OptionArguments = SplitCmdLineWithChar(ParameterLine, ","c)
                 Else
                     Name = DescapeQuote(OptionLine)
-                    ParameterLine = ""
                 End If
-                Options.Add(New CommandLineOption With {.Name = Name, .Arguments = SplitCmdLineWithChar(ParameterLine, ","c).ToArray})
+                Options.Add(New CommandLineOption With {.Name = Name, .Arguments = OptionArguments.ToArray})
             Else
                 Arguments.Add(arg)
             End If
