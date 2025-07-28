@@ -41,6 +41,13 @@ namespace Server
         }
 
         private LockedVariable<Boolean> IsRunningValue = new LockedVariable<Boolean>(false);
+        public Boolean IsRunning
+        {
+            get
+            {
+                return IsRunningValue.Check(b => b);
+            }
+        }
 
         private List<BindingInfo> BindingInfos = new List<BindingInfo>();
         private CancellationTokenSource ListeningTaskTokenSource;

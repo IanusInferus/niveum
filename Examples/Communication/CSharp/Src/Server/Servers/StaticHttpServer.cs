@@ -6,6 +6,7 @@ using System.Net;
 using Firefly;
 using Firefly.Streaming;
 using BaseSystem;
+using System.Text.RegularExpressions;
 
 namespace Server
 {
@@ -15,6 +16,15 @@ namespace Server
     public class StaticHttpServer : IServer
     {
         private ExternalHttpServer Inner;
+        public Boolean IsRunning
+        {
+            get
+            {
+                if (Inner == null) { return false; }
+                return Inner.IsRunning;
+            }
+        }
+
         public IServerContext ServerContext { get; private set; }
         private Action<Action> QueueUserWorkItem;
         private int ReadBufferSize;
@@ -240,6 +250,14 @@ namespace Server
                     var LastWriteTimeStr = LastWriteTime.ToString("R");
                     var ETag = "\"" + Times.DateTimeUtcToString(LastWriteTime) + "\"";
 
+                    var IfNoneMatchStr = a.Request.Headers["If-None-Match"];
+                    if ((IfNoneMatchStr != null) && IfNoneMatchStr.Contains(ETag))
+                    {
+                        a.Response.StatusCode = 304;
+                        OnSuccess();
+                        return;
+                    }
+
                     var IfModifiedSinceStr = a.Request.Headers["If-Modified-Since"];
                     if ((IfModifiedSinceStr != null) && (LastWriteTimeStr == IfModifiedSinceStr))
                     {
@@ -327,7 +345,10 @@ namespace Server
 
         public void Stop()
         {
-            Inner.Stop();
+            if (Inner != null)
+            {
+                Inner.Stop();
+            }
         }
 
         public void Dispose()

@@ -10,6 +10,7 @@ namespace Server
 
     public interface IServer : IDisposable
     {
+        Boolean IsRunning { get; }
         void Start();
         void Stop();
     }

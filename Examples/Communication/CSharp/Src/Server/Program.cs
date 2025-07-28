@@ -82,8 +82,27 @@ namespace Server
             }
 
             var c = LoadConfiguration();
-            Run(c);
-            return 0;
+
+            foreach (var opt in CmdLine.Options)
+            {
+                var optNameLower = opt.Name.ToLower();
+                if (optNameLower == "pidfile")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 1)
+                    {
+                        var PidFilePath = args[0];
+                        return Run(c, PidFilePath);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
+            }
+
+            return Run(c);
         }
 
         public static void DisplayTitle()
@@ -107,9 +126,33 @@ namespace Server
             return c;
         }
 
-        public static void Run(Configuration c)
+        public static int Run(Configuration c, String PidFilePath = null)
         {
-            Console.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + @"  服务器进程启动。");
+            var Pid = System.Diagnostics.Process.GetCurrentProcess().Id;
+            if (PidFilePath != null)
+            {
+                if (System.IO.File.Exists(PidFilePath))
+                {
+                    int PreviousPid;
+                    if (int.TryParse(System.IO.File.ReadAllText(PidFilePath).Trim(' ', '\r', '\n'), out PreviousPid))
+                    {
+                        try
+                        {
+                            var PreviousProcess = System.Diagnostics.Process.GetProcessById(PreviousPid);
+                            if (!PreviousProcess.HasExited)
+                            {
+                                Console.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + @"  PID文件对应进程运行中，不启动。");
+                                return 1;
+                            }
+                        }
+                        catch (Exception)
+                        {
+                        }
+                    }
+                }
+                System.IO.File.WriteAllText(PidFilePath, Pid.ToString());
+            }
+            Console.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + $"  服务器进程{Pid}启动。");
 
             var ProcessorCount = Environment.ProcessorCount;
             var WorkThreadCount = c.NumThread.OnSome ? Math.Max(1, c.NumThread.Value) : ProcessorCount;
@@ -142,52 +185,99 @@ namespace Server
 
                 var ChatContexts = new List<ServerContext>();
 
+                var ServerStarts = new List<Action>();
                 var ServerCloses = new List<Action>();
 
-                try
+                foreach (var s in c.Servers)
                 {
-                    foreach (var s in c.Servers)
+                    if (s.OnChat)
                     {
-                        if (s.OnChat)
+                        var ss = s.Chat;
+                        var ServerContext = new ServerContext();
+                        ChatContexts.Add(ServerContext);
+
+                        ServerContext.EnableLogNormalIn = c.EnableLogNormalIn;
+                        ServerContext.EnableLogNormalOut = c.EnableLogNormalOut;
+                        ServerContext.EnableLogUnknownError = c.EnableLogUnknownError;
+                        ServerContext.EnableLogCriticalError = c.EnableLogCriticalError;
+                        ServerContext.EnableLogPerformance = c.EnableLogPerformance;
+                        ServerContext.EnableLogSystem = c.EnableLogSystem;
+                        ServerContext.EnableLogTransport = c.EnableLogTransport;
+                        ServerContext.ServerDebug = c.ServerDebug;
+                        ServerContext.ClientDebug = c.ClientDebug;
+
+                        ServerContext.Shutdown += () =>
                         {
-                            var ss = s.Chat;
-                            var ServerContext = new ServerContext();
-                            ChatContexts.Add(ServerContext);
+                            Console.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + @"  远程命令退出。");
+                            ExitEvent.Set();
+                        };
+                        if (c.EnableLogConsole)
+                        {
+                            ServerContext.SessionLog += Logger.Push;
+                        }
 
-                            ServerContext.EnableLogNormalIn = c.EnableLogNormalIn;
-                            ServerContext.EnableLogNormalOut = c.EnableLogNormalOut;
-                            ServerContext.EnableLogUnknownError = c.EnableLogUnknownError;
-                            ServerContext.EnableLogCriticalError = c.EnableLogCriticalError;
-                            ServerContext.EnableLogPerformance = c.EnableLogPerformance;
-                            ServerContext.EnableLogSystem = c.EnableLogSystem;
-                            ServerContext.EnableLogTransport = c.EnableLogTransport;
-                            ServerContext.ServerDebug = c.ServerDebug;
-                            ServerContext.ClientDebug = c.ClientDebug;
+                        var ProtocolAndLog = new List<(IServer Server, String Log)>();
+                        var Factory = new TaskFactory(tp);
+                        var PurifierFactory = new TaskFactory(tpPurifier);
+                        foreach (var p in ss.Protocols)
+                        {
+                            if (System.Diagnostics.Debugger.IsAttached)
+                            {
+                                ProtocolAndLog.Add(CreateProtocol(c, p, ServerContext, Factory, PurifierFactory));
+                            }
+                            else
+                            {
+                                try
+                                {
+                                    ProtocolAndLog.Add(CreateProtocol(c, p, ServerContext, Factory, PurifierFactory));
+                                }
+                                catch (Exception ex)
+                                {
+                                    var Message = Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + "\r\n" + ExceptionInfo.GetExceptionInfo(ex);
+                                    Console.WriteLine(Message);
+                                    FileLoggerSync.WriteLog("Error.log", Message);
+                                }
+                            }
+                        }
 
-                            ServerContext.Shutdown += () =>
+                        ServerStarts.Add(() =>
+                        {
+                            foreach (var (p, Log) in ProtocolAndLog)
                             {
-                                Console.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + @"  远程命令退出。");
-                                ExitEvent.Set();
-                            };
-                            if (c.EnableLogConsole)
+                                p.Start();
+                                Console.WriteLine(Log);
+                            }
+                        });
+
+                        ServerCloses.Add(() =>
+                        {
+                            foreach (var Session in ServerContext.Sessions.AsParallel())
                             {
-                                ServerContext.SessionLog += Logger.Push;
+                                Session.SessionLock.EnterReadLock(); ;
+                                try
+                                {
+                                    if (Session.EventPump != null)
+                                    {
+                                        Session.EventPump.ServerShutdown(new Communication.ServerShutdownEvent { });
+                                    }
+                                }
+                                finally
+                                {
+                                    Session.SessionLock.ExitReadLock();
+                                }
                             }
 
-                            var Protocols = new List<IServer>();
-                            var Factory = new TaskFactory(tp);
-                            var PurifierFactory = new TaskFactory(tpPurifier);
-                            foreach (var p in ss.Protocols)
+                            foreach (var (p, _) in ProtocolAndLog)
                             {
                                 if (System.Diagnostics.Debugger.IsAttached)
                                 {
-                                    Protocols.Add(StartProtocol(c, p, ServerContext, Factory, PurifierFactory));
+                                    StopProtocol(p);
                                 }
                                 else
                                 {
                                     try
                                     {
-                                        Protocols.Add(StartProtocol(c, p, ServerContext, Factory, PurifierFactory));
+                                        StopProtocol(p);
                                     }
                                     catch (Exception ex)
                                     {
@@ -198,77 +288,68 @@ namespace Server
                                 }
                             }
 
-                            ServerCloses.Add(() =>
+                            if (c.EnableLogConsole)
                             {
-                                foreach (var Session in ServerContext.Sessions.AsParallel())
-                                {
-                                    Session.SessionLock.EnterReadLock(); ;
-                                    try
-                                    {
-                                        if (Session.EventPump != null)
-                                        {
-                                            Session.EventPump.ServerShutdown(new Communication.ServerShutdownEvent { });
-                                        }
-                                    }
-                                    finally
-                                    {
-                                        Session.SessionLock.ExitReadLock();
-                                    }
-                                }
+                                ServerContext.SessionLog -= Logger.Push;
+                            }
 
-                                foreach (var p in Protocols)
-                                {
-                                    if (System.Diagnostics.Debugger.IsAttached)
-                                    {
-                                        StopProtocol(p);
-                                    }
-                                    else
-                                    {
-                                        try
-                                        {
-                                            StopProtocol(p);
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            var Message = Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + "\r\n" + ExceptionInfo.GetExceptionInfo(ex);
-                                            Console.WriteLine(Message);
-                                            FileLoggerSync.WriteLog("Error.log", Message);
-                                        }
-                                    }
-                                }
+                            Console.WriteLine(@"ChatServerContext.RequestCount = {0}".Formats(ServerContext.RequestCount));
+                            Console.WriteLine(@"ChatServerContext.ReplyCount = {0}".Formats(ServerContext.ReplyCount));
+                            Console.WriteLine(@"ChatServerContext.EventCount = {0}".Formats(ServerContext.EventCount));
+                        });
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("未知服务器类型: " + s._Tag.ToString());
+                    }
+                }
 
-                                if (c.EnableLogConsole)
-                                {
-                                    ServerContext.SessionLog -= Logger.Push;
-                                }
+                try
+                {
+                    var Started = false;
 
-                                Console.WriteLine(@"ChatServerContext.RequestCount = {0}".Formats(ServerContext.RequestCount));
-                                Console.WriteLine(@"ChatServerContext.ReplyCount = {0}".Formats(ServerContext.ReplyCount));
-                                Console.WriteLine(@"ChatServerContext.EventCount = {0}".Formats(ServerContext.EventCount));
-                            });
-                        }
-                        else
+                    while (true)
+                    {
+                        if ((PidFilePath != null) && !System.IO.File.Exists(PidFilePath))
                         {
-                            throw new InvalidOperationException("未知服务器类型: " + s._Tag.ToString());
+                            Console.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + @"  PID文件中断退出。");
+                            break;
+                        }
+
+                        if (!Started)
+                        {
+                            Started = true;
+                            foreach (var a in ServerStarts)
+                            {
+                                a();
+                            }
+                        }
+
+                        if (ExitEvent.WaitOne(10000))
+                        {
+                            break;
                         }
                     }
-
-                    ExitEvent.WaitOne();
-                    Console.CancelKeyPress -= CancelKeyPress;
                 }
                 finally
                 {
-                    foreach (var a in ServerCloses)
+                    Console.CancelKeyPress -= CancelKeyPress;
+                    foreach (var a in ServerCloses.AsEnumerable().Reverse())
                     {
                         a();
                     }
                 }
             }
 
+            if ((PidFilePath != null) && System.IO.File.Exists(PidFilePath))
+            {
+                System.IO.File.Delete(PidFilePath);
+            }
             Console.WriteLine(Times.DateTimeUtcWithMillisecondsToString(DateTime.UtcNow) + @"  服务器进程退出完成。");
+            return 0;
         }
 
-        private static IServer StartProtocol(Configuration c, ChatProtocolConfiguration pc, ServerContext ServerContext, TaskFactory Factory, TaskFactory PurifierFactory)
+        private static (IServer Server, String Log) CreateProtocol(Configuration c, ChatProtocolConfiguration pc, ServerContext ServerContext, TaskFactory Factory, TaskFactory PurifierFactory)
         {
             if (pc.OnTcp)
             {
@@ -308,33 +389,16 @@ namespace Server
                 }
 
                 var Server = new TcpServer(ServerContext, VirtualTransportServerFactory, a => Factory.StartNew(a), a => PurifierFactory.StartNew(a));
-                var Success = false;
 
-                try
-                {
-                    Server.Bindings = s.Bindings.Select(b => new IPEndPoint(IPAddress.Parse(b.IpAddress), b.Port)).ToArray();
-                    Server.SessionIdleTimeout = s.SessionIdleTimeout;
-                    Server.UnauthenticatedSessionIdleTimeout = s.UnauthenticatedSessionIdleTimeout;
-                    Server.MaxConnections = s.MaxConnections;
-                    Server.MaxConnectionsPerIP = s.MaxConnectionsPerIP;
-                    Server.MaxUnauthenticatedPerIP = s.MaxUnauthenticatedPerIP;
-                    Server.MaxBadCommands = s.MaxBadCommands;
+                Server.Bindings = s.Bindings.Select(b => new IPEndPoint(IPAddress.Parse(b.IpAddress), b.Port)).ToArray();
+                Server.SessionIdleTimeout = s.SessionIdleTimeout;
+                Server.UnauthenticatedSessionIdleTimeout = s.UnauthenticatedSessionIdleTimeout;
+                Server.MaxConnections = s.MaxConnections;
+                Server.MaxConnectionsPerIP = s.MaxConnectionsPerIP;
+                Server.MaxUnauthenticatedPerIP = s.MaxUnauthenticatedPerIP;
+                Server.MaxBadCommands = s.MaxBadCommands;
 
-                    Server.Start();
-
-                    Console.WriteLine(@"TCP/{0}服务器已启动。结点: {1}".Formats(s.SerializationProtocolType.ToString(), String.Join(", ", Server.Bindings.Select(b => b.ToString() + "(TCP)"))));
-
-                    Success = true;
-                }
-                finally
-                {
-                    if (!Success)
-                    {
-                        Server.Dispose();
-                    }
-                }
-
-                return Server;
+                return (Server, @"TCP/{0}服务器已启动。结点: {1}".Formats(s.SerializationProtocolType.ToString(), String.Join(", ", Server.Bindings.Select(b => b.ToString() + "(TCP)"))));
             }
             else if (pc.OnUdp)
             {
@@ -374,35 +438,18 @@ namespace Server
                 }
 
                 var Server = new UdpServer(ServerContext, VirtualTransportServerFactory, a => Factory.StartNew(a), a => PurifierFactory.StartNew(a));
-                var Success = false;
 
-                try
-                {
-                    Server.Bindings = s.Bindings.Select(b => new IPEndPoint(IPAddress.Parse(b.IpAddress), b.Port)).ToArray();
-                    Server.SessionIdleTimeout = s.SessionIdleTimeout;
-                    Server.UnauthenticatedSessionIdleTimeout = s.UnauthenticatedSessionIdleTimeout;
-                    Server.MaxConnections = s.MaxConnections;
-                    Server.MaxConnectionsPerIP = s.MaxConnectionsPerIP;
-                    Server.MaxUnauthenticatedPerIP = s.MaxUnauthenticatedPerIP;
-                    Server.MaxBadCommands = s.MaxBadCommands;
+                Server.Bindings = s.Bindings.Select(b => new IPEndPoint(IPAddress.Parse(b.IpAddress), b.Port)).ToArray();
+                Server.SessionIdleTimeout = s.SessionIdleTimeout;
+                Server.UnauthenticatedSessionIdleTimeout = s.UnauthenticatedSessionIdleTimeout;
+                Server.MaxConnections = s.MaxConnections;
+                Server.MaxConnectionsPerIP = s.MaxConnectionsPerIP;
+                Server.MaxUnauthenticatedPerIP = s.MaxUnauthenticatedPerIP;
+                Server.MaxBadCommands = s.MaxBadCommands;
 
-                    Server.TimeoutCheckPeriod = s.TimeoutCheckPeriod;
+                Server.TimeoutCheckPeriod = s.TimeoutCheckPeriod;
 
-                    Server.Start();
-
-                    Console.WriteLine(@"UDP/{0}服务器已启动。结点: {1}".Formats(s.SerializationProtocolType.ToString(), String.Join(", ", Server.Bindings.Select(b => b.ToString() + "(UDP)"))));
-
-                    Success = true;
-                }
-                finally
-                {
-                    if (!Success)
-                    {
-                        Server.Dispose();
-                    }
-                }
-
-                return Server;
+                return (Server, @"UDP/{0}服务器已启动。结点: {1}".Formats(s.SerializationProtocolType.ToString(), String.Join(", ", Server.Bindings.Select(b => b.ToString() + "(UDP)"))));
             }
             else if (pc.OnHttp)
             {
@@ -418,73 +465,39 @@ namespace Server
                 };
 
                 var Server = new HttpServer(ServerContext, VirtualTransportServerFactory, a => Factory.StartNew(a), a => PurifierFactory.StartNew(a));
-                var Success = false;
 
-                try
-                {
-                    Server.Bindings = s.Bindings.Select(b => b.Prefix).ToArray();
-                    Server.SessionIdleTimeout = s.SessionIdleTimeout;
-                    Server.UnauthenticatedSessionIdleTimeout = s.UnauthenticatedSessionIdleTimeout;
-                    Server.MaxConnections = s.MaxConnections;
-                    Server.MaxConnectionsPerIP = s.MaxConnectionsPerIP;
-                    Server.MaxUnauthenticatedPerIP = s.MaxUnauthenticatedPerIP;
-                    Server.MaxBadCommands = s.MaxBadCommands;
+                Server.Bindings = s.Bindings.Select(b => b.Prefix).ToArray();
+                Server.SessionIdleTimeout = s.SessionIdleTimeout;
+                Server.UnauthenticatedSessionIdleTimeout = s.UnauthenticatedSessionIdleTimeout;
+                Server.MaxConnections = s.MaxConnections;
+                Server.MaxConnectionsPerIP = s.MaxConnectionsPerIP;
+                Server.MaxUnauthenticatedPerIP = s.MaxUnauthenticatedPerIP;
+                Server.MaxBadCommands = s.MaxBadCommands;
 
-                    Server.TimeoutCheckPeriod = s.TimeoutCheckPeriod;
-                    Server.ServiceVirtualPath = s.ServiceVirtualPath;
+                Server.TimeoutCheckPeriod = s.TimeoutCheckPeriod;
+                Server.ServiceVirtualPath = s.ServiceVirtualPath;
 
-                    Server.Start();
-
-                    Console.WriteLine(@"HTTP/{0}服务器已启动。结点: {1}".Formats("Json", String.Join(", ", Server.Bindings.Select(b => b.ToString()))));
-
-                    Success = true;
-                }
-                finally
-                {
-                    if (!Success)
-                    {
-                        Server.Dispose();
-                    }
-                }
-
-                return Server;
+                return (Server, @"HTTP/{0}服务器已启动。结点: {1}".Formats("Json", String.Join(", ", Server.Bindings.Select(b => b.ToString()))));
             }
             else if (pc.OnHttpStatic)
             {
                 var s = pc.HttpStatic;
 
                 var Server = new StaticHttpServer(ServerContext, a => Factory.StartNew(a), 8 * 1024);
-                var Success = false;
 
-                try
-                {
-                    Server.Bindings = s.Bindings.Select(b => b.Prefix).ToArray();
-                    Server.SessionIdleTimeout = Math.Min(s.SessionIdleTimeout, s.UnauthenticatedSessionIdleTimeout);
-                    Server.MaxConnections = s.MaxConnections;
-                    Server.MaxConnectionsPerIP = s.MaxConnectionsPerIP;
-                    Server.MaxBadCommands = s.MaxBadCommands;
-                    Server.MaxUnauthenticatedPerIP = s.MaxUnauthenticatedPerIP;
+                Server.Bindings = s.Bindings.Select(b => b.Prefix).ToArray();
+                Server.SessionIdleTimeout = Math.Min(s.SessionIdleTimeout, s.UnauthenticatedSessionIdleTimeout);
+                Server.MaxConnections = s.MaxConnections;
+                Server.MaxConnectionsPerIP = s.MaxConnectionsPerIP;
+                Server.MaxBadCommands = s.MaxBadCommands;
+                Server.MaxUnauthenticatedPerIP = s.MaxUnauthenticatedPerIP;
 
-                    Server.ServiceVirtualPath = s.ServiceVirtualPath;
-                    Server.PhysicalPath = s.PhysicalPath;
-                    Server.Indices = s.Indices.Split(',').Select(Index => Index.Trim(' ')).Where(Index => Index != "").ToArray();
-                    Server.EnableClientRewrite = s.EnableClientRewrite;
+                Server.ServiceVirtualPath = s.ServiceVirtualPath;
+                Server.PhysicalPath = s.PhysicalPath;
+                Server.Indices = s.Indices.Split(',').Select(Index => Index.Trim(' ')).Where(Index => Index != "").ToArray();
+                Server.EnableClientRewrite = s.EnableClientRewrite;
 
-                    Server.Start();
-
-                    Console.WriteLine(@"HTTP静态服务器已启动。结点: {0}".Formats(String.Join(", ", Server.Bindings.Select(b => b.ToString()))));
-
-                    Success = true;
-                }
-                finally
-                {
-                    if (!Success)
-                    {
-                        Server.Dispose();
-                    }
-                }
-
-                return Server;
+                return (Server, @"HTTP静态服务器已启动。结点: {0}".Formats(String.Join(", ", Server.Bindings.Select(b => b.ToString()))));
             }
             else
             {
@@ -495,9 +508,13 @@ namespace Server
         {
             try
             {
+                var IsRunning = Server.IsRunning;
                 Server.Stop();
 
-                Console.WriteLine(@"服务器已关闭。");
+                if (IsRunning)
+                {
+                    Console.WriteLine(@"服务器已关闭。");
+                }
             }
             finally
             {
