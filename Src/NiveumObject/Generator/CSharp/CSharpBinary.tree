@@ -4,7 +4,7 @@
       File:        CSharpBinary.tree
       Location:    Niveum.Object <Tree>
       Description: 对象类型结构C#二进制通讯模板
-      Version:     2022.11.26.
+      Version:     2025.08.07.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -459,16 +459,28 @@
             return fi.Float64Value;
         }
 
+        public static Int64 ReadSize(IReadableStream s)
+        {
+            var Lower = ReadUInt32(s);
+            if ((Lower & 0x80000000) == 0)
+            {
+                return Lower;
+            }
+            var Upper = ReadUInt32(s);
+            if ((Upper & 0x80000000) != 0)
+            {
+                throw new InvalidOperationException();
+            }
+            return (((Int64)Upper) << 31) | (Int64)Lower;
+        }
+
         public static String ReadString(IReadableStream s)
         {
-            var Length = ReadInt32(s);
-            var n = (int)(Length);
-            var Bytes = new List<Byte>();
-            for (int k = 0; k < n; k += 1)
-            {
-                Bytes.Add(s.ReadByte());
-            }
-            return System.Text.Encoding.Unicode.GetString(Bytes.ToArray());
+            var LongLength = ReadSize(s);
+            if (LongLength > 0x7FFFFFFF) { throw new InvalidOperationException(); }
+            var Length = (Int32)(LongLength);
+            var Bytes = s.ReadBytes(Length);
+            return System.Text.Encoding.Unicode.GetString(Bytes);
         }
     }
 
@@ -577,14 +589,31 @@
             WriteInt64(s, fi.Int64Value);
         }
 
+        public static void WriteSize(IWritableStream s, Int64 v)
+        {
+            if ((v < 0) || (v > 0x3FFFFFFFFFFFFFFFL))
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+            var Lower = (UInt32)((UInt64)(v) & 0x7FFFFFFF);
+            var Upper = (UInt32)(((UInt64)(v) >> 31) & 0x7FFFFFFF);
+            if (Upper != 0)
+            {
+                Lower |= 0x80000000;
+                WriteUInt32(s, Lower);
+                WriteUInt32(s, Upper);
+            }
+            else
+            {
+                WriteUInt32(s, Lower);
+            }
+        }
+
         public static void WriteString(IWritableStream s, String v)
         {
             var Bytes = System.Text.Encoding.Unicode.GetBytes(v);
-            WriteInt32(s, (Int32)(Bytes.Length));
-            foreach (var b in Bytes)
-            {
-                s.WriteByte(b);
-            }
+            WriteSize(s, Bytes.LongLength);
+            s.WriteBytes(Bytes);
         }
     }
 
@@ -1547,7 +1576,9 @@
         var ElementSimpleName = ElementType.SimpleName(NamespaceName);
     public static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream s)
     {
-        int Length = (int)(IntFromBinary(s));
+        var LongLength = ReadStream.ReadSize(s);
+        if (LongLength > 0x7FFFFFFF) { throw new InvalidOperationException(); }
+        var Length = (Int32)(LongLength);
         $$
             if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
             {
@@ -1558,7 +1589,7 @@
             {
                 ##
                     var l = new ${TypeString}(Length);
-                    for (int k = 0; k < Length; k += 1)
+                    for (Int32 k = 0; k < Length; k += 1)
                     {
                         l.Add([[${ElementSimpleName}FromBinary]](s));
                     }
@@ -1567,8 +1598,7 @@
     }
     public static void [[${SimpleName}ToBinary]](IWritableStream s, ${TypeString} l)
     {
-        int Length = l.Count;
-        IntToBinary(s, (Int)(Length));
+        WriteStream.WriteSize(s, l.Count);
         $$
             if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
             {
@@ -1611,7 +1641,9 @@
         var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
     public static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream s)
     {
-        int Length = (int)(IntFromBinary(s));
+        var LongLength = ReadStream.ReadSize(s);
+        if (LongLength > 0x7FFFFFFF) { throw new InvalidOperationException(); }
+        var Length = (Int32)(LongLength);
         var l = new List<${ElementTypeString}>(Length);
         for (int k = 0; k < Length; k += 1)
         {
@@ -1621,8 +1653,7 @@
     }
     public static void [[${SimpleName}ToBinary]](IWritableStream s, ${TypeString} l)
     {
-        int Length = l.Count;
-        IntToBinary(s, (Int)(Length));
+        WriteStream.WriteSize(s, l.Count);
         foreach (var e in l)
         {
             [[${ElementSimpleName}ToBinary]](s, e);
@@ -1660,7 +1691,9 @@
         var ValueSimpleName = gp[1].SimpleName(NamespaceName);
     public static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream s)
     {
-        int Length = (Int)(IntFromBinary(s));
+        var LongLength = ReadStream.ReadSize(s);
+        if (LongLength > 0x7FFFFFFF) { throw new InvalidOperationException(); }
+        var Length = (Int32)(LongLength);
         var l = new ${TypeString}(Length);
         for (int k = 0; k < Length; k += 1)
         {
@@ -1671,8 +1704,7 @@
     }
     public static void [[${SimpleName}ToBinary]](IWritableStream s, ${TypeString} l)
     {
-        int Length = l.Count;
-        IntToBinary(s, (Int)(Length));
+        WriteStream.WriteSize(s, l.Count);
         foreach (var p in l)
         {
             [[${KeySimpleName}ToBinary]](s, p.Key);

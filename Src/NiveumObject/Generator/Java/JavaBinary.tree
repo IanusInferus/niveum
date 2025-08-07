@@ -4,7 +4,7 @@
       File:        JavaBinary.tree
       Location:    Niveum.Object <Tree>
       Description: 对象类型结构Java二进制模板
-      Version:     2022.10.02.
+      Version:     2025.08.07.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -111,9 +111,26 @@
             return Double.longBitsToDouble(this.ReadInt64());
         }
 
+        public long ReadSize()
+        {
+            var Lower = this.ReadInt32();
+            if ((Lower & 0x80000000) == 0)
+            {
+                return Lower;
+            }
+            var Upper = this.ReadInt32();
+            if ((Upper & 0x80000000) != 0)
+            {
+                throw new RuntimeException("InvalidOperation");
+            }
+            return (((long)Upper) << 31) | (long)Lower;
+        }
+
         public String ReadString()
         {
-            int n = this.ReadInt32();
+            long LongLength = this.ReadSize();
+            if (LongLength > 0x7FFFFFFF) { throw new RuntimeException("InvalidOperation"); }
+            int n = (int)LongLength;
             byte[] s = new byte[n];
             for (int k = 0; k < n; k += 1)
             {
@@ -213,6 +230,26 @@
         public void WriteFloat64(double v)
         {
             WriteInt64(Double.doubleToLongBits(v));
+        }
+
+        public void WriteSize(long v)
+        {
+            if ((v < 0) || (v > 0x3FFFFFFFFFFFFFFFL))
+            {
+                throw new RuntimeException("InvalidOperation");
+            }
+            var Lower = (int)((long)(v) & 0x7FFFFFFF);
+            var Upper = (int)(((long)(v) >> 31) & 0x7FFFFFFF);
+            if (Upper != 0)
+            {
+                Lower |= 0x80000000;
+                WriteInt32(Lower);
+                WriteInt32(Upper);
+            }
+            else
+            {
+                WriteInt32(Lower);
+            }
         }
 
         public void WriteString(String v)
@@ -589,7 +626,9 @@
         var ElementTypeString = GetTypeString(l.GenericTypeSpec.ParameterValues.Single(), NamespaceName);
     public static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream s)
     {
-        int Length = IntFromBinary(s);
+        long LongLength = s.ReadSize();
+        if (LongLength > 0x7FFFFFFF) { throw new RuntimeException("InvalidOperation"); }
+        int Length = (int)(LongLength);
         ${TypeString} l = new ${TypeString}(Length);
         for (int k = 0; k < Length; k += 1)
         {
@@ -599,8 +638,7 @@
     }
     public static void [[${SimpleName}ToBinary]](IWritableStream s, ${TypeString} l)
     {
-        int Length = l.size();
-        IntToBinary(s, Length);
+        s.WriteSize(l.size());
         for (${ElementTypeString} e : l)
         {
             [[${ElementSimpleName}ToBinary]](s, e);
@@ -615,7 +653,9 @@
         var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
     public static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream s)
     {
-        int Length = IntFromBinary(s);
+        long LongLength = s.ReadSize();
+        if (LongLength > 0x7FFFFFFF) { throw new RuntimeException("InvalidOperation"); }
+        int Length = (int)(LongLength);
         ${TypeString} l = new ${TypeString}(Length);
         for (int k = 0; k < Length; k += 1)
         {
@@ -625,8 +665,7 @@
     }
     public static void [[${SimpleName}ToBinary]](IWritableStream s, ${TypeString} l)
     {
-        int Length = l.size();
-        IntToBinary(s, Length);
+        s.WriteSize(l.size());
         for (${ElementTypeString} e : l)
         {
             [[${ElementSimpleName}ToBinary]](s, e);
@@ -647,7 +686,9 @@
         var ValueSimpleName = gp[1].SimpleName(NamespaceName);
     public static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream s)
     {
-        int Length = IntFromBinary(s);
+        long LongLength = s.ReadSize();
+        if (LongLength > 0x7FFFFFFF) { throw new RuntimeException("InvalidOperation"); }
+        int Length = (int)(LongLength);
         ${TypeString} l = new ${TypeString}(Length);
         for (int k = 0; k < Length; k += 1)
         {
@@ -658,8 +699,7 @@
     }
     public static void [[${SimpleName}ToBinary]](IWritableStream s, ${TypeString} l)
     {
-        int Length = l.size();
-        IntToBinary(s, Length);
+        s.WriteSize(l.size());
         for (${KeyTypeString} Key : l.keySet())
         {
             [[${KeySimpleName}ToBinary]](s, Key);

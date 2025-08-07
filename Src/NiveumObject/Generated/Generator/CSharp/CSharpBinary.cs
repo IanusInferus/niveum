@@ -569,16 +569,28 @@ namespace Niveum.ObjectSchema.CSharpBinary
             yield return "        return fi.Float64Value;";
             yield return "    }";
             yield return "";
+            yield return "    public static Int64 ReadSize(IReadableStream s)";
+            yield return "    {";
+            yield return "        var Lower = ReadUInt32(s);";
+            yield return "        if ((Lower & 0x80000000) == 0)";
+            yield return "        {";
+            yield return "            return Lower;";
+            yield return "        }";
+            yield return "        var Upper = ReadUInt32(s);";
+            yield return "        if ((Upper & 0x80000000) != 0)";
+            yield return "        {";
+            yield return "            throw new InvalidOperationException();";
+            yield return "        }";
+            yield return "        return (((Int64)Upper) << 31) | (Int64)Lower;";
+            yield return "    }";
+            yield return "";
             yield return "    public static String ReadString(IReadableStream s)";
             yield return "    {";
-            yield return "        var Length = ReadInt32(s);";
-            yield return "        var n = (int)(Length);";
-            yield return "        var Bytes = new List<Byte>();";
-            yield return "        for (int k = 0; k < n; k += 1)";
-            yield return "        {";
-            yield return "            Bytes.Add(s.ReadByte());";
-            yield return "        }";
-            yield return "        return System.Text.Encoding.Unicode.GetString(Bytes.ToArray());";
+            yield return "        var LongLength = ReadSize(s);";
+            yield return "        if (LongLength > 0x7FFFFFFF) { throw new InvalidOperationException(); }";
+            yield return "        var Length = (Int32)(LongLength);";
+            yield return "        var Bytes = s.ReadBytes(Length);";
+            yield return "        return System.Text.Encoding.Unicode.GetString(Bytes);";
             yield return "    }";
             yield return "}";
             yield return "";
@@ -687,14 +699,31 @@ namespace Niveum.ObjectSchema.CSharpBinary
             yield return "        WriteInt64(s, fi.Int64Value);";
             yield return "    }";
             yield return "";
+            yield return "    public static void WriteSize(IWritableStream s, Int64 v)";
+            yield return "    {";
+            yield return "        if ((v < 0) || (v > 0x3FFFFFFFFFFFFFFFL))";
+            yield return "        {";
+            yield return "            throw new ArgumentOutOfRangeException();";
+            yield return "        }";
+            yield return "        var Lower = (UInt32)((UInt64)(v) & 0x7FFFFFFF);";
+            yield return "        var Upper = (UInt32)(((UInt64)(v) >> 31) & 0x7FFFFFFF);";
+            yield return "        if (Upper != 0)";
+            yield return "        {";
+            yield return "            Lower |= 0x80000000;";
+            yield return "            WriteUInt32(s, Lower);";
+            yield return "            WriteUInt32(s, Upper);";
+            yield return "        }";
+            yield return "        else";
+            yield return "        {";
+            yield return "            WriteUInt32(s, Lower);";
+            yield return "        }";
+            yield return "    }";
+            yield return "";
             yield return "    public static void WriteString(IWritableStream s, String v)";
             yield return "    {";
             yield return "        var Bytes = System.Text.Encoding.Unicode.GetBytes(v);";
-            yield return "        WriteInt32(s, (Int32)(Bytes.Length));";
-            yield return "        foreach (var b in Bytes)";
-            yield return "        {";
-            yield return "            s.WriteByte(b);";
-            yield return "        }";
+            yield return "        WriteSize(s, Bytes.LongLength);";
+            yield return "        s.WriteBytes(Bytes);";
             yield return "    }";
             yield return "}";
             yield return "";
@@ -1866,7 +1895,9 @@ namespace Niveum.ObjectSchema.CSharpBinary
                 yield return _Line;
             }
             yield return "{";
-            yield return "    int Length = (int)(IntFromBinary(s));";
+            yield return "    var LongLength = ReadStream.ReadSize(s);";
+            yield return "    if (LongLength > 0x7FFFFFFF) { throw new InvalidOperationException(); }";
+            yield return "    var Length = (Int32)(LongLength);";
             if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
             {
                 yield return "    " + "var l = new List<Byte>(s.ReadBytes(Length));";
@@ -1877,7 +1908,7 @@ namespace Niveum.ObjectSchema.CSharpBinary
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
-                yield return "    " + "for (int k = 0; k < Length; k += 1)";
+                yield return "    " + "for (Int32 k = 0; k < Length; k += 1)";
                 yield return "    " + "{";
                 foreach (var _Line in Combine(Combine(Combine(Begin(), "    l.Add("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementSimpleName), "FromBinary"))), "(s));"))
                 {
@@ -1892,8 +1923,7 @@ namespace Niveum.ObjectSchema.CSharpBinary
                 yield return _Line;
             }
             yield return "{";
-            yield return "    int Length = l.Count;";
-            yield return "    IntToBinary(s, (Int)(Length));";
+            yield return "    WriteStream.WriteSize(s, l.Count);";
             if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
             {
                 yield return "    " + "s.WriteBytes(l.ToArray());";
@@ -1951,7 +1981,9 @@ namespace Niveum.ObjectSchema.CSharpBinary
                 yield return _Line;
             }
             yield return "{";
-            yield return "    int Length = (int)(IntFromBinary(s));";
+            yield return "    var LongLength = ReadStream.ReadSize(s);";
+            yield return "    if (LongLength > 0x7FFFFFFF) { throw new InvalidOperationException(); }";
+            yield return "    var Length = (Int32)(LongLength);";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "    var l = new List<"), ElementTypeString), ">(Length);"))
             {
                 yield return _Line;
@@ -1973,8 +2005,7 @@ namespace Niveum.ObjectSchema.CSharpBinary
                 yield return _Line;
             }
             yield return "{";
-            yield return "    int Length = l.Count;";
-            yield return "    IntToBinary(s, (Int)(Length));";
+            yield return "    WriteStream.WriteSize(s, l.Count);";
             yield return "    foreach (var e in l)";
             yield return "    {";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), ElementSimpleName), "ToBinary"))), "(s, e);"))
@@ -2030,7 +2061,9 @@ namespace Niveum.ObjectSchema.CSharpBinary
                 yield return _Line;
             }
             yield return "{";
-            yield return "    int Length = (Int)(IntFromBinary(s));";
+            yield return "    var LongLength = ReadStream.ReadSize(s);";
+            yield return "    if (LongLength > 0x7FFFFFFF) { throw new InvalidOperationException(); }";
+            yield return "    var Length = (Int32)(LongLength);";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "    var l = new "), TypeString), "(Length);"))
             {
                 yield return _Line;
@@ -2053,8 +2086,7 @@ namespace Niveum.ObjectSchema.CSharpBinary
                 yield return _Line;
             }
             yield return "{";
-            yield return "    int Length = l.Count;";
-            yield return "    IntToBinary(s, (Int)(Length));";
+            yield return "    WriteStream.WriteSize(s, l.Count);";
             yield return "    foreach (var p in l)";
             yield return "    {";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), KeySimpleName), "ToBinary"))), "(s, p.Key);"))

@@ -4,7 +4,7 @@
       File:        CppBinary.tree
       Location:    Niveum.Object <Tree>
       Description: 对象类型结构C++二进制通讯模板
-      Version:     2022.10.02.
+      Version:     2025.08.07.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -419,12 +419,28 @@
             return *reinterpret_cast<double *>(&i);
         }
 
+        std::size_t ReadSize()
+        {
+            auto Lower = ReadUInt32();
+            if ((Lower & 0x80000000) == 0)
+            {
+                return Lower;
+            }
+            auto Upper = ReadUInt32();
+            if ((Upper & 0x80000000) != 0)
+            {
+                throw std::out_of_range("");
+            }
+            return (static_cast<std::size_t>(Upper) << 31) | static_cast<std::size_t>(Lower);
+        }
+
         String ReadString()
         {
-            std::int32_t Length = ReadInt32();
-            int n = static_cast<int>(Length) / 2;
+            auto Length = ReadSize();
+            auto n = Length / 2;
             std::u16string v;
-            for (int k = 0; k < n; k += 1)
+            v.reserve(n);
+            for (std::size_t k = 0; k < n; k += 1)
             {
                 v.push_back(static_cast<char16_t>(ReadUInt16()));
             }
@@ -519,9 +535,29 @@
             WriteInt64(*reinterpret_cast<std::int64_t *>(&v));
         }
 
+        void WriteSize(Int64 v)
+        {
+            if ((v < 0) || (v > 0x3FFFFFFFFFFFFFFFL))
+            {
+                throw std::out_of_range("");
+            }
+            auto Lower = static_cast<UInt32>(static_cast<UInt64>(v) & 0x7FFFFFFF);
+            auto Upper = static_cast<UInt32>((static_cast<UInt64>(v) >> 31) & 0x7FFFFFFF);
+            if (Upper != 0)
+            {
+                Lower |= 0x80000000;
+                WriteUInt32(Lower);
+                WriteUInt32(Upper);
+            }
+            else
+            {
+                WriteUInt32(Lower);
+            }
+        }
+
         void WriteString(String v)
         {
-            WriteInt32(static_cast<std::int32_t>(v.size()) * 2);
+            WriteSize(v.size() * 2);
             for (auto c : v)
             {
                 WriteUInt16(static_cast<std::uint16_t>(c));
@@ -949,7 +985,7 @@
         var ElementSimpleName = ElementType.SimpleName(NamespaceName);
     static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream &s)
     {
-        int Length = static_cast<int>(IntFromBinary(s));
+        auto Length = s.ReadSize();
         $$
             if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
             {
@@ -960,7 +996,7 @@
             {
                 ##
                     ${TypeString} l;
-                    l.reserve(static_cast<std::size_t>(Length));
+                    l.reserve(Length);
                     for (int k = 0; k < Length; k += 1)
                     {
                         l.push_back([[${ElementSimpleName}FromBinary]](s));
@@ -970,8 +1006,7 @@
     }
     static void [[${SimpleName}ToBinary]](IWritableStream &s, const ${TypeString} &l)
     {
-        int Length = static_cast<int>(l.size());
-        IntToBinary(s, static_cast<Int>(Length));
+        s.WriteSize(l.size());
         $$
             if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
             {
@@ -995,9 +1030,9 @@
         var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
     static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream &s)
     {
-        int Length = static_cast<int>(IntFromBinary(s));
+        auto Length = s.ReadSize();
         ${TypeString} l;
-        l.reserve(static_cast<std::size_t>(Length));
+        l.reserve(Length);
         for (int k = 0; k < Length; k += 1)
         {
             l.insert([[${ElementSimpleName}FromBinary]](s));
@@ -1006,8 +1041,7 @@
     }
     static void [[${SimpleName}ToBinary]](IWritableStream &s, const ${TypeString} &l)
     {
-        int Length = static_cast<int>(l.size());
-        IntToBinary(s, static_cast<Int>(Length));
+        s.WriteSize(l.size());
         for (auto e : l)
         {
             [[${ElementSimpleName}ToBinary]](s, e);
@@ -1027,9 +1061,9 @@
         var ValueSimpleName = gp[1].SimpleName(NamespaceName);
     static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream &s)
     {
-        int Length = static_cast<int>(IntFromBinary(s));
+        auto Length = s.ReadSize();
         ${TypeString} l;
-        l.reserve(static_cast<std::size_t>(Length));
+        l.reserve(Length);
         for (int k = 0; k < Length; k += 1)
         {
             auto Key = [[${KeySimpleName}FromBinary]](s);
@@ -1039,8 +1073,7 @@
     }
     static void [[${SimpleName}ToBinary]](IWritableStream &s, const ${TypeString} &l)
     {
-        int Length = static_cast<int>(l.size());
-        IntToBinary(s, static_cast<Int>(Length));
+        s.WriteSize(l.size());
         for (auto p : l)
         {
             [[${KeySimpleName}ToBinary]](s, std::get<0>(p));

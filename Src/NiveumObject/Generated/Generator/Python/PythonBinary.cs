@@ -186,61 +186,86 @@ namespace Niveum.ObjectSchema.PythonBinary
             yield return "        return struct.unpack('<d', s.ReadBytes(8))[0]";
             yield return "";
             yield return "    @staticmethod";
+            yield return "    def ReadSize(s: 'IReadableStream') -> int:";
+            yield return "        lower = ReadStream.ReadUInt32(s)";
+            yield return "        if (lower & 0x80000000) == 0:";
+            yield return "            return lower";
+            yield return "        upper = ReadStream.ReadUInt32(s)";
+            yield return "        if (upper & 0x80000000) != 0:";
+            yield return "            raise IndexError";
+            yield return "        return ((upper << 31) | (lower & 0x7FFFFFFF))";
+            yield return "";
+            yield return "    @staticmethod";
             yield return "    def ReadString(s: IReadableStream) -> String:";
-            yield return "        n = ReadStream.ReadInt32(s)";
+            yield return "        n = ReadStream.ReadSize(s)";
             yield return "        s = bytearray(s.ReadBytes(n)).decode('utf-16le')";
             yield return "        return s";
             yield return "";
             yield return "class WriteStream:";
             yield return "    @staticmethod";
-            yield return "    def WriteUnit(s: IReadableStream, v: Unit) -> None:";
+            yield return "    def WriteUnit(s: IWritableStream, v: Unit) -> None:";
             yield return "        pass";
             yield return "    @staticmethod";
-            yield return "    def WriteBoolean(s: IReadableStream, v: Boolean) -> None:";
+            yield return "    def WriteBoolean(s: IWritableStream, v: Boolean) -> None:";
             yield return "        if v:";
             yield return "            s.WriteByte(0xFF)";
             yield return "        else:";
             yield return "            s.WriteByte(0)";
             yield return "    @staticmethod";
-            yield return "    def WriteByte(s: IReadableStream, v: Byte) -> None:";
+            yield return "    def WriteByte(s: IWritableStream, v: Byte) -> None:";
             yield return "        s.WriteByte(v)";
             yield return "";
             yield return "    @staticmethod";
-            yield return "    def WriteUInt8(s: IReadableStream, v: UInt8) -> None:";
+            yield return "    def WriteUInt8(s: IWritableStream, v: UInt8) -> None:";
             yield return "        s.WriteByte(v)";
             yield return "    @staticmethod";
-            yield return "    def WriteUInt16(s: IReadableStream, v: UInt16) -> None:";
+            yield return "    def WriteUInt16(s: IWritableStream, v: UInt16) -> None:";
             yield return "        s.WriteBytes(struct.pack('<H', v))";
             yield return "    @staticmethod";
-            yield return "    def WriteUInt32(s: IReadableStream, v: UInt32) -> None:";
+            yield return "    def WriteUInt32(s: IWritableStream, v: UInt32) -> None:";
             yield return "        s.WriteBytes(struct.pack('<I', v))";
             yield return "    @staticmethod";
-            yield return "    def WriteUInt64(s: IReadableStream, v: UInt64) -> None:";
+            yield return "    def WriteUInt64(s: IWritableStream, v: UInt64) -> None:";
             yield return "        s.WriteBytes(struct.pack('<Q', v))";
             yield return "    @staticmethod";
-            yield return "    def WriteInt8(s: IReadableStream, v: Int8) -> None:";
+            yield return "    def WriteInt8(s: IWritableStream, v: Int8) -> None:";
             yield return "        s.WriteBytes(struct.pack('<b', v))";
             yield return "    @staticmethod";
-            yield return "    def WriteInt16(s: IReadableStream, v: Int16) -> None:";
+            yield return "    def WriteInt16(s: IWritableStream, v: Int16) -> None:";
             yield return "        s.WriteBytes(struct.pack('<h', v))";
             yield return "    @staticmethod";
-            yield return "    def WriteInt32(s: IReadableStream, v: Int32) -> None:";
+            yield return "    def WriteInt32(s: IWritableStream, v: Int32) -> None:";
             yield return "        s.WriteBytes(struct.pack('<i', v))";
             yield return "    @staticmethod";
-            yield return "    def WriteInt64(s: IReadableStream, v: Int64) -> None:";
+            yield return "    def WriteInt64(s: IWritableStream, v: Int64) -> None:";
             yield return "        s.WriteBytes(struct.pack('<q', v))";
             yield return "";
             yield return "    @staticmethod";
-            yield return "    def WriteFloat32(s: IReadableStream, v: Float32) -> None:";
+            yield return "    def WriteFloat32(s: IWritableStream, v: Float32) -> None:";
             yield return "        s.WriteBytes(struct.pack('<f', v))";
             yield return "    @staticmethod";
-            yield return "    def WriteFloat64(s: IReadableStream, v: Float64) -> None:";
+            yield return "    def WriteFloat64(s: IWritableStream, v: Float64) -> None:";
             yield return "        s.WriteBytes(struct.pack('<d', v))";
             yield return "";
             yield return "    @staticmethod";
-            yield return "    def WriteString(s: IReadableStream, v: String) -> None:";
+            yield return "    def WriteSize(s: IWritableStream, v: int) -> None:";
+            yield return "        if v < 0 or v > 0x3FFFFFFFFFFFFFFF:";
+            yield return "            raise IndexError";
+            yield return "";
+            yield return "        lower = int(v & 0x7FFFFFFF)";
+            yield return "        upper = int((v >> 31) & 0x7FFFFFFF)";
+            yield return "";
+            yield return "        if upper != 0:";
+            yield return "            lower |= 0x80000000";
+            yield return "            WriteStream.WriteUInt32(s, lower)";
+            yield return "            WriteStream.WriteUInt32(s, upper)";
+            yield return "        else:";
+            yield return "            WriteStream.WriteUInt32(s, lower)";
+            yield return "";
+            yield return "    @staticmethod";
+            yield return "    def WriteString(s: IWritableStream, v: String) -> None:";
             yield return "        l = v.encode('utf-16le')";
-            yield return "        WriteStream.WriteInt32(s, len(l))";
+            yield return "        WriteStream.WriteSize(s, len(l))";
             yield return "        s.WriteBytes(l)";
             yield return "        return s";
             yield return "";
@@ -1070,7 +1095,7 @@ namespace Niveum.ObjectSchema.PythonBinary
             {
                 yield return _Line;
             }
-            yield return "    Length = BinaryTranslator.IntFromBinary(s)";
+            yield return "    Length = ReadStream.ReadSize(s)";
             if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
             {
                 yield return "    " + "l = s.ReadBytes(Length)";
@@ -1090,8 +1115,7 @@ namespace Niveum.ObjectSchema.PythonBinary
             {
                 yield return _Line;
             }
-            yield return "    Length = len(l)";
-            yield return "    BinaryTranslator.IntToBinary(s, Length)";
+            yield return "    WriteStream.WriteSize(s, len(l))";
             if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
             {
                 yield return "    " + "s.WriteBytes(l)";
@@ -1139,7 +1163,7 @@ namespace Niveum.ObjectSchema.PythonBinary
             {
                 yield return _Line;
             }
-            yield return "    Length = BinaryTranslator.IntFromBinary(s)";
+            yield return "    Length = ReadStream.ReadSize(s)";
             yield return "    l = set()";
             yield return "    for k in range(Length):";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        l.add(BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), ElementSimpleName), "FromBinary"))), "(s))"))
@@ -1152,8 +1176,7 @@ namespace Niveum.ObjectSchema.PythonBinary
             {
                 yield return _Line;
             }
-            yield return "    Length = len(l)";
-            yield return "    BinaryTranslator.IntToBinary(s, Length)";
+            yield return "    WriteStream.WriteSize(s, len(l))";
             yield return "    for e in l:";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), ElementSimpleName), "ToBinary"))), "(s, e)"))
             {
@@ -1200,7 +1223,7 @@ namespace Niveum.ObjectSchema.PythonBinary
             {
                 yield return _Line;
             }
-            yield return "    Length = BinaryTranslator.IntFromBinary(s)";
+            yield return "    Length = ReadStream.ReadSize(s)";
             yield return "    l = {}";
             yield return "    for k in range(Length):";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        Key = BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), KeySimpleName), "FromBinary"))), "(s)"))
@@ -1217,8 +1240,7 @@ namespace Niveum.ObjectSchema.PythonBinary
             {
                 yield return _Line;
             }
-            yield return "    Length = len(l)";
-            yield return "    BinaryTranslator.IntToBinary(s, (Int)(Length))";
+            yield return "    WriteStream.WriteSize(s, len(l))";
             yield return "    for Key, Value in l.items():";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        BinaryTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), KeySimpleName), "ToBinary"))), "(s, Key)"))
             {

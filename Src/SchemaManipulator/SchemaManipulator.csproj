@@ -9,7 +9,7 @@
     <Product>Niveum.SchemaManipulator</Product>
     <Copyright>Copyright(C) F.R.C., under BSD license</Copyright>
     <AssemblyName>SchemaManipulator</AssemblyName>
-    <AssemblyVersion>2023.03.09.0</AssemblyVersion>
+    <AssemblyVersion>2025.08.07.0</AssemblyVersion>
     <BaseIntermediateOutputPath>..\..\Obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
     <OutputType>Exe</OutputType>
     <OutputPath>..\..\Bin\</OutputPath>

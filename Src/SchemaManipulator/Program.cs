@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Niveum.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2023.03.09.
+//  Version:     2025.08.07.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -883,7 +883,7 @@ namespace Niveum.SchemaManipulator
                 var Compiled = f.Value;
                 if (File.Exists(FilePath))
                 {
-                    var Original = Txt.ReadFile(FilePath);
+                    var Original = Txt.ReadFile(FilePath, TextEncoding.UTF8);
                     if (String.Equals(Compiled, Original, StringComparison.Ordinal))
                     {
                         continue;
@@ -891,7 +891,7 @@ namespace Niveum.SchemaManipulator
                 }
                 var Dir = FileNameHandling.GetFileDirectory(FilePath);
                 if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
-                Txt.WriteFile(FilePath, Compiled);
+                Txt.WriteFile(FilePath, TextEncoding.UTF8, Compiled, false);
             }
         }
 
@@ -905,7 +905,7 @@ namespace Niveum.SchemaManipulator
                 var Compiled = f.Value;
                 if (File.Exists(FilePath))
                 {
-                    var Original = Txt.ReadFile(FilePath);
+                    var Original = Txt.ReadFile(FilePath, TextEncoding.UTF8);
                     if (String.Equals(Compiled, Original, StringComparison.Ordinal))
                     {
                         continue;
@@ -913,7 +913,7 @@ namespace Niveum.SchemaManipulator
                 }
                 var Dir = FileNameHandling.GetFileDirectory(FilePath);
                 if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
-                Txt.WriteFile(FilePath, Compiled);
+                Txt.WriteFile(FilePath, TextEncoding.UTF8, Compiled, false);
             }
         }
 

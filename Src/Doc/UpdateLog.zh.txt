@@ -1,4 +1,10 @@
-﻿2025.07.28
+﻿2025.08.07
+Niveum.Object:
+增加C#、C++、Java、Python二进制序列化代码生成对超过2^31-1的长度的数组长度的支持，其中C#和Java由于语言和运行时限制仅支持报错。
+Niveum.SchemaManipulator:
+Java代码生成输出不带BOM的文件。
+
+2025.07.28
 Examples:
 C#通讯示例服务器增加PID文件退出功能，分离服务器创建和启动。
 

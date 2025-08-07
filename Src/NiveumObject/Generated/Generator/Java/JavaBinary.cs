@@ -170,9 +170,26 @@ namespace Niveum.ObjectSchema.JavaBinary
             yield return "        return Double.longBitsToDouble(this.ReadInt64());";
             yield return "    }";
             yield return "";
+            yield return "    public long ReadSize()";
+            yield return "    {";
+            yield return "        var Lower = this.ReadInt32();";
+            yield return "        if ((Lower & 0x80000000) == 0)";
+            yield return "        {";
+            yield return "            return Lower;";
+            yield return "        }";
+            yield return "        var Upper = this.ReadInt32();";
+            yield return "        if ((Upper & 0x80000000) != 0)";
+            yield return "        {";
+            yield return "            throw new RuntimeException(\"InvalidOperation\");";
+            yield return "        }";
+            yield return "        return (((long)Upper) << 31) | (long)Lower;";
+            yield return "    }";
+            yield return "";
             yield return "    public String ReadString()";
             yield return "    {";
-            yield return "        int n = this.ReadInt32();";
+            yield return "        long LongLength = this.ReadSize();";
+            yield return "        if (LongLength > 0x7FFFFFFF) { throw new RuntimeException(\"InvalidOperation\"); }";
+            yield return "        int n = (int)LongLength;";
             yield return "        byte[] s = new byte[n];";
             yield return "        for (int k = 0; k < n; k += 1)";
             yield return "        {";
@@ -273,6 +290,26 @@ namespace Niveum.ObjectSchema.JavaBinary
             yield return "    public void WriteFloat64(double v)";
             yield return "    {";
             yield return "        WriteInt64(Double.doubleToLongBits(v));";
+            yield return "    }";
+            yield return "";
+            yield return "    public void WriteSize(long v)";
+            yield return "    {";
+            yield return "        if ((v < 0) || (v > 0x3FFFFFFFFFFFFFFFL))";
+            yield return "        {";
+            yield return "            throw new RuntimeException(\"InvalidOperation\");";
+            yield return "        }";
+            yield return "        var Lower = (int)((long)(v) & 0x7FFFFFFF);";
+            yield return "        var Upper = (int)(((long)(v) >> 31) & 0x7FFFFFFF);";
+            yield return "        if (Upper != 0)";
+            yield return "        {";
+            yield return "            Lower |= 0x80000000;";
+            yield return "            WriteInt32(Lower);";
+            yield return "            WriteInt32(Upper);";
+            yield return "        }";
+            yield return "        else";
+            yield return "        {";
+            yield return "            WriteInt32(Lower);";
+            yield return "        }";
             yield return "    }";
             yield return "";
             yield return "    public void WriteString(String v)";
@@ -795,7 +832,9 @@ namespace Niveum.ObjectSchema.JavaBinary
                 yield return _Line;
             }
             yield return "{";
-            yield return "    int Length = IntFromBinary(s);";
+            yield return "    long LongLength = s.ReadSize();";
+            yield return "    if (LongLength > 0x7FFFFFFF) { throw new RuntimeException(\"InvalidOperation\"); }";
+            yield return "    int Length = (int)(LongLength);";
             foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    "), TypeString), " l = new "), TypeString), "(Length);"))
             {
                 yield return _Line;
@@ -814,8 +853,7 @@ namespace Niveum.ObjectSchema.JavaBinary
                 yield return _Line;
             }
             yield return "{";
-            yield return "    int Length = l.size();";
-            yield return "    IntToBinary(s, Length);";
+            yield return "    s.WriteSize(l.size());";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "    for ("), ElementTypeString), " e : l)"))
             {
                 yield return _Line;
@@ -839,7 +877,9 @@ namespace Niveum.ObjectSchema.JavaBinary
                 yield return _Line;
             }
             yield return "{";
-            yield return "    int Length = IntFromBinary(s);";
+            yield return "    long LongLength = s.ReadSize();";
+            yield return "    if (LongLength > 0x7FFFFFFF) { throw new RuntimeException(\"InvalidOperation\"); }";
+            yield return "    int Length = (int)(LongLength);";
             foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    "), TypeString), " l = new "), TypeString), "(Length);"))
             {
                 yield return _Line;
@@ -858,8 +898,7 @@ namespace Niveum.ObjectSchema.JavaBinary
                 yield return _Line;
             }
             yield return "{";
-            yield return "    int Length = l.size();";
-            yield return "    IntToBinary(s, Length);";
+            yield return "    s.WriteSize(l.size());";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "    for ("), ElementTypeString), " e : l)"))
             {
                 yield return _Line;
@@ -889,7 +928,9 @@ namespace Niveum.ObjectSchema.JavaBinary
                 yield return _Line;
             }
             yield return "{";
-            yield return "    int Length = IntFromBinary(s);";
+            yield return "    long LongLength = s.ReadSize();";
+            yield return "    if (LongLength > 0x7FFFFFFF) { throw new RuntimeException(\"InvalidOperation\"); }";
+            yield return "    int Length = (int)(LongLength);";
             foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    "), TypeString), " l = new "), TypeString), "(Length);"))
             {
                 yield return _Line;
@@ -912,8 +953,7 @@ namespace Niveum.ObjectSchema.JavaBinary
                 yield return _Line;
             }
             yield return "{";
-            yield return "    int Length = l.size();";
-            yield return "    IntToBinary(s, Length);";
+            yield return "    s.WriteSize(l.size());";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "    for ("), KeyTypeString), " Key : l.keySet())"))
             {
                 yield return _Line;

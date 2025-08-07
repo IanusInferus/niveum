@@ -541,12 +541,28 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "        return *reinterpret_cast<double *>(&i);";
             yield return "    }";
             yield return "";
+            yield return "    std::size_t ReadSize()";
+            yield return "    {";
+            yield return "        auto Lower = ReadUInt32();";
+            yield return "        if ((Lower & 0x80000000) == 0)";
+            yield return "        {";
+            yield return "            return Lower;";
+            yield return "        }";
+            yield return "        auto Upper = ReadUInt32();";
+            yield return "        if ((Upper & 0x80000000) != 0)";
+            yield return "        {";
+            yield return "            throw std::out_of_range(\"\");";
+            yield return "        }";
+            yield return "        return (static_cast<std::size_t>(Upper) << 31) | static_cast<std::size_t>(Lower);";
+            yield return "    }";
+            yield return "";
             yield return "    String ReadString()";
             yield return "    {";
-            yield return "        std::int32_t Length = ReadInt32();";
-            yield return "        int n = static_cast<int>(Length) / 2;";
+            yield return "        auto Length = ReadSize();";
+            yield return "        auto n = Length / 2;";
             yield return "        std::u16string v;";
-            yield return "        for (int k = 0; k < n; k += 1)";
+            yield return "        v.reserve(n);";
+            yield return "        for (std::size_t k = 0; k < n; k += 1)";
             yield return "        {";
             yield return "            v.push_back(static_cast<char16_t>(ReadUInt16()));";
             yield return "        }";
@@ -641,9 +657,29 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "        WriteInt64(*reinterpret_cast<std::int64_t *>(&v));";
             yield return "    }";
             yield return "";
+            yield return "    void WriteSize(Int64 v)";
+            yield return "    {";
+            yield return "        if ((v < 0) || (v > 0x3FFFFFFFFFFFFFFFL))";
+            yield return "        {";
+            yield return "            throw std::out_of_range(\"\");";
+            yield return "        }";
+            yield return "        auto Lower = static_cast<UInt32>(static_cast<UInt64>(v) & 0x7FFFFFFF);";
+            yield return "        auto Upper = static_cast<UInt32>((static_cast<UInt64>(v) >> 31) & 0x7FFFFFFF);";
+            yield return "        if (Upper != 0)";
+            yield return "        {";
+            yield return "            Lower |= 0x80000000;";
+            yield return "            WriteUInt32(Lower);";
+            yield return "            WriteUInt32(Upper);";
+            yield return "        }";
+            yield return "        else";
+            yield return "        {";
+            yield return "            WriteUInt32(Lower);";
+            yield return "        }";
+            yield return "    }";
+            yield return "";
             yield return "    void WriteString(String v)";
             yield return "    {";
-            yield return "        WriteInt32(static_cast<std::int32_t>(v.size()) * 2);";
+            yield return "        WriteSize(v.size() * 2);";
             yield return "        for (auto c : v)";
             yield return "        {";
             yield return "            WriteUInt16(static_cast<std::uint16_t>(c));";
@@ -1212,7 +1248,7 @@ namespace Niveum.ObjectSchema.CppBinary
                 yield return _Line;
             }
             yield return "{";
-            yield return "    int Length = static_cast<int>(IntFromBinary(s));";
+            yield return "    auto Length = s.ReadSize();";
             if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
             {
                 yield return "    " + "auto l = s.ReadBytes(Length);";
@@ -1223,7 +1259,7 @@ namespace Niveum.ObjectSchema.CppBinary
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
-                yield return "    " + "l.reserve(static_cast<std::size_t>(Length));";
+                yield return "    " + "l.reserve(Length);";
                 yield return "    " + "for (int k = 0; k < Length; k += 1)";
                 yield return "    " + "{";
                 foreach (var _Line in Combine(Combine(Combine(Begin(), "    l.push_back("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementSimpleName), "FromBinary"))), "(s));"))
@@ -1239,8 +1275,7 @@ namespace Niveum.ObjectSchema.CppBinary
                 yield return _Line;
             }
             yield return "{";
-            yield return "    int Length = static_cast<int>(l.size());";
-            yield return "    IntToBinary(s, static_cast<Int>(Length));";
+            yield return "    s.WriteSize(l.size());";
             if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
             {
                 yield return "    " + "s.WriteBytes(l);";
@@ -1267,12 +1302,12 @@ namespace Niveum.ObjectSchema.CppBinary
                 yield return _Line;
             }
             yield return "{";
-            yield return "    int Length = static_cast<int>(IntFromBinary(s));";
+            yield return "    auto Length = s.ReadSize();";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "    "), TypeString), " l;"))
             {
                 yield return _Line;
             }
-            yield return "    l.reserve(static_cast<std::size_t>(Length));";
+            yield return "    l.reserve(Length);";
             yield return "    for (int k = 0; k < Length; k += 1)";
             yield return "    {";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        l.insert("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementSimpleName), "FromBinary"))), "(s));"))
@@ -1287,8 +1322,7 @@ namespace Niveum.ObjectSchema.CppBinary
                 yield return _Line;
             }
             yield return "{";
-            yield return "    int Length = static_cast<int>(l.size());";
-            yield return "    IntToBinary(s, static_cast<Int>(Length));";
+            yield return "    s.WriteSize(l.size());";
             yield return "    for (auto e : l)";
             yield return "    {";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), ElementSimpleName), "ToBinary"))), "(s, e);"))
@@ -1314,12 +1348,12 @@ namespace Niveum.ObjectSchema.CppBinary
                 yield return _Line;
             }
             yield return "{";
-            yield return "    int Length = static_cast<int>(IntFromBinary(s));";
+            yield return "    auto Length = s.ReadSize();";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "    "), TypeString), " l;"))
             {
                 yield return _Line;
             }
-            yield return "    l.reserve(static_cast<std::size_t>(Length));";
+            yield return "    l.reserve(Length);";
             yield return "    for (int k = 0; k < Length; k += 1)";
             yield return "    {";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        auto Key = "), GetEscapedIdentifier(Combine(Combine(Begin(), KeySimpleName), "FromBinary"))), "(s);"))
@@ -1338,8 +1372,7 @@ namespace Niveum.ObjectSchema.CppBinary
                 yield return _Line;
             }
             yield return "{";
-            yield return "    int Length = static_cast<int>(l.size());";
-            yield return "    IntToBinary(s, static_cast<Int>(Length));";
+            yield return "    s.WriteSize(l.size());";
             yield return "    for (auto p : l)";
             yield return "    {";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), KeySimpleName), "ToBinary"))), "(s, std::get<0>(p));"))

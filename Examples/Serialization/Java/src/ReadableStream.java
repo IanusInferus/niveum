@@ -1,4 +1,4 @@
-﻿import java.io.*;
+import java.io.*;
 
 public class ReadableStream extends world.binary.IReadableStream
 {

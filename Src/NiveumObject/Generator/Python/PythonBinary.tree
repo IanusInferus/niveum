@@ -4,7 +4,7 @@
       File:        PythonBinary.tree
       Location:    Niveum.Object <Tree>
       Description: 对象类型结构Python二进制通讯模板
-      Version:     2021.01.05.
+      Version:     2025.08.07.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -127,61 +127,86 @@
             return struct.unpack('<d', s.ReadBytes(8))[0]
 
         @staticmethod
+        def ReadSize(s: 'IReadableStream') -> int:
+            lower = ReadStream.ReadUInt32(s)
+            if (lower & 0x80000000) == 0:
+                return lower
+            upper = ReadStream.ReadUInt32(s)
+            if (upper & 0x80000000) != 0:
+                raise IndexError
+            return ((upper << 31) | (lower & 0x7FFFFFFF))
+
+        @staticmethod
         def ReadString(s: IReadableStream) -> String:
-            n = ReadStream.ReadInt32(s)
+            n = ReadStream.ReadSize(s)
             s = bytearray(s.ReadBytes(n)).decode('utf-16le')
             return s
 
     class WriteStream:
         @staticmethod
-        def WriteUnit(s: IReadableStream, v: Unit) -> None:
+        def WriteUnit(s: IWritableStream, v: Unit) -> None:
             pass
         @staticmethod
-        def WriteBoolean(s: IReadableStream, v: Boolean) -> None:
+        def WriteBoolean(s: IWritableStream, v: Boolean) -> None:
             if v:
                 s.WriteByte(0xFF)
             else:
                 s.WriteByte(0)
         @staticmethod
-        def WriteByte(s: IReadableStream, v: Byte) -> None:
+        def WriteByte(s: IWritableStream, v: Byte) -> None:
             s.WriteByte(v)
 
         @staticmethod
-        def WriteUInt8(s: IReadableStream, v: UInt8) -> None:
+        def WriteUInt8(s: IWritableStream, v: UInt8) -> None:
             s.WriteByte(v)
         @staticmethod
-        def WriteUInt16(s: IReadableStream, v: UInt16) -> None:
+        def WriteUInt16(s: IWritableStream, v: UInt16) -> None:
             s.WriteBytes(struct.pack('<H', v))
         @staticmethod
-        def WriteUInt32(s: IReadableStream, v: UInt32) -> None:
+        def WriteUInt32(s: IWritableStream, v: UInt32) -> None:
             s.WriteBytes(struct.pack('<I', v))
         @staticmethod
-        def WriteUInt64(s: IReadableStream, v: UInt64) -> None:
+        def WriteUInt64(s: IWritableStream, v: UInt64) -> None:
             s.WriteBytes(struct.pack('<Q', v))
         @staticmethod
-        def WriteInt8(s: IReadableStream, v: Int8) -> None:
+        def WriteInt8(s: IWritableStream, v: Int8) -> None:
             s.WriteBytes(struct.pack('<b', v))
         @staticmethod
-        def WriteInt16(s: IReadableStream, v: Int16) -> None:
+        def WriteInt16(s: IWritableStream, v: Int16) -> None:
             s.WriteBytes(struct.pack('<h', v))
         @staticmethod
-        def WriteInt32(s: IReadableStream, v: Int32) -> None:
+        def WriteInt32(s: IWritableStream, v: Int32) -> None:
             s.WriteBytes(struct.pack('<i', v))
         @staticmethod
-        def WriteInt64(s: IReadableStream, v: Int64) -> None:
+        def WriteInt64(s: IWritableStream, v: Int64) -> None:
             s.WriteBytes(struct.pack('<q', v))
 
         @staticmethod
-        def WriteFloat32(s: IReadableStream, v: Float32) -> None:
+        def WriteFloat32(s: IWritableStream, v: Float32) -> None:
             s.WriteBytes(struct.pack('<f', v))
         @staticmethod
-        def WriteFloat64(s: IReadableStream, v: Float64) -> None:
+        def WriteFloat64(s: IWritableStream, v: Float64) -> None:
             s.WriteBytes(struct.pack('<d', v))
 
         @staticmethod
-        def WriteString(s: IReadableStream, v: String) -> None:
+        def WriteSize(s: IWritableStream, v: int) -> None:
+            if v < 0 or v > 0x3FFFFFFFFFFFFFFF:
+                raise IndexError
+
+            lower = int(v & 0x7FFFFFFF)
+            upper = int((v >> 31) & 0x7FFFFFFF)
+
+            if upper != 0:
+                lower |= 0x80000000
+                WriteStream.WriteUInt32(s, lower)
+                WriteStream.WriteUInt32(s, upper)
+            else:
+                WriteStream.WriteUInt32(s, lower)
+
+        @staticmethod
+        def WriteString(s: IWritableStream, v: String) -> None:
             l = v.encode('utf-16le')
-            WriteStream.WriteInt32(s, len(l))
+            WriteStream.WriteSize(s, len(l))
             s.WriteBytes(l)
             return s
 
@@ -811,7 +836,7 @@
         var ElementSimpleName = ElementType.SimpleName(NamespaceName);
     @staticmethod
     def [[${SimpleName}FromBinary]](s: IReadableStream) -> ${TypeString}:
-        Length = BinaryTranslator.IntFromBinary(s)
+        Length = ReadStream.ReadSize(s)
         $$
             if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
             {
@@ -828,8 +853,7 @@
         return l
     @staticmethod
     def [[${SimpleName}ToBinary]](s: IWritableStream, l: ${TypeString}) -> None:
-        Length = len(l)
-        BinaryTranslator.IntToBinary(s, Length)
+        WriteStream.WriteSize(s, len(l))
         $$
             if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
             {
@@ -862,15 +886,14 @@
         var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
     @staticmethod
     def [[${SimpleName}FromBinary]](s: IReadableStream) -> ${TypeString}:
-        Length = BinaryTranslator.IntFromBinary(s)
+        Length = ReadStream.ReadSize(s)
         l = set()
         for k in range(Length):
             l.add(BinaryTranslator.[[${ElementSimpleName}FromBinary]](s))
         return l
     @staticmethod
     def [[${SimpleName}ToBinary]](s: IWritableStream, l: ${TypeString}) -> None:
-        Length = len(l)
-        BinaryTranslator.IntToBinary(s, Length)
+        WriteStream.WriteSize(s, len(l))
         for e in l:
             BinaryTranslator.[[${ElementSimpleName}ToBinary]](s, e)
     @staticmethod
@@ -899,7 +922,7 @@
         var ValueSimpleName = gp[1].SimpleName(NamespaceName);
     @staticmethod
     def [[${SimpleName}FromBinary]](s: IReadableStream) -> ${TypeString}:
-        Length = BinaryTranslator.IntFromBinary(s)
+        Length = ReadStream.ReadSize(s)
         l = {}
         for k in range(Length):
             Key = BinaryTranslator.[[${KeySimpleName}FromBinary]](s)
@@ -907,8 +930,7 @@
         return l
     @staticmethod
     def [[${SimpleName}ToBinary]](s: IWritableStream, l: ${TypeString}) -> None:
-        Length = len(l)
-        BinaryTranslator.IntToBinary(s, (Int)(Length))
+        WriteStream.WriteSize(s, len(l))
         for Key, Value in l.items():
             BinaryTranslator.[[${KeySimpleName}ToBinary]](s, Key)
             BinaryTranslator.[[${ValueSimpleName}ToBinary]](s, Value)
