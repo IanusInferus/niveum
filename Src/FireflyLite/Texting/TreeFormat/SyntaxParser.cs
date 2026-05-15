@@ -964,7 +964,6 @@ namespace Firefly.Texting.TreeFormat.Syntax
         {
             var Min = 0;
             var Max = l.Count;
-            int Index = 0;
             while (Min < Max)
             {
                 int Mid = (Max + Min) / 2;

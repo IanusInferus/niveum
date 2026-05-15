@@ -232,11 +232,11 @@ namespace Firefly.TextEncoding
         public static string TrimStart(this string s, Char32 c)
         {
             var s32 = s.ToUTF32();
-            for (int n = s32.Length - 1; n >= 0; n--)
+            for (int n = 0; n < s32.Length; n++)
             {
                 if (s32[n] != c)
                 {
-                    return s32.Take(n + 1).ToUTF16B();
+                    return s32.Skip(n).ToUTF16B();
                 }
             }
             return "";
@@ -245,11 +245,11 @@ namespace Firefly.TextEncoding
         public static string TrimEnd(this string s, Char32 c)
         {
             var s32 = s.ToUTF32();
-            for (int n = 0; n < s32.Length; n++)
+            for (int n = s32.Length - 1; n >= 0; n--)
             {
                 if (s32[n] != c)
                 {
-                    return s32.Skip(n).ToUTF16B();
+                    return s32.Take(n + 1).ToUTF16B();
                 }
             }
             return "";
