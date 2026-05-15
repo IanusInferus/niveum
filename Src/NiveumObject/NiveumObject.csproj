@@ -46,6 +46,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FireflyLite\FireflyLite.vbproj" />
+    <ProjectReference Include="..\FireflyLite\FireflyLite.csproj" />
   </ItemGroup>
 </Project>

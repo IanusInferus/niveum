@@ -26,7 +26,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Nivea", "Nivea\Nivea.csproj
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NiveumJson", "NiveumJson\NiveumJson.csproj", "{0A2ACEBF-1C9E-497A-A996-3A5549A13710}"
 EndProject
-Project("{778DAE3C-4631-46EA-AA77-85C1314464D9}") = "FireflyLite", "FireflyLite\FireflyLite.vbproj", "{E70CC4C7-8598-4631-B25C-71B925CC14D1}"
+Project("{778DAE3C-4631-46EA-AA77-85C1314464D9}") = "FireflyLite", "FireflyLite\FireflyLite.csproj", "{E70CC4C7-8598-4631-B25C-71B925CC14D1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

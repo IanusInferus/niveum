@@ -40,7 +40,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FireflyLite\FireflyLite.vbproj" />
+    <ProjectReference Include="..\FireflyLite\FireflyLite.csproj" />
     <ProjectReference Include="..\NiveumObject\NiveumObject.csproj" />
     <ProjectReference Include="..\NiveumExpression\NiveumExpression.csproj" />
   </ItemGroup>
