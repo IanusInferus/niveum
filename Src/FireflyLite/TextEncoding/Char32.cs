@@ -191,7 +191,7 @@ namespace Firefly.TextEncoding
     {
         public static char ChrW(short u)
         {
-            return Convert.ToChar(DirectIntConvert.CSU(u));
+            return Convert.ToChar(unchecked((ushort)u));
         }
 
         public static char ChrW(ushort u)

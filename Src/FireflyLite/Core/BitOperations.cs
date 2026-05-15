@@ -204,19 +204,19 @@ namespace Firefly
 
         public static sbyte Bits(this sbyte This, int U, int L)
         {
-            return DirectIntConvert.CUS(DirectIntConvert.CSU(This).Bits(U, L));
+            unchecked { return (sbyte)((byte)This).Bits(U, L); }
         }
         public static short Bits(this short This, int U, int L)
         {
-            return DirectIntConvert.CUS(DirectIntConvert.CSU(This).Bits(U, L));
+            unchecked { return (short)((ushort)This).Bits(U, L); }
         }
         public static int Bits(this int This, int U, int L)
         {
-            return DirectIntConvert.CUS(DirectIntConvert.CSU(This).Bits(U, L));
+            unchecked { return (int)((uint)This).Bits(U, L); }
         }
         public static long Bits(this long This, int U, int L)
         {
-            return DirectIntConvert.CUS(DirectIntConvert.CSU(This).Bits(U, L));
+            unchecked { return (long)((ulong)This).Bits(U, L); }
         }
 
 

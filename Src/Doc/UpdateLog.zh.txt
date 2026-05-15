@@ -1,6 +1,7 @@
 ﻿2026.05.16
 Firefly.Lite:
 使用Claude转换为C#。
+删除DirectIntConvert。
 
 2025.08.07
 Niveum.Object:
