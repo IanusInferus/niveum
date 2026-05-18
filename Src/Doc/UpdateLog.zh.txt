@@ -1,4 +1,8 @@
-﻿2026.05.16
+﻿2026.05.18
+Firefly.Lite, Test:
+使用Claude转换测试。
+
+2026.05.16
 Firefly.Lite:
 使用Claude转换为C#。
 删除DirectIntConvert。
