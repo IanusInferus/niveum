@@ -1035,7 +1035,7 @@ namespace Niveum.SchemaManipulator
             var Compiled = ObjectSchema.CompileToPython();
             if (File.Exists(PythonCodePath))
             {
-                var Original = Txt.ReadFile(PythonCodePath);
+                var Original = Txt.ReadFile(PythonCodePath, TextEncoding.UTF8);
                 if (String.Equals(Compiled, Original, StringComparison.Ordinal))
                 {
                     return;
@@ -1052,7 +1052,7 @@ namespace Niveum.SchemaManipulator
             var Compiled = ObjectSchema.CompileToPythonBinary();
             if (File.Exists(PythonCodePath))
             {
-                var Original = Txt.ReadFile(PythonCodePath);
+                var Original = Txt.ReadFile(PythonCodePath, TextEncoding.UTF8);
                 if (String.Equals(Compiled, Original, StringComparison.Ordinal))
                 {
                     return;
@@ -1060,7 +1060,7 @@ namespace Niveum.SchemaManipulator
             }
             var Dir = FileNameHandling.GetFileDirectory(PythonCodePath);
             if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
-            Txt.WriteFile(PythonCodePath, Compiled);
+            Txt.WriteFile(PythonCodePath, TextEncoding.UTF8, Compiled);
         }
 
         public static void ObjectSchemaToXhtml(String XhtmlDir, String Title, String CopyrightText)

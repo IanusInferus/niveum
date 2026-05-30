@@ -3,6 +3,7 @@ Examples:
 从示例中去除NiveumQuery，因为设计需要重新考虑。
 Niveum.SchemaManipulator:
 修正/nullable选项参数个数。
+修正Python代码生成时的编码问题。
 
 2026.05.18
 Firefly.Lite, Test:

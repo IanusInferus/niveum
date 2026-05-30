@@ -13,10 +13,6 @@ SchemaManipulator.exe /loadtype:Schema\Common /t2cs:CSharp\Src\Client\Generated\
 SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /loadtype:Schema\Compatibility.tree /async:CSharp\Src\CommunicationAsync.lst /t2cs:CSharp\Src\Client\Generated\Communication.cs,Communication,false
 SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /loadtype:Schema\Compatibility.tree /async:CSharp\Src\CommunicationAsync.lst /t2csb:CSharp\Src\Client\Generated\CommunicationBinary.cs,Communication.Binary,false
 SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /loadtype:Schema\Compatibility.tree /async:CSharp\Src\CommunicationAsync.lst /t2csj:CSharp\Src\Client\Generated\CommunicationJson.cs,Communication.Json
-@if not exist CSharpBrowser\Src\Browser\Generated @md CSharpBrowser\Src\Browser\Generated
-SchemaManipulator.exe /loadtype:Schema\Common /t2cs:CSharpBrowser\Src\Browser\Generated\Common.cs,"",false
-SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /t2cs:CSharpBrowser\Src\Browser\Generated\Communication.cs,Communication,false
-SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /t2csj:CSharpBrowser\Src\Browser\Generated\CommunicationJson.cs,Communication.Json
 @if not exist CSharpBrowserBlazor\Src\Client\Generated @md CSharpBrowserBlazor\Src\Client\Generated
 SchemaManipulator.exe /loadtype:Schema\Common /nullable /t2cs:CSharpBrowserBlazor\Src\Client\Generated\Common.cs,"",false
 SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /nullable /t2cs:CSharpBrowserBlazor\Src\Client\Generated\Communication.cs,Communication,false
@@ -31,7 +27,7 @@ SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /lo
 SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /t2cpp:CPP\Src\Client\Generated\Communication.h,Communication
 SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /import:"""Communication.h""" /t2cppb:CPP\Src\Client\Generated\CommunicationBinary.h,Communication.Binary
 
-::Haxe
+:: Haxe
 SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /t2hx:Haxe\generated,Communication
 SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /t2hxj:Haxe\generated,Communication.Json
 

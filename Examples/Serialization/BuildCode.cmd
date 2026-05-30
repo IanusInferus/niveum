@@ -23,11 +23,11 @@ SchemaManipulator.exe /loadtype:Schema /t2cpp:CPP\Src\World.h,World
 SchemaManipulator.exe /loadtype:Schema /t2cppb:CPP\Src\WorldBinary.h,World
 SchemaManipulator.exe /loadtype:Schema /t2cppv:CPP\Src\WorldVersions.h,World,World.World
 
-::Haxe
+:: Haxe
 SchemaManipulator.exe /loadtype:Schema /t2hx:Haxe\generated,World
 SchemaManipulator.exe /loadtype:Schema /t2hxj:Haxe\generated,World.Json
 
-::Python
+:: Python
 SchemaManipulator.exe /loadtype:Schema /t2py:Python\src\World.py
 SchemaManipulator.exe /loadtype:Schema /import:World /t2pyb:Python\src\WorldBinary.py
 
