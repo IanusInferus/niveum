@@ -1115,7 +1115,8 @@ namespace Niveum.ObjectSchema.PythonBinary
             {
                 yield return _Line;
             }
-            yield return "    WriteStream.WriteSize(s, len(l))";
+            yield return "    Length = len(l)";
+            yield return "    WriteStream.WriteSize(s, Length)";
             if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
             {
                 yield return "    " + "s.WriteBytes(l)";
@@ -1286,6 +1287,8 @@ namespace Niveum.ObjectSchema.PythonBinary
             yield return "#";
             yield return "#==========================================================================";
             yield return "";
+            yield return "from typing import List";
+            yield return "from typing import Dict";
             yield return "from abc import ABCMeta, abstractmethod";
             yield return "import struct";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "from "), Schema.Imports), " import *"))

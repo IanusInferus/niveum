@@ -4,7 +4,7 @@
       File:        PythonBinary.tree
       Location:    Niveum.Object <Tree>
       Description: 对象类型结构Python二进制通讯模板
-      Version:     2025.08.07.
+      Version:     2026.05.30.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -853,7 +853,8 @@
         return l
     @staticmethod
     def [[${SimpleName}ToBinary]](s: IWritableStream, l: ${TypeString}) -> None:
-        WriteStream.WriteSize(s, len(l))
+        Length = len(l)
+        WriteStream.WriteSize(s, Length)
         $$
             if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
             {
@@ -957,6 +958,8 @@
     #
     #==========================================================================
 
+    from typing import List
+    from typing import Dict
     from abc import ABCMeta, abstractmethod
     import struct
     from ${Schema.Imports} import *
