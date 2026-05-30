@@ -4,7 +4,7 @@
       File:        CSharpJson.tree
       Location:    Niveum.Object <Tree>
       Description: 对象类型结构C# JSON通讯模板
-      Version:     2022.11.26.
+      Version:     2026.05.30.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -630,10 +630,10 @@
         if (jo == null) { throw new InvalidOperationException(); }
         var o = new ${TypeString}();
         $$
-            foreach (var a in Fields)
+            foreach (var f in Fields)
             {
                 ##
-                    o.[[${a.Name}]] = [[${a.Type.SimpleName(NamespaceName)}FromJson]](jo[${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}]);
+                    o.[[${f.Name}]] = [[${f.Type.SimpleName(NamespaceName)}FromJson]](jo[${GetEscapedStringLiteral(LowercaseCamelize(f.Name))}]);
             }
         return o;
     }
@@ -641,10 +641,10 @@
     {
         var jo = new JObject();
         $$
-            foreach (var a in Fields)
+            foreach (var f in Fields)
             {
                 ##
-                    jo.Add(${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}, [[${a.Type.SimpleName(NamespaceName)}ToJson]](o.[[${a.Name}]]));
+                    jo.Add(${GetEscapedStringLiteral(LowercaseCamelize(f.Name))}, [[${f.Type.SimpleName(NamespaceName)}ToJson]](o.[[${f.Name}]]));
             }
         return jo;
     }

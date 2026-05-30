@@ -802,9 +802,9 @@ namespace Niveum.ObjectSchema.CSharpJson
             {
                 yield return _Line;
             }
-            foreach (var a in Fields)
+            foreach (var f in Fields)
             {
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "o."), GetEscapedIdentifier(a.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.SimpleName(NamespaceName)), "FromJson"))), "(jo["), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), "]);"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "o."), GetEscapedIdentifier(f.Name)), " = "), GetEscapedIdentifier(Combine(Combine(Begin(), f.Type.SimpleName(NamespaceName)), "FromJson"))), "(jo["), GetEscapedStringLiteral(LowercaseCamelize(f.Name))), "]);"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -817,9 +817,9 @@ namespace Niveum.ObjectSchema.CSharpJson
             }
             yield return "{";
             yield return "    var jo = new JObject();";
-            foreach (var a in Fields)
+            foreach (var f in Fields)
             {
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "jo.Add("), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), ", "), GetEscapedIdentifier(Combine(Combine(Begin(), a.Type.SimpleName(NamespaceName)), "ToJson"))), "(o."), GetEscapedIdentifier(a.Name)), "));"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "jo.Add("), GetEscapedStringLiteral(LowercaseCamelize(f.Name))), ", "), GetEscapedIdentifier(Combine(Combine(Begin(), f.Type.SimpleName(NamespaceName)), "ToJson"))), "(o."), GetEscapedIdentifier(f.Name)), "));"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }

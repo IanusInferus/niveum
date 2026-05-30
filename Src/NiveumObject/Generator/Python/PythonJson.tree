@@ -1,0 +1,459 @@
+$Comment
+    ==========================================================================
+
+      File:        PythonJson.tree
+      Location:    Niveum.Object <Tree>
+      Description: 对象类型结构Python JSON通讯模板
+      Version:     2026.05.30.
+      Copyright(C) F.R.C.
+
+    ==========================================================================
+
+#Option
+    EnableEmbeddedExpr True
+
+#Namespace Niveum.ObjectSchema.PythonJson
+
+#Import
+    System
+    System.Collections.Generic
+    System.Linq
+    Firefly
+
+#Template JsonTranslator Schema:Schema NamespaceName:String
+    class JsonTranslator:
+        """JSON serialization/deserialization for typed objects."""
+
+        ${GetJsonTranslatorSerializers(Schema, NamespaceName)}
+
+#Template JsonTranslator_Primitive_Unit
+    @staticmethod
+    def UnitFromJson(j: Any) -> None:
+        return None
+
+    @staticmethod
+    def UnitToJson(v: None) -> Any:
+        return {}
+
+#Template JsonTranslator_Primitive_Boolean
+    @staticmethod
+    def BooleanFromJson(j: Any) -> bool:
+        if not isinstance(j, bool):
+            raise TypeError('Expected boolean')
+        return j
+
+    @staticmethod
+    def BooleanToJson(v: bool) -> Any:
+        return v
+
+#Template JsonTranslator_Primitive_String
+    @staticmethod
+    def StringFromJson(j: Any) -> str:
+        if not isinstance(j, str):
+            raise TypeError('Expected string')
+        return j
+
+    @staticmethod
+    def StringToJson(v: str) -> Any:
+        return v
+
+#Template JsonTranslator_Primitive_Int
+    @staticmethod
+    def IntFromJson(j: Any) -> int:
+        if not isinstance(j, int):
+            raise TypeError('Expected integer')
+        return j
+
+    @staticmethod
+    def IntToJson(v: int) -> Any:
+        return v
+
+#Template JsonTranslator_Primitive_Real
+    @staticmethod
+    def RealFromJson(j: Any) -> float:
+        if not isinstance(j, (int, float)):
+            raise TypeError('Expected number')
+        return float(j)
+
+    @staticmethod
+    def RealToJson(v: float) -> Any:
+        return v
+
+#Template JsonTranslator_Primitive_Byte
+    @staticmethod
+    def ByteFromJson(j: Any) -> int:
+        if not isinstance(j, int):
+            raise TypeError('Expected integer')
+        return j
+
+    @staticmethod
+    def ByteToJson(v: int) -> Any:
+        return v
+
+#Template JsonTranslator_Primitive_UInt8
+    @staticmethod
+    def UInt8FromJson(j: Any) -> int:
+        if not isinstance(j, int):
+            raise TypeError('Expected integer')
+        return j
+
+    @staticmethod
+    def UInt8ToJson(v: int) -> Any:
+        return v
+
+#Template JsonTranslator_Primitive_UInt16
+    @staticmethod
+    def UInt16FromJson(j: Any) -> int:
+        if not isinstance(j, int):
+            raise TypeError('Expected integer')
+        return j
+
+    @staticmethod
+    def UInt16ToJson(v: int) -> Any:
+        return v
+
+#Template JsonTranslator_Primitive_UInt32
+    @staticmethod
+    def UInt32FromJson(j: Any) -> int:
+        if not isinstance(j, int):
+            raise TypeError('Expected integer')
+        return j
+
+    @staticmethod
+    def UInt32ToJson(v: int) -> Any:
+        return v
+
+#Template JsonTranslator_Primitive_UInt64
+    @staticmethod
+    def UInt64FromJson(j: Any) -> int:
+        if not isinstance(j, int):
+            raise TypeError('Expected integer')
+        return j
+
+    @staticmethod
+    def UInt64ToJson(v: int) -> Any:
+        return v
+
+#Template JsonTranslator_Primitive_Int8
+    @staticmethod
+    def Int8FromJson(j: Any) -> int:
+        if not isinstance(j, int):
+            raise TypeError('Expected integer')
+        return j
+
+    @staticmethod
+    def Int8ToJson(v: int) -> Any:
+        return v
+
+#Template JsonTranslator_Primitive_Int16
+    @staticmethod
+    def Int16FromJson(j: Any) -> int:
+        if not isinstance(j, int):
+            raise TypeError('Expected integer')
+        return j
+
+    @staticmethod
+    def Int16ToJson(v: int) -> Any:
+        return v
+
+#Template JsonTranslator_Primitive_Int32
+    @staticmethod
+    def Int32FromJson(j: Any) -> int:
+        if not isinstance(j, int):
+            raise TypeError('Expected integer')
+        return j
+
+    @staticmethod
+    def Int32ToJson(v: int) -> Any:
+        return v
+
+#Template JsonTranslator_Primitive_Int64
+    @staticmethod
+    def Int64FromJson(j: Any) -> int:
+        if not isinstance(j, int):
+            raise TypeError('Expected integer')
+        return j
+
+    @staticmethod
+    def Int64ToJson(v: int) -> Any:
+        return v
+
+#Template JsonTranslator_Primitive_Float32
+    @staticmethod
+    def Float32FromJson(j: Any) -> float:
+        if not isinstance(j, (int, float)):
+            raise TypeError('Expected number')
+        return float(j)
+
+    @staticmethod
+    def Float32ToJson(v: float) -> Any:
+        return v
+
+#Template JsonTranslator_Primitive_Float64
+    @staticmethod
+    def Float64FromJson(j: Any) -> float:
+        if not isinstance(j, (int, float)):
+            raise TypeError('Expected number')
+        return float(j)
+
+    @staticmethod
+    def Float64ToJson(v: float) -> Any:
+        return v
+
+#Template JsonTranslator_Alias a:AliasDef NamespaceName:String
+    ${JsonTranslator_Alias(a.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(a.GetTypeSpec(), NamespaceName), a.Type, NamespaceName)}
+
+#Template JsonTranslator_Alias Name:String TypeString:String ValueType:TypeSpec NamespaceName:String
+    $$
+        var ValueSimpleName = ValueType.SimpleName(NamespaceName);
+    @staticmethod
+    def [[${Name}FromJson]](j: Any) -> ${TypeString}:
+        return JsonTranslator.[[${ValueSimpleName}FromJson]](j)
+
+    @staticmethod
+    def [[${Name}ToJson]](o: ${TypeString}) -> Any:
+        return JsonTranslator.[[${ValueSimpleName}ToJson]](o)
+
+#Template JsonTranslator_Record r:RecordDef NamespaceName:String
+    ${JsonTranslator_Record(r.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(r.GetTypeSpec(), NamespaceName), r.Fields, NamespaceName)}
+
+#Template JsonTranslator_Record Name:String TypeString:String Fields:List<VariableDef> NamespaceName:String
+    @staticmethod
+    def [[${Name}FromJson]](j: Any) -> ${TypeString}:
+        if not isinstance(j, dict):
+            raise TypeError('Expected object')
+        return ${TypeString}(
+            $$
+                int k = 0;
+                foreach (var f in Fields)
+                {
+                    if (k == Fields.Count - 1)
+                    {
+                        ##
+                            [[${f.Name}]] = JsonTranslator.[[${f.Type.SimpleName(NamespaceName)}FromJson]](j[${GetEscapedStringLiteral(LowercaseCamelize(f.Name))}])
+                    }
+                    else
+                    {
+                        ##
+                            [[${f.Name}]] = JsonTranslator.[[${f.Type.SimpleName(NamespaceName)}FromJson]](j[${GetEscapedStringLiteral(LowercaseCamelize(f.Name))}]),
+                    }
+                    k += 1;
+                }
+        )
+
+    @staticmethod
+    def [[${Name}ToJson]](o: ${TypeString}) -> Any:
+        return {
+            $$
+                for (int i = 0; i < Fields.Count; i++)
+                {
+                    var a = Fields[i];
+                    ##
+                        ${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}: JsonTranslator.[[${a.Type.SimpleName(NamespaceName)}ToJson]](o.[[${a.Name}]]),
+                }
+        }
+
+#Template JsonTranslator_TaggedUnion tu:TaggedUnionDef NamespaceName:String
+    ${JsonTranslator_TaggedUnion(tu.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(tu.GetTypeSpec(), NamespaceName), GetSuffixedTypeName(tu.Name, tu.Version, "Tag", NamespaceName), GetSuffixedTypeString(tu.Name, tu.Version, "Tag", NamespaceName), tu.Alternatives, NamespaceName)}
+
+#Template JsonTranslator_TaggedUnion Name:String TypeString:String TagName:String TagTypeString:String Alternatives:List<VariableDef> NamespaceName:String
+    @staticmethod
+    def [[${Name}FromJson]](j: Any) -> ${TypeString}:
+        if not isinstance(j, dict):
+            raise TypeError('Expected object')
+        $$
+            foreach (var a in Alternatives)
+            {
+                ##
+                    if ${GetEscapedStringLiteral(LowercaseCamelize(a.Name))} in j:
+                        $$
+                            if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
+                            {
+                                ##
+                                    return ${TypeString}.Create[[${a.Name}]]()
+                            }
+                            else
+                            {
+                                ##
+                                    return ${TypeString}.Create[[${a.Name}]](JsonTranslator.[[${a.Type.SimpleName(NamespaceName)}FromJson]](j[${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}]))
+                            }
+            }
+        raise TypeError('Unknown tag')
+
+    @staticmethod
+    def [[${Name}ToJson]](o: ${TypeString}) -> Any:
+        $$
+            foreach (var a in Alternatives)
+            {
+                ##
+                    if o.Tag_ == ${TagName}.[[${a.Name}]]:
+                        $$
+                            if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
+                            {
+                                ##
+                                    return {${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}: {}}
+                            }
+                            else
+                            {
+                                ##
+                                    return {${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}: JsonTranslator.[[${a.Type.SimpleName(NamespaceName)}ToJson]](o.[[${a.Name}]]())}
+                            }
+            }
+        raise TypeError('Unknown tag')
+
+#Template JsonTranslator_Enum e:EnumDef NamespaceName:String
+    ${JsonTranslator_Enum(e.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(e.GetTypeSpec(), NamespaceName), NamespaceName)}
+
+#Template JsonTranslator_Enum Name:String TypeString:String NamespaceName:String
+    @staticmethod
+    def [[${Name}FromJson]](j: Any) -> ${TypeString}:
+        if not isinstance(j, int):
+            raise TypeError('Expected integer')
+        return ${TypeString}(j)
+
+    @staticmethod
+    def [[${Name}ToJson]](o: ${TypeString}) -> Any:
+        return int(o)
+
+#Template JsonTranslator_Tuple tp:TypeSpec NamespaceName:String
+    $$
+        var SimpleName = tp.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(tp, NamespaceName);
+    @staticmethod
+    def [[${SimpleName}FromJson]](j: Any) -> ${TypeString}:
+        if not isinstance(j, list):
+            raise TypeError('Expected array')
+        return [
+            $$
+                {
+                    int k = 0;
+                    foreach (var t in tp.Tuple)
+                    {
+                        if (k == tp.Tuple.Count - 1)
+                        {
+                            ##
+                                JsonTranslator.[[${t.SimpleName(NamespaceName)}FromJson]](j[${k}])
+                        }
+                        else
+                        {
+                            ##
+                                JsonTranslator.[[${t.SimpleName(NamespaceName)}FromJson]](j[${k}]),
+                        }
+                        k += 1;
+                    }
+                }
+        ]
+
+    @staticmethod
+    def [[${SimpleName}ToJson]](t: ${TypeString}) -> Any:
+        return [
+            $$
+                {
+                    int k = 0;
+                    foreach (var t in tp.Tuple)
+                    {
+                        if (k == tp.Tuple.Count - 1)
+                        {
+                            ##
+                                JsonTranslator.[[${t.SimpleName(NamespaceName)}ToJson]](t[${k}])
+                        }
+                        else
+                        {
+                            ##
+                                JsonTranslator.[[${t.SimpleName(NamespaceName)}ToJson]](t[${k}]),
+                        }
+                        k += 1;
+                    }
+                }
+        ]
+
+#Template JsonTranslator_Optional o:TypeSpec GenericOptionalType:TaggedUnionDef NamespaceName:String
+    $$
+        var ElementType = o.GenericTypeSpec.ParameterValues.Single();
+        var SimpleName = o.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(o, NamespaceName);
+        var ElementSimpleName = ElementType.SimpleName(NamespaceName);
+    @staticmethod
+    def [[${SimpleName}FromJson]](j: Any) -> ${TypeString}:
+        if not isinstance(j, dict):
+            raise TypeError('Expected object')
+        if "none" in j:
+            return None
+        return JsonTranslator.[[${ElementSimpleName}FromJson]](j["some"])
+
+    @staticmethod
+    def [[${SimpleName}ToJson]](o: ${TypeString}) -> Any:
+        if o is None:
+            return {"none": {}}
+        return {"some": JsonTranslator.[[${ElementSimpleName}ToJson]](o)}
+
+#Template JsonTranslator_List l:TypeSpec NamespaceName:String
+    $$
+        var SimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
+        var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
+    @staticmethod
+    def [[${SimpleName}FromJson]](j: Any) -> ${TypeString}:
+        if not isinstance(j, list):
+            raise TypeError('Expected array')
+        return [JsonTranslator.[[${ElementSimpleName}FromJson]](e) for e in j]
+
+    @staticmethod
+    def [[${SimpleName}ToJson]](o: ${TypeString}) -> Any:
+        return [JsonTranslator.[[${ElementSimpleName}ToJson]](e) for e in o]
+
+#Template JsonTranslator_Set l:TypeSpec NamespaceName:String
+    $$
+        var SimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
+        var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
+    @staticmethod
+    def [[${SimpleName}FromJson]](j: Any) -> ${TypeString}:
+        if not isinstance(j, list):
+            raise TypeError('Expected array')
+        return [JsonTranslator.[[${ElementSimpleName}FromJson]](e) for e in j]
+
+    @staticmethod
+    def [[${SimpleName}ToJson]](o: ${TypeString}) -> Any:
+        return [JsonTranslator.[[${ElementSimpleName}ToJson]](e) for e in o]
+
+#Template JsonTranslator_Map l:TypeSpec NamespaceName:String
+    $$
+        var gp = l.GenericTypeSpec.ParameterValues;
+        if (gp.Count != 2)
+        {
+            throw new ArgumentException();
+        }
+        var SimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
+        var KeySimpleName = gp[0].SimpleName(NamespaceName);
+        var ValueSimpleName = gp[1].SimpleName(NamespaceName);
+    @staticmethod
+    def [[${SimpleName}FromJson]](j: Any) -> ${TypeString}:
+        if not isinstance(j, list):
+            raise TypeError('Expected array')
+        return {JsonTranslator.[[${KeySimpleName}FromJson]](e["key"]): JsonTranslator.[[${ValueSimpleName}FromJson]](e["value"]) for e in j}
+
+    @staticmethod
+    def [[${SimpleName}ToJson]](o: ${TypeString}) -> Any:
+        return [{"key": JsonTranslator.[[${KeySimpleName}ToJson]](k), "value": JsonTranslator.[[${ValueSimpleName}ToJson]](v)} for k, v in o.items()]
+
+#Template Main Schema:Schema NamespaceName:String
+    #!/usr/bin/python3
+
+    #==========================================================================
+    #
+    #  Notice:      This file is automatically generated.
+    #               Please don't modify this file.
+    #
+    #==========================================================================
+
+    from typing import Any, Callable, Dict, List, NamedTuple, Optional, Set, Tuple
+    from enum import IntEnum, IntFlag
+    from abc import ABC, abstractmethod
+    import json
+    from ${Schema.Imports} import *
+
+    ${GetTypes(Schema, NamespaceName)}
+
+$End

@@ -1276,7 +1276,7 @@ namespace Niveum.ObjectSchema.PythonBinary
             yield return "        bas.Position = 0";
             yield return "        return bas.ReadBytes(bas.Length)";
         }
-        public IEnumerable<String> Main(Schema Schema)
+        public IEnumerable<String> Main(Schema Schema, String NamespaceName)
         {
             yield return "#!/usr/bin/python3";
             yield return "";
@@ -1296,7 +1296,7 @@ namespace Niveum.ObjectSchema.PythonBinary
                 yield return _Line;
             }
             yield return "";
-            foreach (var _Line in Combine(Begin(), GetTypes(Schema)))
+            foreach (var _Line in Combine(Begin(), GetTypes(Schema, NamespaceName)))
             {
                 yield return _Line;
             }

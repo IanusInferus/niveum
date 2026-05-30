@@ -38,6 +38,7 @@ using Niveum.ObjectSchema.Java;
 using Niveum.ObjectSchema.JavaBinary;
 using Niveum.ObjectSchema.Python;
 using Niveum.ObjectSchema.PythonBinary;
+using Niveum.ObjectSchema.PythonJson;
 using Niveum.ObjectSchema.VB;
 using Niveum.ObjectSchema.Xhtml;
 using OS = Niveum.ObjectSchema;
@@ -484,7 +485,28 @@ namespace Niveum.SchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 1)
                     {
-                        ObjectSchemaToPythonBinaryCode(args[0]);
+                        ObjectSchemaToPythonBinaryCode(args[0], "");
+                    }
+                    else if (args.Length == 2)
+                    {
+                        ObjectSchemaToPythonBinaryCode(args[0], args[1]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
+                else if (optNameLower == "t2pyj")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 1)
+                    {
+                        ObjectSchemaToPythonJsonCode(args[0], "");
+                    }
+                    else if (args.Length == 2)
+                    {
+                        ObjectSchemaToPythonJsonCode(args[0], args[1]);
                     }
                     else
                     {
@@ -610,7 +632,9 @@ namespace Niveum.SchemaManipulator
             Console.WriteLine(@"生成Python类型");
             Console.WriteLine(@"/t2py:<PythonCodePath>");
             Console.WriteLine(@"生成Python二进制类型");
-            Console.WriteLine(@"/t2pyb:<PythonCodePath>");
+            Console.WriteLine(@"/t2pyb:<PythonCodePath>[,<NamespaceName>]");
+            Console.WriteLine(@"生成Python JSON通讯类型");
+            Console.WriteLine(@"/t2pyj:<PythonCodePath>[,<NamespaceName>]");
             Console.WriteLine(@"生成XHTML文档");
             Console.WriteLine(@"/t2xhtml:<XhtmlDir>,<Title>,<CopyrightText>");
             Console.WriteLine(@"生成兼容类型结构Tree文件(当前加载的类型结构为Head)");
@@ -1046,10 +1070,10 @@ namespace Niveum.SchemaManipulator
             Txt.WriteFile(PythonCodePath, TextEncoding.UTF8, Compiled, false);
         }
 
-        public static void ObjectSchemaToPythonBinaryCode(String PythonCodePath)
+        public static void ObjectSchemaToPythonBinaryCode(String PythonCodePath, String NamespaceName)
         {
             var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToPythonBinary();
+            var Compiled = ObjectSchema.CompileToPythonBinary(NamespaceName);
             if (File.Exists(PythonCodePath))
             {
                 var Original = Txt.ReadFile(PythonCodePath, TextEncoding.UTF8);
@@ -1061,6 +1085,23 @@ namespace Niveum.SchemaManipulator
             var Dir = FileNameHandling.GetFileDirectory(PythonCodePath);
             if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
             Txt.WriteFile(PythonCodePath, TextEncoding.UTF8, Compiled);
+        }
+
+        public static void ObjectSchemaToPythonJsonCode(String PythonCodePath, String NamespaceName)
+        {
+            var ObjectSchema = GetObjectSchema();
+            var Compiled = ObjectSchema.CompileToPythonJson(NamespaceName);
+            if (File.Exists(PythonCodePath))
+            {
+                var Original = Txt.ReadFile(PythonCodePath, TextEncoding.UTF8);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(PythonCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(PythonCodePath, TextEncoding.UTF8, Compiled, false);
         }
 
         public static void ObjectSchemaToXhtml(String XhtmlDir, String Title, String CopyrightText)

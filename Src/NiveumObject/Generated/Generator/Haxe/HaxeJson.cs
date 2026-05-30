@@ -499,9 +499,9 @@ namespace Niveum.ObjectSchema.HaxeJson
             yield return "{";
             yield return "    return";
             yield return "    {";
-            foreach (var a in Fields)
+            foreach (var f in Fields)
             {
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), GetEscapedIdentifier(LowercaseCamelize(a.Name))), " : "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(a.Type.SimpleName(NamespaceName))), "FromJson"))), "(getField(j, "), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), ")),"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Begin(), GetEscapedIdentifier(LowercaseCamelize(f.Name))), " : "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(f.Type.SimpleName(NamespaceName))), "FromJson"))), "(getField(j, "), GetEscapedStringLiteral(LowercaseCamelize(f.Name))), ")),"))
                 {
                     yield return _Line == "" ? "" : "        " + _Line;
                 }
@@ -514,9 +514,9 @@ namespace Niveum.ObjectSchema.HaxeJson
             }
             yield return "{";
             yield return "    var j : Dynamic = {};";
-            foreach (var a in Fields)
+            foreach (var f in Fields)
             {
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "setField(j, "), GetEscapedStringLiteral(LowercaseCamelize(a.Name))), ", "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(a.Type.SimpleName(NamespaceName))), "ToJson"))), "(o."), GetEscapedIdentifier(LowercaseCamelize(a.Name))), "));"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "setField(j, "), GetEscapedStringLiteral(LowercaseCamelize(f.Name))), ", "), GetEscapedIdentifier(Combine(Combine(Begin(), LowercaseCamelize(f.Type.SimpleName(NamespaceName))), "ToJson"))), "(o."), GetEscapedIdentifier(LowercaseCamelize(f.Name))), "));"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }

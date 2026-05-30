@@ -18,11 +18,11 @@ namespace Niveum.ObjectSchema.PythonBinary
 {
     public static class CodeGenerator
     {
-        public static String CompileToPythonBinary(this Schema Schema)
+        public static String CompileToPythonBinary(this Schema Schema, String NamespaceName)
         {
             Schema = Schema.GetTypesWithoutNamespaces();
             var t = new Templates(Schema);
-            var Lines = t.Main(Schema).Select(Line => Line.TrimEnd(' '));
+            var Lines = t.Main(Schema, NamespaceName).Select(Line => Line.TrimEnd(' '));
             return String.Join("\n", Lines);
         }
     }
@@ -200,12 +200,8 @@ namespace Niveum.ObjectSchema.PythonBinary
             return l;
         }
 
-        public List<String> GetTypes(Schema Schema)
+        public List<String> GetTypes(Schema Schema, String NamespaceName)
         {
-            var NamespaceName = Schema.Types.Concat(Schema.TypeRefs).Where(t => !t.OnPrimitive).FirstOrDefault()?.NamespaceName() ?? "";
-
-            var Primitives = GetPrimitives(Schema);
-
             var NamespaceToClasses = new Dictionary<String, List<List<String>>>();
             void AddClass(String ClassNamespaceName, IEnumerable<String> ClassContent)
             {
@@ -227,7 +223,7 @@ namespace Niveum.ObjectSchema.PythonBinary
 
             var Classes = NamespaceToClasses.Select(p => p.Value.Join(new String[] { "" }));
 
-            return (new List<List<String>> { Primitives }).Concat(Classes).Join(new String[] { "" }).ToList();
+            return Classes.Join(new String[] { "" }).ToList();
         }
     }
 }

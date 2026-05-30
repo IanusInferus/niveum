@@ -4,7 +4,7 @@
       File:        HaxeJson.tree
       Location:    Niveum.Object <Tree>
       Description: 对象类型结构Haxe JSON通讯模板
-      Version:     2022.10.02.
+      Version:     2026.05.30.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -376,10 +376,10 @@
         return
         {
             $$
-                foreach (var a in Fields)
+                foreach (var f in Fields)
                 {
                     ##
-                        [[${LowercaseCamelize(a.Name)}]] : [[${LowercaseCamelize(a.Type.SimpleName(NamespaceName))}FromJson]](getField(j, ${GetEscapedStringLiteral(LowercaseCamelize(a.Name))})),
+                        [[${LowercaseCamelize(f.Name)}]] : [[${LowercaseCamelize(f.Type.SimpleName(NamespaceName))}FromJson]](getField(j, ${GetEscapedStringLiteral(LowercaseCamelize(f.Name))})),
                 }
         };
     }
@@ -387,10 +387,10 @@
     {
         var j : Dynamic = {};
         $$
-            foreach (var a in Fields)
+            foreach (var f in Fields)
             {
                 ##
-                    setField(j, ${GetEscapedStringLiteral(LowercaseCamelize(a.Name))}, [[${LowercaseCamelize(a.Type.SimpleName(NamespaceName))}ToJson]](o.[[${LowercaseCamelize(a.Name)}]]));
+                    setField(j, ${GetEscapedStringLiteral(LowercaseCamelize(f.Name))}, [[${LowercaseCamelize(f.Type.SimpleName(NamespaceName))}ToJson]](o.[[${LowercaseCamelize(f.Name)}]]));
             }
         return j;
     }

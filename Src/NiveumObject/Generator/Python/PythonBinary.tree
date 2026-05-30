@@ -948,7 +948,7 @@
             bas.Position = 0
             return bas.ReadBytes(bas.Length)
 
-#Template Main Schema:Schema
+#Template Main Schema:Schema NamespaceName:String
     #!/usr/bin/python3
 
     #==========================================================================
@@ -964,6 +964,6 @@
     import struct
     from ${Schema.Imports} import *
 
-    ${GetTypes(Schema)}
+    ${GetTypes(Schema, NamespaceName)}
 
 $End

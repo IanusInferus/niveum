@@ -30,6 +30,7 @@ SchemaManipulator.exe /loadtype:Schema /t2hxj:Haxe\generated,World.Json
 :: Python
 SchemaManipulator.exe /loadtype:Schema /t2py:Python\src\World.py
 SchemaManipulator.exe /loadtype:Schema /import:World /t2pyb:Python\src\WorldBinary.py
+SchemaManipulator.exe /loadtype:Schema /import:World /t2pyj:Python\src\WorldJson.py
 
 :: Xhtml
 @if not exist XHTML @md XHTML
