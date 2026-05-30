@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Niveum.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2025.08.07.
+//  Version:     2026.05.30.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -208,7 +208,7 @@ namespace Niveum.SchemaManipulator
                 else if (optNameLower == "nullable")
                 {
                     var args = opt.Arguments;
-                    if (args.Length == 1)
+                    if (args.Length == 0)
                     {
                         EnableNullableDeclaration = true;
                     }
