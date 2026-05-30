@@ -472,7 +472,7 @@ namespace Niveum.ObjectSchema.VB
             }
             foreach (var l in e.Literals)
             {
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "If Not d.ContainsKey("), Name), "."), GetEscapedIdentifier(l.Name)), ")) Then d.Add("), Name), "."), GetEscapedIdentifier(l.Name)), ", "), GetEscapedStringLiteral(l.Description)), ")"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "If Not d.ContainsKey("), Name), "."), GetEscapedIdentifier(l.Name)), ") Then d.Add("), Name), "."), GetEscapedIdentifier(l.Name)), ", "), GetEscapedStringLiteral(l.Description)), ")"))
                 {
                     yield return _Line == "" ? "" : "        " + _Line;
                 }

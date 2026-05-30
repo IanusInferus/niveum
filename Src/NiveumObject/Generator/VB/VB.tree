@@ -4,7 +4,7 @@
       File:        VB.tree
       Location:    Niveum.Object <Tree>
       Description: 对象类型结构VB.Net模板
-      Version:     2019.04.28.
+      Version:     2026.05.30.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -471,7 +471,7 @@
                 foreach (var l in e.Literals)
                 {
                     ##
-                        If Not d.ContainsKey(${Name}.[[${l.Name}]])) Then d.Add(${Name}.[[${l.Name}]], ${GetEscapedStringLiteral(l.Description)})
+                        If Not d.ContainsKey(${Name}.[[${l.Name}]]) Then d.Add(${Name}.[[${l.Name}]], ${GetEscapedStringLiteral(l.Description)})
                 }
         End Sub
         Public Shared Function GetDescription(ByVal Value As ${Name}) As String
