@@ -1,4 +1,8 @@
-﻿2026.05.18
+﻿2026.05.30
+Examples:
+从示例中去除NiveumQuery，因为设计需要重新考虑。
+
+2026.05.18
 Firefly.Lite, Test:
 使用Claude转换测试。
 
