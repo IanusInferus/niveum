@@ -3,7 +3,7 @@
 //  File:        ObjectSchemaExtensions.cs
 //  Location:    Niveum.Object <Visual C#>
 //  Description: 对象类型结构扩展
-//  Version:     2022.11.01.
+//  Version:     2026.05.30.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -1416,6 +1416,164 @@ namespace Niveum.ObjectSchema
                 }
             }
             return Output ?? new T[] { };
+        }
+
+        public static Schema GetTypesWithoutNamespaces(this Schema s)
+        {
+            var AllTypes = s.TypeRefs.Concat(s.Types).ToList();
+
+            var RewrittenTypes = AllTypes.Select(t => MapType(t, new TypeMapConfiguration
+            {
+                MapTypeDefKernel = d =>
+                {
+                    if (d.OnPrimitive)
+                    {
+                        var p = d.Primitive;
+                        return TypeDef.CreatePrimitive(new PrimitiveDef
+                        {
+                            Name = new List<String> { p.Name.Last() },
+                            GenericParameters = p.GenericParameters,
+                            Attributes = p.Attributes,
+                            Description = p.Description
+                        });
+                    }
+                    else if (d.OnAlias)
+                    {
+                        var a = d.Alias;
+                        return TypeDef.CreateAlias(new AliasDef
+                        {
+                            Name = new List<String> { a.Name.Last() },
+                            Version = a.Version,
+                            GenericParameters = a.GenericParameters,
+                            Type = a.Type,
+                            Attributes = a.Attributes,
+                            Description = a.Description
+                        });
+                    }
+                    else if (d.OnRecord)
+                    {
+                        var r = d.Record;
+                        return TypeDef.CreateRecord(new RecordDef
+                        {
+                            Name = new List<String> { r.Name.Last() },
+                            Version = r.Version,
+                            GenericParameters = r.GenericParameters,
+                            Fields = r.Fields,
+                            Attributes = r.Attributes,
+                            Description = r.Description
+                        });
+                    }
+                    else if (d.OnTaggedUnion)
+                    {
+                        var tu = d.TaggedUnion;
+                        return TypeDef.CreateTaggedUnion(new TaggedUnionDef
+                        {
+                            Name = new List<String> { tu.Name.Last() },
+                            Version = tu.Version,
+                            GenericParameters = tu.GenericParameters,
+                            Alternatives = tu.Alternatives,
+                            Attributes = tu.Attributes,
+                            Description = tu.Description
+                        });
+                    }
+                    else if (d.OnEnum)
+                    {
+                        var e = d.Enum;
+                        return TypeDef.CreateEnum(new EnumDef
+                        {
+                            Name = new List<String> { e.Name.Last() },
+                            Version = e.Version,
+                            UnderlyingType = e.UnderlyingType,
+                            Literals = e.Literals,
+                            Attributes = e.Attributes,
+                            Description = e.Description
+                        });
+                    }
+                    else if (d.OnClientCommand)
+                    {
+                        var cc = d.ClientCommand;
+                        return TypeDef.CreateClientCommand(new ClientCommandDef
+                        {
+                            Name = new List<String> { cc.Name.Last() },
+                            Version = cc.Version,
+                            OutParameters = cc.OutParameters,
+                            InParameters = cc.InParameters,
+                            Attributes = cc.Attributes,
+                            Description = cc.Description
+                        });
+                    }
+                    else if (d.OnServerCommand)
+                    {
+                        var sc = d.ServerCommand;
+                        return TypeDef.CreateServerCommand(new ServerCommandDef
+                        {
+                            Name = new List<String> { sc.Name.Last() },
+                            Version = sc.Version,
+                            OutParameters = sc.OutParameters,
+                            Attributes = sc.Attributes,
+                            Description = sc.Description
+                        });
+                    }
+                    else if (d.OnQuery)
+                    {
+                        var q = d.Query;
+                        return TypeDef.CreateQuery(new QueryDef
+                        {
+                            Name = new List<String> { q.Name.Last() },
+                            RootType = q.RootType,
+                            MappingSpecs = q.MappingSpecs
+                        });
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException();
+                    }
+                },
+                MapTypeSpecKernel = (d, ts) =>
+                {
+                    // Remove namespace from all TypeRefs
+                    if (ts.OnTypeRef)
+                    {
+                        var tr = ts.TypeRef;
+                        if (tr.Name.Count > 1)
+                        {
+                            return TypeSpec.CreateTypeRef(new TypeRef { Name = new List<String> { tr.Name.Last() }, Version = tr.Version });
+                        }
+                        return ts;
+                    }
+                    return ts;
+                }
+            })).ToList();
+
+            var NameCounts = new Dictionary<String, int>(StringComparer.OrdinalIgnoreCase);
+            foreach (var t in RewrittenTypes)
+            {
+                var Name = t.VersionedName();
+                if (NameCounts.ContainsKey(Name))
+                {
+                    NameCounts[Name] += 1;
+                }
+                else
+                {
+                    NameCounts[Name] = 1;
+                }
+            }
+            var Duplicates = NameCounts.Where(p => p.Value > 1).Select(p => p.Key).ToList();
+            if (Duplicates.Count > 0)
+            {
+                throw new InvalidOperationException("Duplicate types after removing namespaces: " + String.Join(", ", Duplicates));
+            }
+
+            var TypeRefCount = s.TypeRefs.Count;
+            var NewTypeRefs = RewrittenTypes.Take(TypeRefCount).ToList();
+            var NewTypes = RewrittenTypes.Skip(TypeRefCount).ToList();
+
+            return new Schema
+            {
+                Types = NewTypes,
+                TypeRefs = NewTypeRefs,
+                Imports = s.Imports
+            };
         }
 
         public static String GetDotNetFullNameFromVersionedName(String VersionedName)
