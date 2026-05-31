@@ -2,6 +2,8 @@
 Examples:
 修正C#通讯示例。
 修正C++通讯示例，去除fmt的使用。
+*:
+对Build.cmd使用更好的explorer检测机制。
 
 2026.05.30
 Examples:
