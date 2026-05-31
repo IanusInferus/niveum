@@ -1,4 +1,8 @@
-﻿2026.05.30
+﻿2026.05.31
+Examples:
+修正C#通讯示例。
+
+2026.05.30
 Examples:
 从示例中去除NiveumQuery，因为设计需要重新考虑。
 Niveum.SchemaManipulator:

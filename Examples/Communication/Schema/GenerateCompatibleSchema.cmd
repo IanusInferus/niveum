@@ -26,7 +26,7 @@
     )
 )
 
-SchemaManipulator.exe /loadtype:Common /loadtype:Communication /gencomcmpt:%Versions%,Compatibility.tree
+SchemaManipulator.exe /loadtype:Common /loadtype:Communication /loadtype:CommunicationTestDuplication /gencomcmpt:%Versions%,Compatibility.tree
 
 @set EXIT_CODE=%ERRORLEVEL%
 
