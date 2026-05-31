@@ -409,7 +409,7 @@ namespace Client
                     Console.WriteLine(Line);
                 }
             };
-            var r = await InnerClient.CheckSchemaVersion(new CheckSchemaVersionRequest { Hash = UseOld ? "D7FFBD0D2E5D7274" : InnerClient.Hash.ToString("X16") });
+            var r = await InnerClient.CheckSchemaVersion(new CheckSchemaVersionRequest { Hash = UseOld ? "3DDB41626C55E770" : InnerClient.Hash.ToString("X16") });
             if (r.OnHead)
             {
             }

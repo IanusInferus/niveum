@@ -3,7 +3,7 @@
 //  File:        PythonJson.cs
 //  Location:    Niveum.Object <Visual C#>
 //  Description: 对象类型结构Python JSON通讯代码生成器
-//  Version:     2026.05.30.
+//  Version:     2026.05.31.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -25,7 +25,7 @@ namespace Niveum.ObjectSchema.PythonJson
 
         public static String CompileToPythonJson(this Schema Schema, String NamespaceName)
         {
-            Schema = Schema.GetTypesWithoutNamespaces();
+            var ReducedSchema = Schema.GetTypesWithoutNamespaces();
             var t = new Templates(Schema);
             var Lines = t.Main(Schema, NamespaceName).Select(Line => Line.TrimEnd(' '));
             return String.Join("\n", Lines);
@@ -56,9 +56,9 @@ namespace Niveum.ObjectSchema.PythonJson
         {
             return Inner.GetSuffixedTypeRef(Name, Version, Suffix);
         }
-        public String GetSuffixedTypeString(List<String> Name, String Version, String Suffix, String NamespaceName, bool ForceNoQuote = false)
+        public String GetSuffixedTypeString(List<String> Name, String Version, String Suffix, String NamespaceName)
         {
-            return Inner.GetSuffixedTypeString(Name, Version, Suffix, NamespaceName, ForceNoQuote);
+            return Inner.GetSuffixedTypeString(Name, Version, Suffix, NamespaceName, true);
         }
         public String GetSuffixedTypeName(List<String> Name, String Version, String Suffix, String NamespaceName)
         {
@@ -146,9 +146,11 @@ namespace Niveum.ObjectSchema.PythonJson
                 }
                 else if (c.OnClientCommand)
                 {
+                    l.AddRange(JsonTranslator_ClientCommand(c.ClientCommand, NamespaceName));
                 }
                 else if (c.OnServerCommand)
                 {
+                    l.AddRange(JsonTranslator_ServerCommand(c.ServerCommand, NamespaceName));
                 }
                 else
                 {
@@ -258,6 +260,15 @@ namespace Niveum.ObjectSchema.PythonJson
                     NamespaceToClasses.Add(ClassNamespaceName, new List<List<String>>());
                 }
                 NamespaceToClasses[ClassNamespaceName].Add(ClassContent.ToList());
+            }
+
+            var Commands = Schema.Types.Where(t => t.OnClientCommand || t.OnServerCommand).ToList();
+            if (Commands.Count > 0)
+            {
+                var SchemaClosureGenerator = Schema.GetSchemaClosureGenerator();
+                var Hash = SchemaClosureGenerator.GetSubSchema(Schema.Types.Where(t => (t.OnClientCommand || t.OnServerCommand) && t.Version() == ""), new List<TypeSpec> { }).GetNonattributed().Hash();
+                AddClass(NamespaceName, IJsonSender());
+                AddClass(NamespaceName, JsonSerializationClient(Hash, Commands, SchemaClosureGenerator, NamespaceName));
             }
 
             AddClass(NamespaceName, JsonTranslator(Schema, NamespaceName));

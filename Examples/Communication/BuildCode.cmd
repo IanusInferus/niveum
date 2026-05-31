@@ -27,6 +27,11 @@ SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /lo
 SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /loadtype:Schema\CommunicationTestDuplication /t2cpp:CPP\Src\Client\Generated\Communication.h,Communication
 SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /loadtype:Schema\CommunicationTestDuplication /import:"""Communication.h""" /t2cppb:CPP\Src\Client\Generated\CommunicationBinary.h,Communication.Binary
 
+:: Python
+@if not exist Python\src\Generated @md Python\src\Generated
+SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /t2py:Python\src\Communication.py
+SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /import:Communication /t2pyj:Python\src\CommunicationJson.py,Communication
+
 :: Xhtml
 @if not exist XHTML @md XHTML
 SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /t2xhtml:XHTML,"Communication Example","Copyright Public Domain"

@@ -285,6 +285,30 @@ namespace Niveum.ObjectSchema.Python
                 yield return "    " + "pass";
             }
         }
+        public IEnumerable<String> ClientCommand(ClientCommandDef c)
+        {
+            var RequestRef = GetSuffixedTypeRef(c.Name, c.Version, "Request");
+            var ReplyRef = GetSuffixedTypeRef(c.Name, c.Version, "Reply");
+            var Request = new RecordDef { Name = RequestRef.Name, Version = RequestRef.Version, GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+            var Reply = new TaggedUnionDef { Name = ReplyRef.Name, Version = ReplyRef.Version, GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
+            foreach (var _Line in Combine(Begin(), Record(Request)))
+            {
+                yield return _Line;
+            }
+            foreach (var _Line in Combine(Begin(), TaggedUnion(Reply)))
+            {
+                yield return _Line;
+            }
+        }
+        public IEnumerable<String> ServerCommand(ServerCommandDef c)
+        {
+            var EventRef = GetSuffixedTypeRef(c.Name, c.Version, "Event");
+            var Event = new RecordDef { Name = EventRef.Name, Version = EventRef.Version, GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+            foreach (var _Line in Combine(Begin(), Record(Event)))
+            {
+                yield return _Line;
+            }
+        }
         public IEnumerable<String> Main(Schema Schema)
         {
             yield return "#!/usr/bin/python3";

@@ -205,6 +205,21 @@
                     pass
             }
 
+#Template ClientCommand c:ClientCommandDef
+    $$
+        var RequestRef = GetSuffixedTypeRef(c.Name, c.Version, "Request");
+        var ReplyRef = GetSuffixedTypeRef(c.Name, c.Version, "Reply");
+        var Request = new RecordDef { Name = RequestRef.Name, Version = RequestRef.Version, GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+        var Reply = new TaggedUnionDef { Name = ReplyRef.Name, Version = ReplyRef.Version, GenericParameters = new List<VariableDef> { }, Alternatives = c.InParameters, Attributes = c.Attributes, Description = c.Description };
+    ${Record(Request)}
+    ${TaggedUnion(Reply)}
+
+#Template ServerCommand c:ServerCommandDef
+    $$
+        var EventRef = GetSuffixedTypeRef(c.Name, c.Version, "Event");
+        var Event = new RecordDef { Name = EventRef.Name, Version = EventRef.Version, GenericParameters = new List<VariableDef> { }, Fields = c.OutParameters, Attributes = c.Attributes, Description = c.Description };
+    ${Record(Event)}
+
 #Template Main Schema:Schema
     #!/usr/bin/python3
 

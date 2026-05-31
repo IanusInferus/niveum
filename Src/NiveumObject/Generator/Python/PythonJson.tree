@@ -20,6 +20,126 @@ $Comment
     System.Linq
     Firefly
 
+#Template IJsonSender
+    class IJsonSender(ABC):
+        """Abstract interface for JSON message transport."""
+
+        @abstractmethod
+        def send(self, command_name: str, command_hash: str, parameters: str) -> None:
+            raise NotImplementedError
+
+#Template JsonSerializationClient Hash:UInt64 Commands:List<TypeDef> SchemaClosureGenerator:ISchemaClosureGenerator NamespaceName:String
+    class JsonSerializationClient:
+        """JSON serialization client for typed communication."""
+
+        def __init__(self, sender: IJsonSender) -> None:
+            self._sender = sender
+            self._client_command_callbacks: Dict[str, List[dict]] = {}
+            self._server_commands: Dict[str, dict] = {}
+
+            # Register server command handlers
+            $$
+                foreach (var c in Commands)
+                {
+                    if (c.OnServerCommand)
+                    {
+                        var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
+                        var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                        var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
+                        var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                        ##
+                            self._server_commands[${CommandNameString}] = {
+                                "commandHash": "${CommandHash}",
+                                "callback": lambda parameters: self._handle_[[${Name}]](JsonTranslator.[[${EventName}FromJson]](json.loads(parameters)))
+                            }
+                    }
+                }
+
+        @property
+        def hash(self) -> str:
+            return "${Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)}"
+
+        $$
+            foreach (var c in Commands)
+            {
+                if (c.OnServerCommand)
+                {
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                    var Description = GetXmlComment(c.ServerCommand.Description);
+                    ##
+                        ${Description}
+                        [[${Name}]]: Optional[Callable[ [${EventTypeString}], None] ] = None
+                }
+            }
+
+        # Client command methods
+        $$
+            foreach (var c in Commands)
+            {
+                if (c.OnClientCommand)
+                {
+                    var CommandNameString = GetEscapedStringLiteral(c.ClientCommand.FullName());
+                    var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                    var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
+                    var Description = GetXmlComment(c.ClientCommand.Description);
+                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                    ##
+                        def [[${Name}]](self, r: ${RequestTypeString}, callback: Callable[ [${ReplyTypeString}], None], on_error: Optional[Callable[ [Exception], None] ] = None) -> None:
+                            ${Description}
+                            request = json.dumps(JsonTranslator.[[${RequestName}ToJson]](r), separators=(',', ':'))
+                            self._add_callback(${CommandNameString}, "${CommandHash}", lambda parameters: callback(JsonTranslator.[[${ReplyName}FromJson]](json.loads(parameters))), on_error)
+                            self._sender.send(${CommandNameString}, "${CommandHash}", request)
+                }
+            }
+
+        def _add_callback(self, command_name: str, command_hash: str, callback: Callable[ [str], None], on_error: Optional[Callable[ [Exception], None] ] = None) -> None:
+            entry = {"commandHash": command_hash, "callback": callback, "onError": on_error}
+            if command_name in self._client_command_callbacks:
+                self._client_command_callbacks[command_name].append(entry)
+            else:
+                self._client_command_callbacks[command_name] = [entry]
+
+        def handle_result(self, command_name: str, command_hash: str, parameters: str) -> None:
+            """Handle a response or server event from the transport."""
+            # Check client command callbacks first
+            if command_name in self._client_command_callbacks:
+                q = self._client_command_callbacks[command_name]
+                if len(q) == 0:
+                    raise RuntimeError(f"InvalidOperation: {command_name}@{command_hash}")
+                callback_pair = q.pop(0)
+                if callback_pair["commandHash"] != command_hash:
+                    raise RuntimeError(f"InvalidOperation: {command_name}@{command_hash}")
+                callback_pair["callback"](parameters)
+                return
+
+            # Check server commands
+            if command_name in self._server_commands:
+                callback_pair = self._server_commands[command_name]
+                if callback_pair["commandHash"] != command_hash:
+                    raise RuntimeError(f"InvalidOperation: {command_name}@{command_hash}")
+                callback_pair["callback"](parameters)
+                return
+
+            raise RuntimeError(f"Unknown command: {command_name}@{command_hash}")
+
+        $$
+            foreach (var c in Commands)
+            {
+                if (c.OnServerCommand)
+                {
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                    ##
+                        def _handle_[[${Name}]](self, e: ${EventTypeString}) -> None:
+                            if self.[[${Name}]] is not None:
+                                self.[[${Name}]](e)
+                }
+            }
+
 #Template JsonTranslator Schema:Schema NamespaceName:String
     class JsonTranslator:
         """JSON serialization/deserialization for typed objects."""
@@ -437,6 +557,13 @@ $Comment
     @staticmethod
     def [[${SimpleName}ToJson]](o: ${TypeString}) -> Any:
         return [{"key": JsonTranslator.[[${KeySimpleName}ToJson]](k), "value": JsonTranslator.[[${ValueSimpleName}ToJson]](v)} for k, v in o.items()]
+
+#Template JsonTranslator_ClientCommand c:ClientCommandDef NamespaceName:String
+    ${JsonTranslator_Record(GetSuffixedTypeName(c.Name, c.Version, "Request", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Request", NamespaceName), c.OutParameters, NamespaceName)}
+    ${JsonTranslator_TaggedUnion(GetSuffixedTypeName(c.Name, c.Version, "Reply", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Reply", NamespaceName), GetSuffixedTypeName(c.Name, c.Version, "ReplyTag", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "ReplyTag", NamespaceName), c.InParameters, NamespaceName)}
+
+#Template JsonTranslator_ServerCommand c:ServerCommandDef NamespaceName:String
+    ${JsonTranslator_Record(GetSuffixedTypeName(c.Name, c.Version, "Event", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Event", NamespaceName), c.OutParameters, NamespaceName)}
 
 #Template Main Schema:Schema NamespaceName:String
     #!/usr/bin/python3

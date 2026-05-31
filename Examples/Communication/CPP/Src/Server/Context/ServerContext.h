@@ -26,8 +26,8 @@ namespace Server
         Optional<std::u16string> CommunicationSchemaHashToVersion(std::u16string Hash)
         {
             if (Hash == HeadCommunicationSchemaHash) { return Optional<std::u16string>::CreateHasValue(u""); }
-            if (Hash == u"2E43E8086311138C") { return Optional<std::u16string>::CreateHasValue(u"2"); }
-            if (Hash == u"065DE60CA9210FC4") { return Optional<std::u16string>::CreateHasValue(u"1"); }
+            if (Hash == u"E155190642FF7278") { return Optional<std::u16string>::CreateHasValue(u"2"); }
+            if (Hash == u"3DDB41626C55E770") { return Optional<std::u16string>::CreateHasValue(u"1"); }
             return Optional<std::u16string>::Empty();
         }
 

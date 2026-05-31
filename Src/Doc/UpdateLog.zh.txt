@@ -1,7 +1,10 @@
 ﻿2026.05.31
+Niveum.Object:
+增加Python JSON通讯代码生成。
 Examples:
 修正C#通讯示例。
 修正C++通讯示例，去除fmt的使用。
+增加Python JSON通讯示例。
 *:
 对Build.cmd使用更好的explorer检测机制。
 

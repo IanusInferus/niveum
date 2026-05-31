@@ -78,6 +78,162 @@ namespace Niveum.ObjectSchema.PythonJson
                 yield return GetEscapedIdentifier(Identifier);
             }
         }
+        public IEnumerable<String> IJsonSender()
+        {
+            yield return "class IJsonSender(ABC):";
+            yield return "    \"\"\"Abstract interface for JSON message transport.\"\"\"";
+            yield return "";
+            yield return "    @abstractmethod";
+            yield return "    def send(self, command_name: str, command_hash: str, parameters: str) -> None:";
+            yield return "        raise NotImplementedError";
+        }
+        public IEnumerable<String> JsonSerializationClient(UInt64 Hash, List<TypeDef> Commands, ISchemaClosureGenerator SchemaClosureGenerator, String NamespaceName)
+        {
+            yield return "class JsonSerializationClient:";
+            yield return "    \"\"\"JSON serialization client for typed communication.\"\"\"";
+            yield return "";
+            yield return "    def __init__(self, sender: IJsonSender) -> None:";
+            yield return "        self._sender = sender";
+            yield return "        self._client_command_callbacks: Dict[str, List[dict]] = {}";
+            yield return "        self._server_commands: Dict[str, dict] = {}";
+            yield return "";
+            yield return "        # Register server command handlers";
+            foreach (var c in Commands)
+            {
+                if (c.OnServerCommand)
+                {
+                    var CommandNameString = GetEscapedStringLiteral(c.ServerCommand.FullName());
+                    var EventName = GetSuffixedTypeName(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
+                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                    foreach (var _Line in Combine(Combine(Combine(Begin(), "self._server_commands["), CommandNameString), "] = {"))
+                    {
+                        yield return _Line == "" ? "" : "        " + _Line;
+                    }
+                    foreach (var _Line in Combine(Combine(Combine(Begin(), "    \"commandHash\": \""), CommandHash), "\","))
+                    {
+                        yield return _Line == "" ? "" : "        " + _Line;
+                    }
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    \"callback\": lambda parameters: self._handle_"), GetEscapedIdentifier(Name)), "(JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), EventName), "FromJson"))), "(json.loads(parameters)))"))
+                    {
+                        yield return _Line == "" ? "" : "        " + _Line;
+                    }
+                    yield return "        " + "}";
+                }
+            }
+            yield return "";
+            yield return "    @property";
+            yield return "    def hash(self) -> str:";
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "        return \""), Hash.ToString("X16", System.Globalization.CultureInfo.InvariantCulture)), "\""))
+            {
+                yield return _Line;
+            }
+            yield return "";
+            foreach (var c in Commands)
+            {
+                if (c.OnServerCommand)
+                {
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                    var Description = GetXmlComment(c.ServerCommand.Description);
+                    foreach (var _Line in Combine(Begin(), Description))
+                    {
+                        yield return _Line == "" ? "" : "    " + _Line;
+                    }
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Begin(), GetEscapedIdentifier(Name)), ": Optional[Callable[ ["), EventTypeString), "], None] ] = None"))
+                    {
+                        yield return _Line == "" ? "" : "    " + _Line;
+                    }
+                }
+            }
+            yield return "";
+            yield return "    # Client command methods";
+            foreach (var c in Commands)
+            {
+                if (c.OnClientCommand)
+                {
+                    var CommandNameString = GetEscapedStringLiteral(c.ClientCommand.FullName());
+                    var RequestTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyTypeString = GetSuffixedTypeString(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                    var RequestName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Request", NamespaceName);
+                    var ReplyName = GetSuffixedTypeName(c.ClientCommand.Name, c.ClientCommand.Version, "Reply", NamespaceName);
+                    var Name = c.ClientCommand.GetTypeSpec().SimpleName(NamespaceName);
+                    var Description = GetXmlComment(c.ClientCommand.Description);
+                    var CommandHash = ((UInt32)(SchemaClosureGenerator.GetSubSchema(new List<TypeDef> { c }, new List<TypeSpec> { }).GetNonversioned().GetNonattributed().Hash().Bits(31, 0))).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "def "), GetEscapedIdentifier(Name)), "(self, r: "), RequestTypeString), ", callback: Callable[ ["), ReplyTypeString), "], None], on_error: Optional[Callable[ [Exception], None] ] = None) -> None:"))
+                    {
+                        yield return _Line == "" ? "" : "    " + _Line;
+                    }
+                    foreach (var _Line in Combine(Combine(Begin(), "    "), Description))
+                    {
+                        yield return _Line == "" ? "" : "    " + _Line;
+                    }
+                    foreach (var _Line in Combine(Combine(Combine(Begin(), "    request = json.dumps(JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), RequestName), "ToJson"))), "(r), separators=(',', ':'))"))
+                    {
+                        yield return _Line == "" ? "" : "    " + _Line;
+                    }
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "    self._add_callback("), CommandNameString), ", \""), CommandHash), "\", lambda parameters: callback(JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), ReplyName), "FromJson"))), "(json.loads(parameters))), on_error)"))
+                    {
+                        yield return _Line == "" ? "" : "    " + _Line;
+                    }
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    self._sender.send("), CommandNameString), ", \""), CommandHash), "\", request)"))
+                    {
+                        yield return _Line == "" ? "" : "    " + _Line;
+                    }
+                }
+            }
+            yield return "";
+            yield return "    def _add_callback(self, command_name: str, command_hash: str, callback: Callable[ [str], None], on_error: Optional[Callable[ [Exception], None] ] = None) -> None:";
+            yield return "        entry = {\"commandHash\": command_hash, \"callback\": callback, \"onError\": on_error}";
+            yield return "        if command_name in self._client_command_callbacks:";
+            yield return "            self._client_command_callbacks[command_name].append(entry)";
+            yield return "        else:";
+            yield return "            self._client_command_callbacks[command_name] = [entry]";
+            yield return "";
+            yield return "    def handle_result(self, command_name: str, command_hash: str, parameters: str) -> None:";
+            yield return "        \"\"\"Handle a response or server event from the transport.\"\"\"";
+            yield return "        # Check client command callbacks first";
+            yield return "        if command_name in self._client_command_callbacks:";
+            yield return "            q = self._client_command_callbacks[command_name]";
+            yield return "            if len(q) == 0:";
+            yield return "                raise RuntimeError(f\"InvalidOperation: {command_name}@{command_hash}\")";
+            yield return "            callback_pair = q.pop(0)";
+            yield return "            if callback_pair[\"commandHash\"] != command_hash:";
+            yield return "                raise RuntimeError(f\"InvalidOperation: {command_name}@{command_hash}\")";
+            yield return "            callback_pair[\"callback\"](parameters)";
+            yield return "            return";
+            yield return "";
+            yield return "        # Check server commands";
+            yield return "        if command_name in self._server_commands:";
+            yield return "            callback_pair = self._server_commands[command_name]";
+            yield return "            if callback_pair[\"commandHash\"] != command_hash:";
+            yield return "                raise RuntimeError(f\"InvalidOperation: {command_name}@{command_hash}\")";
+            yield return "            callback_pair[\"callback\"](parameters)";
+            yield return "            return";
+            yield return "";
+            yield return "        raise RuntimeError(f\"Unknown command: {command_name}@{command_hash}\")";
+            yield return "";
+            foreach (var c in Commands)
+            {
+                if (c.OnServerCommand)
+                {
+                    var Name = c.ServerCommand.GetTypeSpec().SimpleName(NamespaceName);
+                    var EventTypeString = GetSuffixedTypeString(c.ServerCommand.Name, c.ServerCommand.Version, "Event", NamespaceName);
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "def _handle_"), GetEscapedIdentifier(Name)), "(self, e: "), EventTypeString), ") -> None:"))
+                    {
+                        yield return _Line == "" ? "" : "    " + _Line;
+                    }
+                    foreach (var _Line in Combine(Combine(Combine(Begin(), "    if self."), GetEscapedIdentifier(Name)), " is not None:"))
+                    {
+                        yield return _Line == "" ? "" : "    " + _Line;
+                    }
+                    foreach (var _Line in Combine(Combine(Combine(Begin(), "        self."), GetEscapedIdentifier(Name)), "(e)"))
+                    {
+                        yield return _Line == "" ? "" : "    " + _Line;
+                    }
+                }
+            }
+        }
         public IEnumerable<String> JsonTranslator(Schema Schema, String NamespaceName)
         {
             yield return "class JsonTranslator:";
@@ -639,6 +795,24 @@ namespace Niveum.ObjectSchema.PythonJson
                 yield return _Line;
             }
             foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "    return [{\"key\": JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), KeySimpleName), "ToJson"))), "(k), \"value\": JsonTranslator."), GetEscapedIdentifier(Combine(Combine(Begin(), ValueSimpleName), "ToJson"))), "(v)} for k, v in o.items()]"))
+            {
+                yield return _Line;
+            }
+        }
+        public IEnumerable<String> JsonTranslator_ClientCommand(ClientCommandDef c, String NamespaceName)
+        {
+            foreach (var _Line in Combine(Begin(), JsonTranslator_Record(GetSuffixedTypeName(c.Name, c.Version, "Request", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Request", NamespaceName), c.OutParameters, NamespaceName)))
+            {
+                yield return _Line;
+            }
+            foreach (var _Line in Combine(Begin(), JsonTranslator_TaggedUnion(GetSuffixedTypeName(c.Name, c.Version, "Reply", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Reply", NamespaceName), GetSuffixedTypeName(c.Name, c.Version, "ReplyTag", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "ReplyTag", NamespaceName), c.InParameters, NamespaceName)))
+            {
+                yield return _Line;
+            }
+        }
+        public IEnumerable<String> JsonTranslator_ServerCommand(ServerCommandDef c, String NamespaceName)
+        {
+            foreach (var _Line in Combine(Begin(), JsonTranslator_Record(GetSuffixedTypeName(c.Name, c.Version, "Event", NamespaceName), GetSuffixedTypeString(c.Name, c.Version, "Event", NamespaceName), c.OutParameters, NamespaceName)))
             {
                 yield return _Line;
             }

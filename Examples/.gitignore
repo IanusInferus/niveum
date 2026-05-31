@@ -7,6 +7,8 @@ __pycache__
 /Communication/CPP/Lib/cppformat
 /Communication/CPP/Lib/asio
 /Communication/Haxe/generated
+/Communication/Python/src/Communication.py
+/Communication/Python/src/CommunicationJson.py
 /Communication/XHTML
 /Database/MailCSharp/Src/Database.cs
 /Database/MailCSharp/Src/Krustallos/KrustallosDataAccess.cs
