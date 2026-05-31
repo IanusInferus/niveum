@@ -15,7 +15,7 @@
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
-#include <fmt/format.h>
+#include <format>
 
 namespace Server
 {
@@ -34,7 +34,7 @@ namespace Server
             for (std::size_t k = 0; k < SessionTokenValue.size(); k += 1)
             {
                 auto b = SessionTokenValue[k];
-                s += fmt::format(L"{:02X}", b);
+                s += std::format(L"{:02X}", b);
             }
             SessionTokenStringValue = wideCharToUtf16(s);
         }

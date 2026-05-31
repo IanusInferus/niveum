@@ -1,10 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 find_package(Threads)
-add_definitions("-std=c++17")
+add_definitions("-std=c++20")
 add_definitions("-DFMT_HEADER_ONLY")
 add_definitions("-DASIO_STANDALONE")
 include_directories("../../Lib/utf8/source")
-include_directories("../../Lib/fmt")
 include_directories("../../Lib/asio/include")
 include_directories(".")
 

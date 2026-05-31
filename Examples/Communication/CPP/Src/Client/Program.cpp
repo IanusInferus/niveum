@@ -3,7 +3,7 @@
 //  File:        Program.cpp
 //  Location:    Niveum.Examples <C++ 2011>
 //  Description: 聊天客户端
-//  Version:     2021.11.10.
+//  Version:     2026.05.31.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -32,7 +32,7 @@
 #ifdef _MSC_VER
 #undef SendMessage
 #endif
-#include <fmt/format.h>
+#include <format>
 
 namespace Client
 {
@@ -323,11 +323,11 @@ namespace Client
             auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService, 30 * 1000);
             bsca->ClientCommandReceived = [=](std::u16string CommandName, int Milliseconds)
             {
-                //std::wprintf(L"%ls\n", fmt::format(L"{0} {1}ms", utf16ToWideChar(CommandName), Milliseconds).c_str());
+                //std::wprintf(L"%ls\n", std::format(L"{0} {1}ms", utf16ToWideChar(CommandName), Milliseconds).c_str());
             };
             bsca->ClientCommandFailed = [=](std::u16string CommandName, int Milliseconds)
             {
-                //std::wprintf(L"%ls\n", fmt::format(L"{0} Failed {1}ms", utf16ToWideChar(CommandName), Milliseconds).c_str());
+                //std::wprintf(L"%ls\n", std::format(L"{0} Failed {1}ms", utf16ToWideChar(CommandName), Milliseconds).c_str());
             };
             bsca->ServerCommandReceived = [=](std::u16string CommandName)
             {
@@ -383,11 +383,11 @@ namespace Client
             auto bsca = std::make_shared<Client::BinarySerializationClientAdapter>(IoService, 30 * 1000);
             bsca->ClientCommandReceived = [=](std::u16string CommandName, int Milliseconds)
             {
-                //std::wprintf(L"%ls\n", fmt::format(L"{0} {1}ms", utf16ToWideChar(CommandName), Milliseconds).c_str());
+                //std::wprintf(L"%ls\n", std::format(L"{0} {1}ms", utf16ToWideChar(CommandName), Milliseconds).c_str());
             };
             bsca->ClientCommandFailed = [=](std::u16string CommandName, int Milliseconds)
             {
-                //std::wprintf(L"%ls\n", fmt::format(L"{0} Failed {1}ms", utf16ToWideChar(CommandName), Milliseconds).c_str());
+                //std::wprintf(L"%ls\n", std::format(L"{0} Failed {1}ms", utf16ToWideChar(CommandName), Milliseconds).c_str());
             };
             bsca->ServerCommandReceived = [=](std::u16string CommandName)
             {
