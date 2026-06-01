@@ -3,7 +3,7 @@
 //  File:        PythonBinary.cs
 //  Location:    Niveum.Object <Visual C#>
 //  Description: 对象类型结构Python二进制通讯代码生成器
-//  Version:     2026.05.31.
+//  Version:     2026.06.01.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -215,11 +215,6 @@ namespace Niveum.ObjectSchema.PythonBinary
             AddClass(NamespaceName, Streams());
 
             AddClass(NamespaceName, BinaryTranslator(Schema, NamespaceName));
-
-            if (NamespaceToClasses.Count > 1)
-            {
-                throw new NotSupportedException("PythonMultipleNamespace"); //Python不支持nested class import
-            }
 
             var Classes = NamespaceToClasses.Select(p => p.Value.Join(new String[] { "" }));
 
