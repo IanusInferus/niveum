@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Firefly.TextEncoding;
 
 namespace Firefly.Test
