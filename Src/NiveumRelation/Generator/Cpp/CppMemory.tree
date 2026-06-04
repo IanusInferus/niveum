@@ -1,0 +1,203 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        CppMemory.tree
+      Location:    Niveum.Relation <Tree>
+      Description: 关系类型结构C++ Memory代码模板
+      Version:     2026.06.05.
+      Copyright(C) F.R.C.
+
+    ==========================================================================
+
+#Option
+    EnableEmbeddedExpr True
+
+#Namespace Niveum.RelationSchema.CppMemory
+
+#Import
+    System
+    System.Collections.Generic
+    System.Linq
+
+#Template NamespaceImplementation EntityNamespaceName:IEnumerable<String> Contents:IEnumerable<String>
+    namespace _Impl
+    {
+        using namespace cpplinq;
+        using namespace ::${EntityNamespaceName};
+        ${Contents}
+    }
+    typedef _Impl::MemoryDataAccess MemoryDataAccess;
+
+#Template DataAccess Tables:IEnumerable<String> Indices:IEnumerable<String> Streams:IEnumerable<String> BinaryTranslator:IEnumerable<String> Generates:IEnumerable<String> Hash:String Queries:IEnumerable<String>
+    class MemoryDataTables
+    {
+    public:
+        ${Tables}
+    };
+
+    class MemoryDataIndices
+    {
+    public:
+        ${Indices}
+    };
+
+    ${Streams}
+
+    ${BinaryTranslator}
+
+    class MemoryDataAccess : public IDataAccess
+    {
+    public:
+        std::shared_ptr<MemoryDataTables> Tables;
+        std::shared_ptr<MemoryDataIndices> Indices;
+
+        MemoryDataAccess(std::vector<std::uint8_t> Buffer)
+        {
+            {
+                ByteArrayStream bas;
+                bas.WriteBytes(Buffer);
+                bas.SetPosition(0);
+                if (bas.ReadUInt64() != 0x415441445355524B) { throw std::logic_error("InvalidOperation"); }
+                auto Hash = bas.ReadUInt64();
+                if (Hash != 0x${Hash}) { throw std::logic_error("InvalidOperation"); }
+                auto SchemaLength = bas.ReadInt64();
+                bas.SetPosition(static_cast<std::size_t>(bas.GetPosition() + SchemaLength));
+                bas.ReadInt64();
+                Tables = BinaryTranslator::MemoryDataTablesFromBinary(bas);
+            }
+            Indices = std::make_shared<MemoryDataIndices>();
+            ${Generates}
+        }
+
+    public:
+        static inline std::shared_ptr<IDataAccess> Create(std::vector<std::uint8_t> Buffer)
+        {
+            return std::static_pointer_cast<IDataAccess>(std::make_shared<MemoryDataAccess>(Buffer));
+        }
+
+        void Complete()
+        {
+        }
+
+        ${Queries}
+    };
+
+#Template DataAccessBase_Table EntityName:String
+    std::vector<std::shared_ptr<class [[${EntityName}]]>> [[${EntityName}]];
+
+#Template DataAccessBase_Index IndexName:String IndexType:String
+    [[${IndexType}]] [[${IndexName}]];
+
+#Template DataAccessBase_Generate EntityName:String IndexName:String IndexType:String Fetches:IEnumerable<String> Add:IEnumerable<String>
+    {
+        Indices->[[${IndexName}]] = std::make_shared<${IndexType}>();
+        auto &Table = *Indices->[[${IndexName}]];
+        int k = 0;
+        for (auto &&r : Tables->[[${EntityName}]])
+        {
+            ${Fetches}
+            ${Add}
+            k += 1;
+        }
+    }
+
+#Template DataAccessBase_Generate_Fetch ParentByIndex:String RemainIndexType:String Column:String ByIndex:String
+    if ([[Table${ParentByIndex}]].count(r->[[${Column}]]) <= 0) { [[Table${ParentByIndex}]][r->[[${Column}]]] = std::make_shared<[[${RemainIndexType}]]>(); }
+    auto &[[Table${ByIndex}]] = *[[Table${ParentByIndex}]][r->[[${Column}]]];
+
+#Template DataAccessBase_Generate_Add ByIndex:String
+    [[Table${ByIndex}]].push_back(k);
+
+#Template Query Signature:String Content:IEnumerable<String>
+    ${Signature}
+    {
+        ${Content}
+    }
+
+#Template SelectMany_Fetch EntityName:String ParentByIndex:String Column:String ByIndex:String WhenEmpty:IEnumerable<String>
+    if ([[_Index${ParentByIndex}_]].count(${Column}) <= 0)
+    {
+        ${WhenEmpty}
+    }
+    auto &[[_Index${ByIndex}_]] = *[[_Index${ParentByIndex}_]][${Column}];
+
+#Template SelectLock_Optional ManyName:String Parameters:String EntityName:String IndexName:String Fetches:IEnumerable<String> ByIndex:String Filters:String
+    auto &_Index_ = *this->Indices->[[${IndexName}]];
+    ${Fetches}
+    auto _l_ = from([[_Index${ByIndex}_]])${Filters}>>select([&](Int _i_) { return this->Tables->[[${EntityName}]][_i_]; })>>to_vector();
+    if (_l_.size() == 0) { return nullptr; }
+    if (_l_.size() != 1) { throw std::logic_error("NotSingle"); }
+    return _l_[0];
+
+#Template SelectLock_Optional_WhenEmpty EntityName:String
+    return nullptr;
+
+#Template SelectLock_One ManyName:String Parameters:String EntityName:String IndexName:String Fetches:IEnumerable<String> ByIndex:String Filters:String
+    auto &_Index_ = *this->Indices->[[${IndexName}]];
+    ${Fetches}
+    auto _l_ = from([[_Index${ByIndex}_]])${Filters}>>select([&](Int _i_) { return this->Tables->[[${EntityName}]][_i_]; })>>to_vector();
+    if (_l_.size() != 1) { throw std::logic_error("NotSingle"); }
+    return _l_[0];
+
+#Template SelectLock_One_WhenEmpty EntityName:String
+    throw std::logic_error("NotExist");
+
+#Template SelectLock_Many ManyName:String Parameters:String OrderBys:String EntityName:String IndexName:String Fetches:IEnumerable<String> ByIndex:String Filters:String
+    auto &_Index_ = *this->Indices->[[${IndexName}]];
+    ${Fetches}
+    auto _l_ = from([[_Index${ByIndex}_]])${Filters}>>select([&](Int _i_) { return this->Tables->[[${EntityName}]][_i_]; })${OrderBys}>>to_vector();
+    return std::make_shared<std::vector<std::shared_ptr<class [[${EntityName}]]>>>(std::move(_l_));
+
+#Template SelectLock_All AllName:String OrderBys:String EntityName:String
+    auto _l_ = from(this->Tables->[[${EntityName}]])${OrderBys}>>to_vector();
+    return std::make_shared<std::vector<std::shared_ptr<class [[${EntityName}]]>>>(std::move(_l_));
+
+#Template SelectLock_Range ManyName:String Parameters:String OrderBys:String EntityName:String IndexName:String Fetches:IEnumerable<String> ByIndex:String Filters:String
+    auto &_Index_ = *this->Indices->[[${IndexName}]];
+    ${Fetches}
+    auto _l_ = from([[_Index${ByIndex}_]])${Filters}>>select([&](Int _i_) { return this->Tables->[[${EntityName}]][_i_]; })${OrderBys}>>skip(_Skip_)>>take(_Take_)>>to_vector();
+    return std::make_shared<std::vector<std::shared_ptr<class [[${EntityName}]]>>>(std::move(_l_));
+
+#Template SelectLock_RangeAll AllName:String OrderBys:String EntityName:String
+    auto _l_ = from(this->Tables->[[${EntityName}]])${OrderBys}>>skip(_Skip_)>>take(_Take_)>>to_vector();
+    return std::make_shared<std::vector<std::shared_ptr<class [[${EntityName}]]>>>(std::move(_l_));
+
+#Template SelectLock_ManyRange_WhenEmpty EntityName:String
+    return std::make_shared<std::vector<std::shared_ptr<class [[${EntityName}]]>>>();
+
+#Template SelectLock_Count ManyName:String Parameters:String EntityName:String IndexName:String Fetches:IEnumerable<String> ByIndex:String Filters:String
+    auto &_Index_ = *this->Indices->[[${IndexName}]];
+    ${Fetches}
+    auto _c_ = from([[_Index${ByIndex}_]])${Filters}>>count();
+    return static_cast<Int>(_c_);
+
+#Template SelectLock_Count_WhenEmpty EntityName:String
+    return 0;
+
+#Template InsertUpdateUpsertDelete
+    throw std::logic_error("NotSupportedException");
+
+#Template Main Includes:IEnumerable<String> Primitives:IEnumerable<String> ComplexTypes:IEnumerable<String>
+    //==========================================================================
+    //
+    //  Notice:      This file is automatically generated.
+    //               Please don't modify this file.
+    //
+    //==========================================================================
+
+    #pragma once
+
+    #include <cstddef>
+    #include <cstdint>
+    #include <string>
+    #include <vector>
+    #include <map>
+    #include <memory>
+    #include <stdexcept>
+    #include <utility>
+    #include <cpplinq.hpp>
+    #include ${Includes}
+    ${Primitives}
+    ${ComplexTypes}
+
+$End

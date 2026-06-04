@@ -1,4 +1,8 @@
-﻿2026.06.04
+﻿2026.06.05
+Niveum.Relation, Yuki.Relation:
+迁移CppPlain、CppMemory、CSharpPlain。
+
+2026.06.04
 *:
 统一tree和cs文件编码为UTF-8 BOM。
 Niveum.Relation, Yuki.Relation:

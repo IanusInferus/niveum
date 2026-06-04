@@ -3,7 +3,7 @@
 //  File:        CSharpLinqToEntities.cs
 //  Location:    Niveum.Relation <Visual C#>
 //  Description: 关系类型结构C# Linq to Entities数据库代码生成器
-//  Version:     2026.06.04.
+//  Version:     2026.06.05.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -22,9 +22,9 @@ namespace Niveum.RelationSchema.CSharpLinqToEntities
     {
         public static String CompileToCSharpLinqToEntities(this Schema Schema, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
         {
-            var w = new Templates(Schema, DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
-            var a = w.GetSchema();
-            return String.Join("\r\n", a.Select(Line => Line.TrimEnd(' ')));
+            var t = new Templates(Schema, DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
+            var Lines = t.GetSchema().Select(Line => Line.TrimEnd(' '));
+            return String.Join("\r\n", Lines);
         }
     }
 

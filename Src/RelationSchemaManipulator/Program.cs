@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.RelationSchemaManipulator <Visual C#>
 //  Description: 关系类型结构处理工具
-//  Version:     2026.06.04.
+//  Version:     2026.06.05.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -23,14 +23,14 @@ using RS = Niveum.RelationSchema;
 using Yuki.RelationSchema.TSql;
 using Yuki.RelationSchema.MySql;
 using Niveum.RelationSchema.CSharpLinqToEntities;
-using Yuki.RelationSchema.CSharpPlain;
+using Niveum.RelationSchema.CSharpPlain;
 using Yuki.RelationSchema.CSharpMemory;
 using Yuki.RelationSchema.CSharpSqlServer;
 using Yuki.RelationSchema.CSharpMySql;
 using Yuki.RelationSchema.CSharpKrustallos;
 using Yuki.RelationSchema.CSharpCounted;
-using Yuki.RelationSchema.CppPlain;
-using Yuki.RelationSchema.CppMemory;
+using Niveum.RelationSchema.CppPlain;
+using Niveum.RelationSchema.CppMemory;
 using Yuki.RelationSchema.Xhtml;
 
 namespace Yuki.RelationSchemaManipulator
