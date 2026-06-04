@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# Krustallos代码生成器
-//  Version:     2022.12.04.
+//  Version:     2026.06.04.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -12,7 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Firefly;
-using Niveum.ObjectSchema;
+using Niveum.RelationSchema;
 using OS = Niveum.ObjectSchema;
 using ObjectSchemaTemplateInfo = Yuki.ObjectSchema.ObjectSchemaTemplateInfo;
 
@@ -58,7 +58,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                 this.NamespaceName = NamespaceName;
                 InnerSchema = PlainObjectSchemaGenerator.Generate(Schema, EntityNamespaceName);
                 TypeDict = Schema.GetMap().ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
-                InnerTypeDict = Niveum.ObjectSchema.ObjectSchemaExtensions.GetMap(InnerSchema).ToDictionary(p => p.Key.Split('.').Last(), p => p.Value, StringComparer.OrdinalIgnoreCase);
+                InnerTypeDict = OS.ObjectSchemaExtensions.GetMap(InnerSchema).ToDictionary(p => p.Key.Split('.').Last(), p => p.Value, StringComparer.OrdinalIgnoreCase);
 
                 KeysDict = new Dictionary<String, Key[]>(StringComparer.OrdinalIgnoreCase);
                 foreach (var e in Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity))
@@ -207,7 +207,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     foreach (var f in e.Fields.Where(f => f.Attribute.OnColumn && f.Attribute.Column.IsIdentity))
                     {
                         var SequenceName = "SequenceOf" + e.Name + "Dot" + f.Name;
-                        var SequenceType = "Sequence" + d[f.Name].Type.SimpleName(NamespaceName);
+                        var SequenceType = "Sequence" + OS.ObjectSchemaExtensions.SimpleName(d[f.Name].Type, NamespaceName);
                         l.AddRange(GetTemplate("Data_SequenceDefinition").Substitute("SequenceName", SequenceName).Substitute("SequenceType", SequenceType));
                     }
                 }
@@ -235,7 +235,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                     foreach (var f in e.Fields.Where(f => f.Attribute.OnColumn && f.Attribute.Column.IsIdentity))
                     {
                         var SequenceName = "SequenceOf" + e.Name + "Dot" + f.Name;
-                        var SequenceType = "Sequence" + d[f.Name].Type.SimpleName(NamespaceName);
+                        var SequenceType = "Sequence" + OS.ObjectSchemaExtensions.SimpleName(d[f.Name].Type, NamespaceName);
                         l.AddRange(GetTemplate("Data_SequenceInitialization").Substitute("SequenceName", SequenceName).Substitute("SequenceType", SequenceType));
                     }
                 }
@@ -610,7 +610,7 @@ namespace Yuki.RelationSchema.CSharpKrustallos
                         var Key = String.Join(", ", k.Columns.Select(c => "v.[[{0}]]".Formats(c.Name)));
                         var FirstColumnName = k.Columns.First().Name;
                         var FirstColumnType = d[FirstColumnName].Type;
-                        var PartitionIndex = (FirstColumnType.OnTypeRef && FirstColumnType.TypeRef.NameMatches("Int")) ? ("v.[[" + FirstColumnName + "]] % Data.[[${IndexName}]].NumPartition") : "0";
+                        var PartitionIndex = (FirstColumnType.OnTypeRef && OS.ObjectSchemaExtensions.NameMatches(FirstColumnType.TypeRef, "Int")) ? ("v.[[" + FirstColumnName + "]] % Data.[[${IndexName}]].NumPartition") : "0";
                         IndexNames.Add(IndexName);
                         Partitions.AddRange(GetTemplate("LoadSave_Partition").Substitute("PartitionIndex", PartitionIndex).Substitute("IndexName", IndexName));
                         Updates.AddRange(GetTemplate("LoadSave_Update").Substitute("IndexName", IndexName).Substitute("Key", Key));

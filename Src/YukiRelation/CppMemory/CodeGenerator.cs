@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C++ Memory代码生成器
-//  Version:     2021.02.13.
+//  Version:     2026.06.04.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -12,10 +12,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Firefly;
-using Firefly.Mapping.MetaSchema;
 using Firefly.TextEncoding;
 using OS = Niveum.ObjectSchema;
 using ObjectSchemaTemplateInfo = Yuki.ObjectSchema.ObjectSchemaTemplateInfo;
+using Niveum.RelationSchema;
 
 namespace Yuki.RelationSchema.CppMemory
 {
@@ -89,7 +89,7 @@ namespace Yuki.RelationSchema.CppMemory
                 ).ToList();
                 Types.Add(OS.TypeDef.CreateRecord(new OS.RecordDef { Name = EntityNamespaceParts.Concat(new List <String> { "MemoryDataTables" }).ToList(), Version = "", GenericParameters = new List<OS.VariableDef> { }, Attributes = new List<KeyValuePair<String, List<String>>> { }, Fields = TableFields, Description = "" }));
                 InnerSchema = new OS.Schema { Types = Types, TypeRefs = InnerSchema.TypeRefs, Imports = InnerSchema.Imports };
-                InnerTypeDict = Niveum.ObjectSchema.ObjectSchemaExtensions.GetMap(InnerSchema).ToDictionary(p => p.Key.Split('.').Last(), p => p.Value, StringComparer.OrdinalIgnoreCase);
+                InnerTypeDict = OS.ObjectSchemaExtensions.GetMap(InnerSchema).ToDictionary(p => p.Key.Split('.').Last(), p => p.Value, StringComparer.OrdinalIgnoreCase);
                 InnerBinaryWriter = new OS.CppBinary.Templates(InnerSchema, false, false);
             }
 

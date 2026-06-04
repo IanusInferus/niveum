@@ -1,6 +1,9 @@
 ﻿2026.06.04
 *:
 统一tree和cs文件编码为UTF-8 BOM。
+Niveum.Relation, Yuki.Relation:
+增加Niveum.Relation，并将RelationSchema、RelationValue、RelationSchemaDiff移动过去。
+迁移CSharpLinqToEntities。
 
 2026.06.01
 Niveum.Object:

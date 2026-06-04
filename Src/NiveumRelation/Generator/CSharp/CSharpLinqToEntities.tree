@@ -1,0 +1,162 @@
+﻿﻿$Comment
+    ==========================================================================
+
+      File:        CSharpLinqToEntities.tree
+      Location:    Niveum.Relation <Tree>
+      Description: 关系类型结构C# Linq to Entities数据库模板
+      Version:     2026.06.04.
+      Copyright(C) F.R.C.
+
+    ==========================================================================
+
+#Option
+    EnableEmbeddedExpr True
+
+#Namespace Niveum.RelationSchema.CSharpLinqToEntities
+
+#Import
+    System
+    System.Collections.Generic
+    System.Linq
+
+#Constant PrimitiveMapping:Map<String, String>
+    $Table KeyValuePairOfStringAndString Key Value
+        Boolean             System.Boolean
+        String              System.String
+        Int                 System.Int32
+        Int64               System.Int64
+        Real                System.Double
+        Binary              System.Byte[]
+
+#Template SingleLineXmlComment Description:String
+    /// <summary>${Description}</summary>
+
+#Template MultiLineXmlComment Description:List<String>
+    /// <summary>
+    /// ${Description}
+    /// </summary>
+
+#Template Primitive Name:String PlatformName:String
+    using [[${Name}]] = ${PlatformName};
+
+#Template Literal Name:String Value:String XmlComment:IEnumerable<String>
+    ${XmlComment}
+    [[${Name}]] = ${Value},
+
+#Template Enum Name:String UnderlyingType:String Literals:IEnumerable<String> XmlComment:IEnumerable<String>
+    ${XmlComment}
+    public enum [[${Name}]] : ${UnderlyingType}
+    {
+        ${Literals}
+    }
+
+#Template Table RecordName:String TableName:String Properties:IEnumerable<String> XmlComment:IEnumerable<String>
+    ${XmlComment}
+    [Table("${TableName}")]
+    public class [[${RecordName}]]
+    {
+        ${Properties}
+    }
+
+#Template ColumnProperty Name:String ColumnAttributes:String PropertyType:String XmlComment:IEnumerable<String>
+    ${XmlComment}
+    [${ColumnAttributes}]
+    public [[${PropertyType}]] [[${Name}]] { get; set; }
+
+#Template AssociationProperty Name:String AssociationParameters:String PropertyType:String XmlComment:IEnumerable<String>
+    ${XmlComment}
+    [${AssociationParameters}]
+    public virtual [[${PropertyType}]] [[${Name}]] { get; set; }
+
+#Template Context ContextClassName:String TableGetters:IEnumerable<String>
+    public partial class [[${ContextClassName}]] : System.Data.Entity.DbContext, IReadonlyContext
+    {
+        public [[${ContextClassName}]](System.Data.Common.DbConnection connection)
+            : base(connection, true)
+        {
+        }
+
+        ${TableGetters}
+    }
+
+#Template TableGetter RecordName:String TableName:String XmlComment:IEnumerable<String>
+    ${XmlComment}
+    public System.Data.Entity.DbSet<[[${RecordName}]]> [[${TableName}]] { get; set; }
+    IQueryable<[[${RecordName}]]> IReadonlyContext.[[${TableName}]] { get { return [[${TableName}]]; } }
+
+#Template IReadonlyContext TableGetters:IEnumerable<String>
+    public interface IReadonlyContext
+    {
+        ${TableGetters}
+    }
+
+#Template IReadonlyContextTableGetter RecordName:String TableName:String XmlComment:IEnumerable<String>
+    ${XmlComment}
+    IQueryable<[[${RecordName}]]> [[${TableName}]] { get; }
+
+#Template DbExtensions Methods:IEnumerable<String>
+    public static class DbExtensions
+    {
+        ${Methods}
+    }
+
+#Template WhereKeyIs RecordName:String KeyFriendlyName:String KeyParameters:String KeyWhereExpressions:String
+    public static IQueryable<[[${RecordName}]]> [[Where${KeyFriendlyName}Is]](this IQueryable<[[${RecordName}]]> _This, ${KeyParameters})
+    {
+        return _This.${KeyWhereExpressions};
+    }
+    public static IEnumerable<[[${RecordName}]]> [[Where${KeyFriendlyName}Is]](this IEnumerable<[[${RecordName}]]> _This, ${KeyParameters})
+    {
+        return _This.${KeyWhereExpressions};
+    }
+
+#Template ByKey RecordName:String KeyFriendlyName:String KeyParameters:String KeyWhereExpressions:String
+    public static [[${RecordName}]] [[By${KeyFriendlyName}]](this IQueryable<[[${RecordName}]]> _This, ${KeyParameters})
+    {
+        return _This.${KeyWhereExpressions}.Single();
+    }
+    public static [[${RecordName}]] [[By${KeyFriendlyName}]](this IEnumerable<[[${RecordName}]]> _This, ${KeyParameters})
+    {
+        return _This.${KeyWhereExpressions}.Single();
+    }
+
+#Template ByKeyT RecordName:String KeyFriendlyName:String KeyParameters:String KeyWhereExpressions:String
+    public static _T [[By${KeyFriendlyName}]]<_T>(this IQueryable<[[${RecordName}]]> _This, ${KeyParameters}, Func<[[${RecordName}]], _T> _Projector)
+    {
+        return _This.${KeyWhereExpressions}.Select(_Projector).Single();
+    }
+    public static _T [[By${KeyFriendlyName}]]<_T>(this IEnumerable<[[${RecordName}]]> _This, ${KeyParameters}, Func<[[${RecordName}]], _T> _Projector)
+    {
+        return _This.${KeyWhereExpressions}.Select(_Projector).Single();
+    }
+
+#Template Main EntityNamespaceName:String ContextNamespaceName:String Imports:List<String> Primitives:IEnumerable<String> EntityComplexTypes:IEnumerable<String> ContextComplexTypes:IEnumerable<String>
+    //==========================================================================
+    //
+    //  Notice:      This file is automatically generated.
+    //               Please don't modify this file.
+    //
+    //==========================================================================
+
+    //Reference:
+
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.ComponentModel.DataAnnotations;
+    using System.ComponentModel.DataAnnotations.Schema;
+    using ${Imports};
+    using [[${EntityNamespaceName}]];
+    ${Primitives}
+
+    namespace [[${EntityNamespaceName}]]
+    {
+        ${EntityComplexTypes}
+    }
+
+    namespace [[${ContextNamespaceName}]]
+    {
+        ${ContextComplexTypes}
+    }
+
+$End

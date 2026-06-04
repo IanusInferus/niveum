@@ -3,7 +3,7 @@
 //  File:        Resources.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 资源读取类
-//  Version:     2016.10.12.
+//  Version:     2026.06.04.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -31,7 +31,6 @@ namespace Yuki.RelationSchema.Properties
         public static Byte[] CppPlain { get { return GetResource("CppPlain"); } }
         public static Byte[] CSharpCounted { get { return GetResource("CSharpCounted"); } }
         public static Byte[] CSharpKrustallos { get { return GetResource("CSharpKrustallos"); } }
-        public static Byte[] CSharpLinqToEntities { get { return GetResource("CSharpLinqToEntities"); } }
         public static Byte[] CSharpMemory { get { return GetResource("CSharpMemory"); } }
         public static Byte[] CSharpMySql { get { return GetResource("CSharpMySql"); } }
         public static Byte[] CSharpPlain { get { return GetResource("CSharpPlain"); } }

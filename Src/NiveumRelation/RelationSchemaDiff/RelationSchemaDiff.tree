@@ -1,0 +1,55 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        RelationSchemaDiff.tree
+      Location:    Niveum.Relation <Tree>
+      Description: 关系类型结构映射元类型结构
+      Version:     2026.06.04.
+      Copyright(C) F.R.C.
+
+    ==========================================================================
+
+#Namespace Niveum.RelationSchemaDiff
+
+#Import
+    Niveum.RelationValue
+
+$Comment
+    #Map                            //结构转换
+        //语法定义
+        Entity id New                       //(1)创建实体
+        Entity id From id                   //(2)复制实体
+        Entity id Field id New literal      //(3)在实体中创建新字段
+        Entity id Field id From id          //(4)在实体中复制字段，自动转换类型
+
+        //例子
+        Entity A New                        //创建实体A
+        Entity A From B                     //将B复制到A
+        Entity A Field a New 1              //在实体A中创建一个新字段a，并将值赋为1
+        Entity A Field a New $Empty         //在实体A中创建一个新字段a，并将值赋为空
+        Entity A Field a From b             //在实体A中创建一个新字段a，从字段b复制
+        Entity A Field a From a             //在实体A中创建一个新字段a，将原来的字段a转换类型
+
+    语义限制：
+    所有的实体名称不能同时在(1)、(2)的第一个id中出现两次。
+    (3)、(4)中的第一个id是指的在完成(1)、(2)后的实体名称。
+    (3)、(4)中的第二个id对每个实体只能出现一次。
+    如果一个实体在(1)、(2)中没有出现，则会隐式添加自己到自己的(2)
+    如果一个字段在(3)、(4)中没有出现，则会隐式添加自己到自己的(4)，但是不会自动转换类型
+
+#Record EntityMapping                               实体映射
+    EntityName          String                      目的实体名
+    Method              EntityMappingMethod         实体映射方法
+
+#TaggedUnion EntityMappingMethod                    实体映射方法
+    New                 Unit                        创建实体
+    Copy                String                      复制实体，源实体名
+    Field               FieldMapping                字段映射
+
+#Record FieldMapping                                字段映射
+    FieldName           String                      目的字段名
+    Method              FieldMappingMethod          字段映射方法
+
+#TaggedUnion FieldMappingMethod                     字段映射方法
+    New                 Optional<PrimitiveVal>      创建字段
+    Copy                String                      复制字段，源字段名

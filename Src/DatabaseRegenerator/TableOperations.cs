@@ -13,8 +13,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Data;
 using Firefly;
-using Yuki.RelationSchema;
-using Yuki.RelationValue;
+using Niveum.RelationSchema;
+using Niveum.RelationValue;
 
 namespace Yuki.DatabaseRegenerator
 {

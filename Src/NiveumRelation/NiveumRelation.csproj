@@ -4,25 +4,18 @@
     <LangVersion>11.0</LangVersion>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
-    <RootNamespace>Firefly</RootNamespace>
-    <PackageId>Firefly.Lite</PackageId>
-    <Product>Firefly.Lite</Product>
+    <RootNamespace>Niveum.RelationSchema</RootNamespace>
+    <PackageId>Niveum.Relation</PackageId>
+    <Product>Niveum.Relation</Product>
     <Copyright>Copyright(C) F.R.C., under BSD license</Copyright>
-    <AssemblyName>Firefly.Lite</AssemblyName>
-    <AssemblyVersion>2026.05.16.0</AssemblyVersion>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <SignAssembly>false</SignAssembly>
-    <AssemblyOriginatorKeyFile>$(FLTKey)</AssemblyOriginatorKeyFile>
+    <AssemblyName>Niveum.Relation</AssemblyName>
+    <AssemblyVersion>2026.06.04.0</AssemblyVersion>
     <BaseIntermediateOutputPath>..\..\Obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
     <OutputPath>..\..\Bin\</OutputPath>
   </PropertyGroup>
 
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
-
-  <PropertyGroup Condition=" Exists('$(FLTKey)') ">
-    <SignAssembly>true</SignAssembly>
-  </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
@@ -44,4 +37,9 @@
     <WarningLevel>4</WarningLevel>
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FireflyLite\FireflyLite.csproj" />
+    <ProjectReference Include="..\NiveumObject\NiveumObject.csproj" />
+  </ItemGroup>
 </Project>

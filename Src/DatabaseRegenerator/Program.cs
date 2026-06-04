@@ -21,13 +21,13 @@ using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
 using Syntax = Firefly.Texting.TreeFormat.Syntax;
 using Firefly.Texting.TreeFormat.Semantics;
-using Yuki.RelationSchema;
+using Niveum.RelationSchema;
 using Yuki.RelationSchema.Sqlite;
 using Yuki.RelationSchema.TSql;
 using Yuki.RelationSchema.PostgreSql;
 using Yuki.RelationSchema.MySql;
-using Yuki.RelationValue;
-using Yuki.RelationSchemaDiff;
+using Niveum.RelationValue;
+using Niveum.RelationSchemaDiff;
 
 namespace Yuki.DatabaseRegenerator
 {

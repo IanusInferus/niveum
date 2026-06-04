@@ -9,7 +9,7 @@
     <Product>Yuki.RelationSchemaManipulator</Product>
     <Copyright>Copyright(C) F.R.C., under BSD license</Copyright>
     <AssemblyName>RelationSchemaManipulator</AssemblyName>
-    <AssemblyVersion>2021.12.18.0</AssemblyVersion>
+    <AssemblyVersion>2026.06.04.0</AssemblyVersion>
     <BaseIntermediateOutputPath>..\..\Obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
     <OutputType>Exe</OutputType>
     <OutputPath>..\..\Bin\</OutputPath>
@@ -42,6 +42,7 @@
   <ItemGroup>
     <ProjectReference Include="..\FireflyLite\FireflyLite.csproj" />
     <ProjectReference Include="..\NiveumObject\NiveumObject.csproj" />
+    <ProjectReference Include="..\NiveumRelation\NiveumRelation.csproj" />
     <ProjectReference Include="..\YukiRelation\YukiRelation.csproj" />
   </ItemGroup>
 </Project>

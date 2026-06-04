@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.RelationSchemaManipulator <Visual C#>
 //  Description: 关系类型结构处理工具
-//  Version:     2018.12.22.
+//  Version:     2026.06.04.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -18,11 +18,11 @@ using Firefly.TextEncoding;
 using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
 using OS = Niveum.ObjectSchema;
-using Yuki.RelationSchema;
-using RS = Yuki.RelationSchema;
+using Niveum.RelationSchema;
+using RS = Niveum.RelationSchema;
 using Yuki.RelationSchema.TSql;
 using Yuki.RelationSchema.MySql;
-using Yuki.RelationSchema.CSharpLinqToEntities;
+using Niveum.RelationSchema.CSharpLinqToEntities;
 using Yuki.RelationSchema.CSharpPlain;
 using Yuki.RelationSchema.CSharpMemory;
 using Yuki.RelationSchema.CSharpSqlServer;

@@ -3,7 +3,7 @@
 //  File:        CodeGenerator.cs
 //  Location:    Yuki.Relation <Visual C#>
 //  Description: 关系类型结构C# SQL Server代码生成器
-//  Version:     2018.12.22.
+//  Version:     2026.06.04.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -14,6 +14,7 @@ using System.Linq;
 using Firefly;
 using OS = Niveum.ObjectSchema;
 using ObjectSchemaTemplateInfo = Yuki.ObjectSchema.ObjectSchemaTemplateInfo;
+using Niveum.RelationSchema;
 
 namespace Yuki.RelationSchema.CSharpSqlServer
 {

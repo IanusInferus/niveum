@@ -1,0 +1,118 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        RelationSchema.tree
+      Location:    Niveum.Relation <Tree>
+      Description: 关系元类型结构
+      Version:     2026.06.04.
+      Copyright(C) F.R.C.
+
+    ==========================================================================
+
+#Namespace Niveum.RelationSchema
+
+#TaggedUnion TypeDef                                类型定义
+    Primitive           PrimitiveDef                基元
+    Entity              EntityDef                   实体
+    Enum                EnumDef                     枚举
+    QueryList           QueryListDef                查询列表
+
+#Alias TypeRef                                      类型引用
+    String
+
+#TaggedUnion TypeSpec                               类型说明
+    TypeRef             TypeRef                     类型引用
+    List                TypeRef                     列表
+    Optional            TypeRef                     可选类型
+
+#Record PrimitiveDef                                基元定义
+    Name                String                      名称
+    Attributes          List<KeyValuePair<String, List<String>>>    特性
+    Description         String                      描述
+
+#Record VariableDef                                 变量定义
+    Name                String                      名称
+    Type                TypeSpec                    类型
+    Attributes          List<KeyValuePair<String, List<String>>>    特性
+    Description         String                      描述
+    Attribute           FieldAttribute              特性
+
+#TaggedUnion FieldAttribute                         字段特性
+    Column              ColumnAttribute             列特性
+    Navigation          NavigationAttribute         导航特性
+
+#Record ColumnAttribute                             列特性
+    IsIdentity          Boolean                     是否为自增字段
+    TypeParameters      String                      类型参数
+
+#Record NavigationAttribute                         导航特性
+    IsReverse           Boolean                     是否为反向导航
+    IsUnique            Boolean                     是否为唯一导航
+    ThisKey             List<String>                当前表的键
+    OtherKey            List<String>                目标表的键
+
+#Record KeyColumn                                   键中的列
+    Name                String                      名称
+    IsDescending        Boolean                     是否逆序
+
+#Record Key                                         键
+    Columns             List<KeyColumn>             列
+    IsClustered         Boolean                     是否为聚合索引
+
+#Record EntityDef                                   实体定义
+    Name                String                      名称
+    CollectionName      String                      集合名称
+    Fields              List<VariableDef>           字段
+    Attributes          List<KeyValuePair<String, List<String>>>    特性
+    Description         String                      描述
+    PrimaryKey          Key                         主键
+    UniqueKeys          List<Key>                   唯一键
+    NonUniqueKeys       List<Key>                   非唯一键
+
+#Record LiteralDef                                  字面量定义
+    Name                String                      名称
+    Value               Int64                       值
+    Attributes          List<KeyValuePair<String, List<String>>>    特性
+    Description         String                      描述
+
+#Record EnumDef                                     枚举定义
+    Name                String                      名称
+    UnderlyingType      TypeSpec                    基础类型
+    Literals            List<LiteralDef>            字面量
+    Attributes          List<KeyValuePair<String, List<String>>>    特性
+    Description         String                      描述
+
+#TaggedUnion Verb                                   动词
+    Select              Unit                        映射
+    Lock                Unit                        锁定
+    Insert              Unit                        插入
+    Update              Unit                        更新
+    Upsert              Unit                        覆盖
+    Delete              Unit                        删除
+
+#TaggedUnion Numeral                                量词
+    Optional            Unit                        "0..1"
+    One                 Unit                        "1"
+    Many                Unit                        "*"
+    All                 Unit                        全部
+    Range               Unit                        区间
+    Count               Unit                        数量
+
+#Record QueryDef                                    查询
+    EntityName          String                      实体名称
+    Verb                Verb                        动词
+    Numeral             Numeral                     量词
+    By                  List<String>                选择索引
+    OrderBy             List<KeyColumn>             排序索引
+
+#Record QueryListDef                                查询列表
+    Queries             List<QueryDef>              查询
+
+#Record TypePath                                    类型路径
+    Name                String                      类型名称
+    Path                String                      文件路径
+
+#Record Schema                                      类型定义集
+    Types               List<TypeDef>               类型
+    TypeRefs            List<TypeDef>               类型引用
+    Imports             List<String>                命名空间导入
