@@ -1,0 +1,569 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        CSharpKrustallos.tree
+      Location:    Niveum.Relation <Tree>
+      Description: 关系类型结构C# Krustallos代码模板数据
+      Version:     2026.06.05.
+      Copyright(C) F.R.C.
+
+    ==========================================================================
+
+#Option
+    EnableEmbeddedExpr True
+
+#Namespace Niveum.RelationSchema.CSharpKrustallos
+
+#Import
+    System
+    System.Collections.Generic
+    System.Linq
+
+#Template Data IndexAndSequenceDefinitions:IEnumerable<String> IndexAndSequenceInitializations:IEnumerable<String>
+    public class KrustallosData
+    {
+        ${IndexAndSequenceDefinitions}
+
+        public KrustallosData(int NumPartition)
+        {
+            if (NumPartition < 1) { throw new ArgumentException(); }
+            ${IndexAndSequenceInitializations}
+        }
+    }
+
+#Template Data_IndexDefinition IndexName:String IndexType:String
+    public VersionedStore<[[${IndexType}]]> [[${IndexName}]];
+
+#Template Data_SequenceDefinition SequenceName:String SequenceType:String
+    public [[${SequenceType}]] [[${SequenceName}]];
+
+#Template Data_IndexInitialization Index:String IndexName:String IndexType:String KeyComparer:String NumPartition:String
+    this.[[${IndexName}]] = new VersionedStore<[[${IndexType}]]>(new String[] { ${Index} }, () => new [[${IndexType}]](${KeyComparer}), ${NumPartition});
+
+#Template Data_SequenceInitialization SequenceName:String SequenceType:String
+    this.[[${SequenceName}]] = new [[${SequenceType}]]();
+
+#Template DataAccessBase
+    public partial class KrustallosDataAccess : IDataAccess
+    {
+        private Instance Instance;
+        private KrustallosData Data;
+        private Transaction Transaction;
+        private ITransactionLock TransactionLock;
+        public KrustallosDataAccess(Instance Instance, KrustallosData Data, IsolationLevel IsolationLevel, ITransactionLock TransactionLock)
+        {
+            this.Instance = Instance;
+            this.Data = Data;
+            this.Transaction = new Transaction(this.Instance, IsolationLevel);
+            this.TransactionLock = TransactionLock;
+        }
+        public KrustallosDataAccess(Instance Instance, KrustallosData Data, IsolationLevel IsolationLevel, Func<Transaction, ITransactionLock> TransactionLockFactory)
+        {
+            this.Instance = Instance;
+            this.Data = Data;
+            this.Transaction = new Transaction(this.Instance, IsolationLevel);
+            this.TransactionLock = TransactionLockFactory(Transaction);
+        }
+
+        public void Dispose()
+        {
+            if (Transaction != null)
+            {
+                Transaction.Revert();
+                Transaction.Dispose();
+                Transaction = null;
+            }
+            if (TransactionLock != null)
+            {
+                TransactionLock.ExitAll();
+                TransactionLock = null;
+            }
+        }
+
+        public void Complete()
+        {
+            if (Transaction != null)
+            {
+                Transaction.Commit();
+                Transaction.Dispose();
+                Transaction = null;
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+            if (TransactionLock != null)
+            {
+                TransactionLock.ExitAll();
+                TransactionLock = null;
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+        }
+    }
+
+#Template DataAccessClones Clones:IEnumerable<String>
+    public partial class KrustallosDataAccess
+    {
+        ${Clones}
+    }
+
+#Template DataAccessClone EntityName:String FieldClones:IEnumerable<String>
+    private static [[${EntityName}]] Clone([[${EntityName}]] v)
+    {
+        var nv = new [[${EntityName}]]();
+        ${FieldClones}
+        return nv;
+    }
+
+#Template DataAccessClone_Field FieldName:String
+    nv.[[${FieldName}]] = v.[[${FieldName}]];
+
+#Template DataAccessClone_BinaryField FieldName:String
+    nv.[[${FieldName}]] = v.[[${FieldName}]].ToList();
+
+#Template DataAccessClone_OptionalBinaryField FieldName:String
+    nv.[[${FieldName}]] = v.[[${FieldName}]].OnSome ? v.[[${FieldName}]].Value.ToList() : v.[[${FieldName}]];
+
+#Template DataAccess Queries:IEnumerable<String>
+    public partial class KrustallosDataAccess
+    {
+        ${Queries}
+    }
+
+#Template Query Signature:String Content:IEnumerable<String>
+    public ${Signature}
+    {
+        ${Content}
+    }
+
+#Template SelectLock_Optional IndexName:String LockingStatement:IEnumerable<String> Parameters:String PartitionIndex:String Filters:String
+    ${LockingStatement}
+    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters}.Select(_e_ => Clone(_e_))).ToList();
+    if (_l_.Count == 0) { return null; }
+    if (_l_.Count > 1)
+    {
+        throw new InvalidOperationException("MultipleValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+    }
+    return _l_.Single();
+
+#Template SelectLock_One IndexName:String LockingStatement:IEnumerable<String> Parameters:String PartitionIndex:String Filters:String
+    ${LockingStatement}
+    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters}.Select(_e_ => Clone(_e_))).ToList();
+    if (_l_.Count == 0)
+    {
+        throw new InvalidOperationException("NoValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+    }
+    if (_l_.Count > 1)
+    {
+        throw new InvalidOperationException("MultipleValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+    }
+    return _l_.Single();
+
+#Template SelectLock_ManyAllRange IndexName:String LockingStatement:IEnumerable<String> Parameters:String PartitionIndex:String Filters:String
+    ${LockingStatement}
+    return Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters}.Select(_e_ => Clone(_e_))).ToList();
+
+#Template SelectLock_AllRange_Partitioned IndexName:String LockingStatement:IEnumerable<String> Parameters:String PartitionIndex:String Filters:String
+    ${LockingStatement}
+    return Enumerable.Range(0, this.Data.[[${IndexName}]].NumPartition).SelectMany(_i_ => Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _i_, _d_ => _d_${Filters}.Select(_e_ => Clone(_e_)))).ToList();
+
+#Template SelectLock_Count IndexName:String LockingStatement:IEnumerable<String> Parameters:String PartitionIndex:String Filters:String
+    ${LockingStatement}
+    return Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters});
+
+#Template SelectLock_Count_Partitioned IndexName:String LockingStatement:IEnumerable<String> Parameters:String PartitionIndex:String Filters:String
+    ${LockingStatement}
+    return Enumerable.Range(0, this.Data.[[${IndexName}]].NumPartition).Sum(_i_ => Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _i_, _d_ => _d_${Filters}));
+
+#Template Lock_LockingStatement EntityNameAndParameterAndValues:String
+    if (TransactionLock != null) { TransactionLock.Enter(new Object[] { ${EntityNameAndParameterAndValues} }); }
+
+#Template Insert_OptionalOne IdentityStatements:IEnumerable<String> UpdateStatements:IEnumerable<String>
+    ${IdentityStatements}
+    var _v_ = Clone(v);
+    ${UpdateStatements}
+
+#Template Insert_Many IdentityStatements:IEnumerable<String> UpdateStatements:IEnumerable<String>
+    foreach (var v in l)
+    {
+        ${IdentityStatements}
+        var _v_ = Clone(v);
+        ${UpdateStatements}
+    }
+
+#Template Insert_IdentityStatement SequenceName:String FieldName:String
+    v.[[${FieldName}]] = this.Data.[[${SequenceName}]].NextValue();
+
+#Template Insert_UpdateStatement IndexName:String Function:String PartitionIndex:String Key:String
+    Transaction.UpdateVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_.[[${Function}]](new Key(${Key}), _v_));
+
+#Template Update_Optional IndexName:String Parameters:String PartitionIndex:String Filters:String DeleteStatements:IEnumerable<String> UpdateStatements:IEnumerable<String>
+    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters}).ToList();
+    if (_l_.Count == 0) { return; }
+    if (_l_.Count > 1)
+    {
+        throw new InvalidOperationException("MultipleValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+    }
+    ${DeleteStatements}
+    {
+        var _v_ = Clone(v);
+        ${UpdateStatements}
+    }
+
+#Template Update_One IndexName:String Parameters:String PartitionIndex:String Filters:String DeleteStatements:IEnumerable<String> UpdateStatements:IEnumerable<String>
+    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters}).ToList();
+    if (_l_.Count == 0)
+    {
+        throw new InvalidOperationException("NoValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+    }
+    if (_l_.Count > 1)
+    {
+        throw new InvalidOperationException("MultipleValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+    }
+    ${DeleteStatements}
+    {
+        var _v_ = Clone(v);
+        ${UpdateStatements}
+    }
+
+#Template Update_Many IndexName:String Parameters:String PartitionIndex:String Filters:String DeleteStatements:IEnumerable<String> UpdateStatements:IEnumerable<String>
+    foreach (var v in l)
+    {
+        var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters}).ToList();
+        if (_l_.Count == 0)
+        {
+            throw new InvalidOperationException("NoValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+        }
+        if (_l_.Count > 1)
+        {
+            throw new InvalidOperationException("MultipleValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+        }
+        ${DeleteStatements}
+        {
+            var _v_ = Clone(v);
+            ${UpdateStatements}
+        }
+    }
+
+#Template Upsert_One IndexName:String Parameters:String PartitionIndex:String Filters:String DeleteStatements:IEnumerable<String> UpdateStatements:IEnumerable<String>
+    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters}).ToList();
+    if (_l_.Count > 1)
+    {
+        throw new InvalidOperationException("MultipleValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+    }
+    if (_l_.Count > 0)
+    {
+        ${DeleteStatements}
+    }
+    {
+        var _v_ = Clone(v);
+        ${UpdateStatements}
+    }
+
+#Template Upsert_Many IndexName:String Parameters:String PartitionIndex:String Filters:String DeleteStatements:IEnumerable<String> UpdateStatements:IEnumerable<String>
+    foreach (var v in l)
+    {
+        var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters}).ToList();
+        if (_l_.Count > 1)
+        {
+            throw new InvalidOperationException("MultipleValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+        }
+        if (_l_.Count > 0)
+        {
+            ${DeleteStatements}
+        }
+        {
+            var _v_ = Clone(v);
+            ${UpdateStatements}
+        }
+    }
+
+#Template Delete_Optional IndexName:String Parameters:String PartitionIndex:String Filters:String UpdateStatements:IEnumerable<String>
+    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters}).ToList();
+    if (_l_.Count == 0) { return; }
+    if (_l_.Count > 1)
+    {
+        throw new InvalidOperationException("MultipleValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+    }
+    var _v_ = _l_.Single();
+    ${UpdateStatements}
+
+#Template Delete_One IndexName:String Parameters:String PartitionIndex:String Filters:String UpdateStatements:IEnumerable<String>
+    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters}).ToList();
+    if (_l_.Count == 0)
+    {
+        throw new InvalidOperationException("NoValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+    }
+    if (_l_.Count > 1)
+    {
+        throw new InvalidOperationException("MultipleValueFor: (" + String.Join(" ", (new Object[] { ${Parameters} }).Select(o => o.ToString()).ToArray()) + ")");
+    }
+    var _v_ = _l_.Single();
+    ${UpdateStatements}
+
+#Template Delete_ManyRange IndexName:String PartitionIndex:String Filters:String UpdateStatements:IEnumerable<String>
+    var _l_ = Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_${Filters}).ToList();
+    if (_l_.Count == 0) { return; }
+    ${UpdateStatements}
+
+#Template Delete_ManyRange_Partitioned IndexName:String Filters:String UpdateStatements:IEnumerable<String>
+    var _l_ = Enumerable.Range(0, this.Data.[[${IndexName}]].NumPartition).SelectMany(_i_ => Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _i_, _d_ => _d_${Filters})).ToList();
+    if (_l_.Count == 0) { return; }
+    ${UpdateStatements}
+
+#Template Delete_All UpdateStatements:IEnumerable<String>
+    ${UpdateStatements}
+
+#Template Delete_UpdateStatement_OptionalOne IndexName:String PartitionIndex:String Function:String Key:String
+    Transaction.UpdateVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_.[[${Function}]](new Key(${Key})));
+
+#Template Delete_UpdateStatement_ManyRange IndexName:String PartitionIndex:String Function:String Key:String
+    foreach (var _v_ in _l_)
+    {
+        Transaction.UpdateVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_.[[${Function}]](new Key(${Key})));
+    }
+
+#Template Delete_UpdateStatement_All IndexName:String PartitionIndex:String Function:String
+    Transaction.UpdateVersioned(this.Data.[[${IndexName}]], ${PartitionIndex}, _d_ => _d_.[[${Function}]]());
+
+#Template Delete_UpdateStatement_All_Partitioned IndexName:String Function:String
+    for (int _i_ = 0; _i_ < this.Data.[[${IndexName}]].NumPartition; _i_ += 1)
+    {
+        Transaction.UpdateVersioned(this.Data.[[${IndexName}]], _i_, _d_ => _d_.[[${Function}]]());
+    }
+
+#Template LoadSave Hash:String Loads:IEnumerable<String> Saves:IEnumerable<String>
+    public partial class KrustallosDataAccess
+    {
+        private const UInt64 Hash = 0x${Hash};
+        public Version GetReaderVersion()
+        {
+            return Transaction.GetReaderVersion();
+        }
+        public Yuki.RelationSchema.Schema Load(IBinaryReader<IReadableStream> sbr, IBinaryReader<IReadableStream> br, String Path)
+        {
+            using (var s = Streams.OpenReadable(Path))
+            {
+                return Load(sbr, br, s);
+            }
+        }
+        public void Save(IBinaryWriter<IWritableStream> sbw, IBinaryWriter<IWritableStream> bw, String Path, Yuki.RelationSchema.Schema Schema)
+        {
+            using (var s = Streams.CreateResizable(Path))
+            {
+                Save(sbw, bw, s, Schema);
+            }
+        }
+        public Yuki.RelationSchema.Schema Load(IBinaryReader<IReadableStream> sbr, IBinaryReader<IReadableStream> br, IReadableSeekableStream s)
+        {
+            if (s.ReadSimpleString(8) != "KRUSDATA") { throw new InvalidOperationException(); }
+            var Hash = s.ReadUInt64();
+            if (Hash != KrustallosDataAccess.Hash) { throw new InvalidOperationException(); }
+            var SchemaLength = s.ReadInt64();
+            if (SchemaLength == 0) { throw new InvalidOperationException(); }
+            var SchemaPosition = s.Position;
+            var Schema = sbr.Read<Yuki.RelationSchema.Schema>(s);
+            if (s.Position != SchemaPosition + SchemaLength) { throw new InvalidOperationException(); }
+            var DataLength = s.ReadInt64();
+            var DataPosition = s.Position;
+            ${Loads}
+            if (s.Position != DataPosition + DataLength) { throw new InvalidOperationException(); }
+            return Schema;
+        }
+        public void Save(IBinaryWriter<IWritableStream> sbw, IBinaryWriter<IWritableStream> bw, IWritableSeekableStream s, Yuki.RelationSchema.Schema Schema)
+        {
+            s.WriteSimpleString("KRUSDATA", 8);
+            s.WriteUInt64(KrustallosDataAccess.Hash);
+            var SchemaLengthPosition = s.Position;
+            s.WriteInt64(0);
+            var SchemaPosition = s.Position;
+            sbw.Write(Schema, s);
+            var SchemaLength = s.Position - SchemaPosition;
+            var DataLengthPosition = s.Position;
+            s.WriteInt64(0);
+            var DataPosition = s.Position;
+            ${Saves}
+            var DataLength = s.Position - DataPosition;
+            s.Position = SchemaLengthPosition;
+            s.WriteInt64(SchemaLength);
+            s.Position = DataLengthPosition;
+            s.WriteInt64(DataLength);
+        }
+    }
+
+#Template LoadSave_Load IndexNames:IEnumerable<String> Partitions:IEnumerable<String> Updates:IEnumerable<String> EntityName:String
+    {
+        var Count = s.ReadInt32();
+        for (int _k_ = 0; _k_ < Count; _k_ += 1)
+        {
+            var v = br.Read<[[${EntityName}]]>(s);
+            ${Partitions}
+            $$
+                foreach (var IndexName in IndexNames)
+                {
+                    ##
+                        var [[${IndexName}]] = [[p${IndexName}]].GetLastVersionContent();
+                }
+            ${Updates}
+            $$
+                foreach (var IndexName in IndexNames)
+                {
+                    ##
+                        [[p${IndexName}]].PutVersion(new Version(0), [[${IndexName}]]);
+                }
+        }
+    }
+
+#Template LoadSave_Partition PartitionIndex:String IndexName:String
+    var [[p${IndexName}]] = this.Data.[[${IndexName}]].GetPartition(${PartitionIndex});
+
+#Template LoadSave_Update IndexName:String Key:String
+    [[${IndexName}]] = [[${IndexName}]].AddOrSetItem(new Key(${Key}), v);
+
+#Template LoadSave_UpdateSequence SequenceName:String FieldName:String
+    this.Data.[[${SequenceName}]].SkipPass(v.[[${FieldName}]]);
+
+#Template LoadSave_Save IndexName:String
+    {
+        var Partitions = Enumerable.Range(0, this.Data.[[${IndexName}]].NumPartition).Select(_i_ => Transaction.CheckReaderVersioned(this.Data.[[${IndexName}]], _i_, _d_ => _d_)).ToList();
+        var Count = Partitions.Select(_p_ => _p_.Count).Sum();
+        s.WriteInt32(Count);
+        foreach (var v in Partitions.SelectMany(_d_ => _d_).Select(_v_ => _v_.Value))
+        {
+            bw.Write(v, s);
+        }
+    }
+
+#Template Serializer
+    public class KrustallosSerializer
+    {
+        public static BinarySerializer Create()
+        {
+            var bs = new BinarySerializer();
+            var st = new StringTranslator();
+            bs.PutReaderTranslator(st);
+            bs.PutWriterTranslator(st);
+            bs.PutCounterTranslator(st);
+            return bs;
+        }
+
+        private class StringTranslator : IProjectorToProjectorDomainTranslator<String, Byte[]>, IProjectorToProjectorRangeTranslator<String, Byte[]>
+        {
+            public Func<String, R> TranslateProjectorToProjectorDomain<R>(Func<Byte[], R> Projector)
+            {
+                return s => Projector(TextEncoding.UTF16.GetBytes(s));
+            }
+
+            public Func<D, String> TranslateProjectorToProjectorRange<D>(Func<D, Byte[]> Projector)
+            {
+                return k => TextEncoding.UTF16.GetString(Projector(k));
+            }
+        }
+    }
+
+#Template DataAccessPool Hash:String
+    public class KrustallosDataAccessPool
+    {
+        public UInt64 Hash
+        {
+            get
+            {
+                return 0x${Hash};
+            }
+        }
+
+        private Dictionary<String, Lazy<KeyValuePair<Instance, KrustallosData>>> Instances = new Dictionary<String, Lazy<KeyValuePair<Instance, KrustallosData>>>();
+
+        public IDataAccess Create(String ConnectionString)
+        {
+            return Create(ConnectionString, IsolationLevel.Snapshot, (ITransactionLock)(null));
+        }
+        public IDataAccess Create(String ConnectionString, ITransactionLock TransactionLock)
+        {
+            return Create(ConnectionString, IsolationLevel.Snapshot, TransactionLock);
+        }
+        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel)
+        {
+            return Create(ConnectionString, IsolationLevel, (ITransactionLock)(null));
+        }
+        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, ITransactionLock TransactionLock)
+        {
+            return Create(ConnectionString, IsolationLevel, t => TransactionLock);
+        }
+        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, Func<Transaction, ITransactionLock> TransactionLockFactory)
+        {
+            return Create(ConnectionString, IsolationLevel, TransactionLockFactory, 16);
+        }
+        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, ITransactionLock TransactionLock, int NumPartition)
+        {
+            return Create(ConnectionString, IsolationLevel, t => TransactionLock, NumPartition);
+        }
+        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, Func<Transaction, ITransactionLock> TransactionLockFactory, int NumPartition)
+        {
+            Lazy<KeyValuePair<Instance, KrustallosData>> LazyPair;
+            lock (Instances)
+            {
+                if (Instances.ContainsKey(ConnectionString))
+                {
+                    LazyPair = Instances[ConnectionString];
+                }
+                else
+                {
+                    LazyPair = new Lazy<KeyValuePair<Instance, KrustallosData>>(() => new KeyValuePair<Instance, KrustallosData>(new Instance(), new KrustallosData(NumPartition)));
+                    Instances.Add(ConnectionString, LazyPair);
+                }
+            }
+            var Pair = LazyPair.Value;
+            return new KrustallosDataAccess(Pair.Key, Pair.Value, IsolationLevel, TransactionLockFactory);
+        }
+    }
+
+#Template Main NamespaceName:String Imports:IEnumerable<String> Primitives:IEnumerable<String> ComplexTypes:IEnumerable<String>
+    //==========================================================================
+    //
+    //  Notice:      This file is automatically generated.
+    //               Please don't modify this file.
+    //
+    //==========================================================================
+
+    //Reference:
+
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Data;
+    using Firefly;
+    using Firefly.Mapping;
+    using Firefly.Mapping.Binary;
+    using Firefly.Streaming;
+    using Firefly.TextEncoding;
+    using Krustallos;
+    $$
+        if (EntityNamespaceName != NamespaceName && EntityNamespaceName != "")
+        {
+            ##
+                using ${EntityNamespaceName};
+        }
+    using ${Imports};
+    ${Primitives}
+    using Version = Krustallos.Version;
+
+    $$
+        if (NamespaceName == "")
+        {
+            ##
+                ${ComplexTypes}
+        }
+        else
+        {
+            ##
+                namespace [[${NamespaceName}]]
+                {
+                    ${ComplexTypes}
+                }
+        }
+
+$End

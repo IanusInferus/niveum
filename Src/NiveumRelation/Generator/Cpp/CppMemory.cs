@@ -236,7 +236,7 @@ namespace Niveum.RelationSchema.CppMemory
             var Signature = Inner.GetQuerySignature(q);
             var ManyName = (new QueryDef { EntityName = q.EntityName, Verb = q.Verb, Numeral = Numeral.CreateMany(), By = q.By, OrderBy = new List<KeyColumn> { } }).FriendlyName();
             var AllName = (new QueryDef { EntityName = q.EntityName, Verb = q.Verb, Numeral = Numeral.CreateAll(), By = q.By, OrderBy = new List<KeyColumn> { } }).FriendlyName();
-            var Parameters = String.Join(", ", q.By.Select(c => "[[{0}]]".Formats(c)).ToArray());
+            var Parameters = String.Join(", ", q.By.Select(c => GetEscapedIdentifier(c)).ToArray());
             var OrderBys = GetOrderBy(q, e.Name);
             IEnumerable<String> Content;
             if (q.Verb.OnSelect || q.Verb.OnLock)

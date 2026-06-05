@@ -1,6 +1,7 @@
 ﻿2026.06.05
 Niveum.Relation, Yuki.Relation:
 迁移CppPlain、CppMemory、CSharpPlain。
+迁移CSharpMemory、CSharpCounted、CSharpKrustallos。
 
 2026.06.04
 *:
