@@ -83,8 +83,8 @@ namespace Niveum.ObjectSchema.Python
                 }
                 else
                 {
-                    throw new NotSupportedException("PythonMultipleNamespace"); //Python不支持nested class import
-                    //return "'" + GetEscapedIdentifier(Ref.NamespaceName() + "." + Ref.SimpleName(Ref.NamespaceName())) + "'";
+                    // throw new NotSupportedException("PythonMultipleNamespace"); //Python不支持nested class import
+                    return (ForceNoQuote ? "" : "'") + GetEscapedIdentifier(Ref.SimpleName(Ref.NamespaceName())) + (ForceNoQuote ? "" : "'");
                 }
             }
             else if (Type.OnGenericParameterRef)
