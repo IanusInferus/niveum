@@ -5,17 +5,14 @@ using System.ComponentModel;
 
 namespace System.Runtime.CompilerServices
 {
-    /// <summary>
-    /// Reserved to be used by the compiler for tracking metadata.
-    /// This class should not be used by developers in source code.
-    /// </summary>
+    /// <summary>Specifies that a type has required members or that a member is required.</summary>
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
     [EditorBrowsable(EditorBrowsableState.Never)]
 #if SYSTEM_PRIVATE_CORELIB
     public
 #else
     internal
 #endif
-    static class IsExternalInit
-    {
-    }
+        sealed class RequiredMemberAttribute : Attribute
+    { }
 }

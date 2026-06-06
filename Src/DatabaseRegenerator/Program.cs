@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2022.12.23.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -22,10 +22,10 @@ using Firefly.Texting.TreeFormat;
 using Syntax = Firefly.Texting.TreeFormat.Syntax;
 using Firefly.Texting.TreeFormat.Semantics;
 using Niveum.RelationSchema;
-using Yuki.RelationSchema.Sqlite;
-using Yuki.RelationSchema.TSql;
-using Yuki.RelationSchema.PostgreSql;
-using Yuki.RelationSchema.MySql;
+using Niveum.RelationSchema.Sqlite;
+using Niveum.RelationSchema.TSql;
+using Niveum.RelationSchema.PostgreSql;
+using Niveum.RelationSchema.MySql;
 using Niveum.RelationValue;
 using Niveum.RelationSchemaDiff;
 
