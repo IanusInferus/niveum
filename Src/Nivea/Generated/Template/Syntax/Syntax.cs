@@ -52,7 +52,7 @@ namespace Nivea.Template.Syntax
     [TaggedUnion]
     public sealed class ExprNode
     {
-        [Tag] public ExprNodeTag _Tag { get; init; }
+        [Tag] public required ExprNodeTag _Tag { get; init; }
 
         /// <summary>直接</summary>
         public String Direct { get; init; }
@@ -110,27 +110,27 @@ namespace Nivea.Template.Syntax
     public sealed class ExprNodeStem
     {
         /// <summary>头部</summary>
-        public Optional<ExprNode> Head { get; init; }
+        public required Optional<ExprNode> Head { get; init; }
         /// <summary>子结点列表</summary>
-        public List<ExprNode> Nodes { get; init; }
+        public required List<ExprNode> Nodes { get; init; }
         /// <summary>是否可以和前面的结点合并（作为子结点时）</summary>
-        public Boolean CanMerge { get; init; }
+        public required Boolean CanMerge { get; init; }
     }
     /// <summary>表达式结点待定序列</summary>
     [Record]
     public sealed class ExprNodeUndetermined
     {
         /// <summary>结点列表</summary>
-        public List<ExprNode> Nodes { get; init; }
+        public required List<ExprNode> Nodes { get; init; }
     }
     /// <summary>成员</summary>
     [Record]
     public sealed class ExprNodeMember
     {
         /// <summary>父结点</summary>
-        public ExprNode Parent { get; init; }
+        public required ExprNode Parent { get; init; }
         /// <summary>子结点</summary>
-        public ExprNode Child { get; init; }
+        public required ExprNode Child { get; init; }
     }
     public enum StackNodeTag
     {
@@ -143,7 +143,7 @@ namespace Nivea.Template.Syntax
     [TaggedUnion]
     public sealed class StackNode
     {
-        [Tag] public StackNodeTag _Tag { get; init; }
+        [Tag] public required StackNodeTag _Tag { get; init; }
 
         /// <summary>结点</summary>
         public ExprNode Node { get; init; }

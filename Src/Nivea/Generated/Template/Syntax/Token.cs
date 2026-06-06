@@ -34,13 +34,13 @@ namespace Nivea.Template.Syntax
     public sealed class Token
     {
         /// <summary>原始文本</summary>
-        public String OriginalText { get; init; }
+        public required String OriginalText { get; init; }
         /// <summary>词类型</summary>
-        public TokenType Type { get; init; }
+        public required TokenType Type { get; init; }
         /// <summary>是否是一行的起始</summary>
-        public Boolean IsLeadingToken { get; init; }
+        public required Boolean IsLeadingToken { get; init; }
         /// <summary>是否在非缩进空格后</summary>
-        public Boolean IsAfterSpace { get; init; }
+        public required Boolean IsAfterSpace { get; init; }
     }
     public enum TokenTypeTag
     {
@@ -67,7 +67,7 @@ namespace Nivea.Template.Syntax
     [TaggedUnion]
     public sealed class TokenType
     {
-        [Tag] public TokenTypeTag _Tag { get; init; }
+        [Tag] public required TokenTypeTag _Tag { get; init; }
 
         /// <summary>直接</summary>
         public String Direct { get; init; }

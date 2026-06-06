@@ -8,17 +8,18 @@
 //
 //==========================================================================
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Firefly;
 using Firefly.Mapping.TreeText;
 using Firefly.Texting.TreeFormat;
 using Firefly.Texting.TreeFormat.Syntax;
-using TreeFormat = Firefly.Texting.TreeFormat;
-using TFSemantics = Firefly.Texting.TreeFormat.Semantics;
 using Niveum.ObjectSchema;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using OS = Niveum.ObjectSchema;
+using TFSemantics = Firefly.Texting.TreeFormat.Semantics;
+using TreeFormat = Firefly.Texting.TreeFormat;
 
 namespace Niveum.RelationSchema
 {
@@ -197,12 +198,12 @@ namespace Niveum.RelationSchema
                                                     throw new InvalidEvaluationException("InvalidLineNodeCount", nm.GetFileRange(Line), Line);
                                                 }
 
-                                                var p = new VariableDef { Name = cName, Type = cType, Attributes = cAttributes, Description = cDescription };
+                                                var p = new VariableDef { Name = cName, Type = cType, Attributes = cAttributes, Description = cDescription, Attribute = null };
                                                 Mark(p, Line);
                                                 Fields.Add(p);
                                             }
 
-                                            var ed = new EntityDef { Name = Name, Fields = Fields, Attributes = Attributes, Description = Description };
+                                            var ed = new EntityDef { Name = Name, Fields = Fields, Attributes = Attributes, Description = Description, CollectionName = null, PrimaryKey = null, UniqueKeys = null, NonUniqueKeys = null };
                                             Mark(ed, f);
                                             var t = TypeDef.CreateEntity(ed);
                                             Mark(t, f);

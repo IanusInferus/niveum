@@ -122,7 +122,7 @@ namespace Nivea.Generator.CSharpType
             yield return "[TaggedUnion]";
             yield return "public struct Optional<T>";
             yield return "{";
-            yield return "    [Tag] public OptionalTag _Tag { get; init; }";
+            yield return "    [Tag] public required OptionalTag _Tag { get; init; }";
             yield return "";
             yield return "    public Unit None { get; init; }";
             yield return "    public T Some { get; init; }";
@@ -260,7 +260,7 @@ namespace Nivea.Generator.CSharpType
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    public "), Type), " Value { get; init; }"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    public required "), Type), " Value { get; init; }"))
             {
                 yield return _Line;
             }
@@ -303,7 +303,7 @@ namespace Nivea.Generator.CSharpType
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetTypeString(f.Type)), " "), GetEscapedIdentifier(f.Name)), " { get; init; }"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public required "), GetTypeString(f.Type)), " "), GetEscapedIdentifier(f.Name)), " { get; init; }"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -357,7 +357,7 @@ namespace Nivea.Generator.CSharpType
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    [Tag] public "), TagName), " _Tag { get; init; }"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    [Tag] public required "), TagName), " _Tag { get; init; }"))
             {
                 yield return _Line;
             }

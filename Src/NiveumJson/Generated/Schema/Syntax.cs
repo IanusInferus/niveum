@@ -5,6 +5,9 @@
 //
 //==========================================================================
 
+#nullable enable
+#pragma warning disable CS8618
+
 using System;
 using System.Collections.Generic;
 using Boolean = System.Boolean;
@@ -41,16 +44,16 @@ namespace Niveum.Json.Syntax
     [TaggedUnion]
     public sealed class TokenLiteral
     {
-        [Tag] public TokenLiteralTag _Tag;
+        [Tag] public required TokenLiteralTag _Tag { get; init; }
 
         /// <summary>空</summary>
-        public Unit NullValue;
+        public Unit NullValue { get; init; }
         /// <summary>布尔</summary>
-        public Boolean BooleanValue;
+        public Boolean BooleanValue { get; init; }
         /// <summary>实数</summary>
-        public Real NumberValue;
+        public Real NumberValue { get; init; }
         /// <summary>字符串</summary>
-        public String StringValue;
+        public String StringValue { get; init; }
 
         /// <summary>空</summary>
         public static TokenLiteral CreateNullValue() { return new TokenLiteral { _Tag = TokenLiteralTag.NullValue, NullValue = default(Unit) }; }
@@ -83,14 +86,14 @@ namespace Niveum.Json.Syntax
     [TaggedUnion]
     public sealed class SyntaxValue
     {
-        [Tag] public SyntaxValueTag _Tag;
+        [Tag] public required SyntaxValueTag _Tag { get; init; }
 
         /// <summary>字面量</summary>
-        public TokenLiteral Literal;
+        public TokenLiteral Literal { get; init; }
         /// <summary>对象字面量</summary>
-        public SyntaxObject Object;
+        public SyntaxObject Object { get; init; }
         /// <summary>数组字面量</summary>
-        public SyntaxArray Array;
+        public SyntaxArray Array { get; init; }
 
         /// <summary>字面量</summary>
         public static SyntaxValue CreateLiteral(TokenLiteral Value) { return new SyntaxValue { _Tag = SyntaxValueTag.Literal, Literal = Value }; }
@@ -111,7 +114,7 @@ namespace Niveum.Json.Syntax
     public sealed class SyntaxObject
     {
         /// <summary>成员列表</summary>
-        public Optional<SyntaxMembers> Members;
+        public required Optional<SyntaxMembers> Members { get; init; }
     }
     public enum SyntaxMembersTag
     {
@@ -124,12 +127,12 @@ namespace Niveum.Json.Syntax
     [TaggedUnion]
     public sealed class SyntaxMembers
     {
-        [Tag] public SyntaxMembersTag _Tag;
+        [Tag] public required SyntaxMembersTag _Tag { get; init; }
 
         /// <summary>单个成员</summary>
-        public Tuple<TokenLiteral, SyntaxValue> Single;
+        public Tuple<TokenLiteral, SyntaxValue> Single { get; init; }
         /// <summary>多个成员</summary>
-        public Tuple<SyntaxMembers, TokenLiteral, SyntaxValue> Multiple;
+        public Tuple<SyntaxMembers, TokenLiteral, SyntaxValue> Multiple { get; init; }
 
         /// <summary>单个成员</summary>
         public static SyntaxMembers CreateSingle(Tuple<TokenLiteral, SyntaxValue> Value) { return new SyntaxMembers { _Tag = SyntaxMembersTag.Single, Single = Value }; }
@@ -146,7 +149,7 @@ namespace Niveum.Json.Syntax
     public sealed class SyntaxArray
     {
         /// <summary>元素列表</summary>
-        public Optional<SyntaxElements> Elements;
+        public required Optional<SyntaxElements> Elements { get; init; }
     }
     public enum SyntaxElementsTag
     {
@@ -159,12 +162,12 @@ namespace Niveum.Json.Syntax
     [TaggedUnion]
     public sealed class SyntaxElements
     {
-        [Tag] public SyntaxElementsTag _Tag;
+        [Tag] public required SyntaxElementsTag _Tag { get; init; }
 
         /// <summary>单个元素</summary>
-        public SyntaxValue Single;
+        public SyntaxValue Single { get; init; }
         /// <summary>多个元素</summary>
-        public Tuple<SyntaxElements, SyntaxValue> Multiple;
+        public Tuple<SyntaxElements, SyntaxValue> Multiple { get; init; }
 
         /// <summary>单个元素</summary>
         public static SyntaxElements CreateSingle(SyntaxValue Value) { return new SyntaxElements { _Tag = SyntaxElementsTag.Single, Single = Value }; }
@@ -209,34 +212,34 @@ namespace Niveum.Json.Syntax
     [TaggedUnion]
     public sealed class SyntaxRule
     {
-        [Tag] public SyntaxRuleTag _Tag;
+        [Tag] public required SyntaxRuleTag _Tag { get; init; }
 
         /// <summary>字面量</summary>
-        public TokenLiteral Literal;
+        public TokenLiteral Literal { get; init; }
         /// <summary>左方括号</summary>
-        public Unit LeftBracket;
+        public Unit LeftBracket { get; init; }
         /// <summary>右方括号</summary>
-        public Unit RightBracket;
+        public Unit RightBracket { get; init; }
         /// <summary>左花括号</summary>
-        public Unit LeftBrace;
+        public Unit LeftBrace { get; init; }
         /// <summary>右花括号</summary>
-        public Unit RightBrace;
+        public Unit RightBrace { get; init; }
         /// <summary>冒号</summary>
-        public Unit Colon;
+        public Unit Colon { get; init; }
         /// <summary>逗号</summary>
-        public Unit Comma;
+        public Unit Comma { get; init; }
         /// <summary>空白</summary>
-        public Unit Whitespace;
+        public Unit Whitespace { get; init; }
         /// <summary>值</summary>
-        public SyntaxValue Value;
+        public SyntaxValue Value { get; init; }
         /// <summary>对象</summary>
-        public SyntaxObject Object;
+        public SyntaxObject Object { get; init; }
         /// <summary>成员</summary>
-        public SyntaxMembers Members;
+        public SyntaxMembers Members { get; init; }
         /// <summary>数组</summary>
-        public SyntaxArray Array;
+        public SyntaxArray Array { get; init; }
         /// <summary>元素</summary>
-        public SyntaxElements Elements;
+        public SyntaxElements Elements { get; init; }
 
         /// <summary>字面量</summary>
         public static SyntaxRule CreateLiteral(TokenLiteral Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.Literal, Literal = Value }; }

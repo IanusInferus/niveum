@@ -3,13 +3,12 @@
 //  File:        SemanticTranslator.cs
 //  Location:    Niveum.Expression <Visual C#>
 //  Description: 语法表达式到语义表达式转换器
-//  Version:     2022.01.25.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
 
 #nullable enable
-#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -21,7 +20,7 @@ namespace Niveum.ExpressionSchema
 {
     public sealed class SemanticTranslatorResult
     {
-        public Expr Semantics { get; init; }
+        public required Expr Semantics { get; init; }
     }
 
     public class SemanticTranslator

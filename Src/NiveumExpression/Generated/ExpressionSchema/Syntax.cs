@@ -42,7 +42,7 @@ namespace Niveum.ExpressionSchema
     [TaggedUnion]
     public sealed class TokenLiteral
     {
-        [Tag] public TokenLiteralTag _Tag { get; init; }
+        [Tag] public required TokenLiteralTag _Tag { get; init; }
 
         /// <summary>布尔类型</summary>
         public Boolean BooleanValue { get; init; }
@@ -70,21 +70,21 @@ namespace Niveum.ExpressionSchema
     public sealed class TokenIdentifier
     {
         /// <summary>名称</summary>
-        public String Name { get; init; }
+        public required String Name { get; init; }
     }
     /// <summary>二目运算符</summary>
     [Record]
     public sealed class TokenBinaryOperator
     {
         /// <summary>名称</summary>
-        public String Name { get; init; }
+        public required String Name { get; init; }
     }
     /// <summary>单目运算符</summary>
     [Record]
     public sealed class TokenUnaryOperator
     {
         /// <summary>名称</summary>
-        public String Name { get; init; }
+        public required String Name { get; init; }
     }
     /// <summary>左小括号</summary>
     [Record]
@@ -120,7 +120,7 @@ namespace Niveum.ExpressionSchema
     [TaggedUnion]
     public sealed class SyntaxExpr
     {
-        [Tag] public SyntaxExprTag _Tag { get; init; }
+        [Tag] public required SyntaxExprTag _Tag { get; init; }
 
         /// <summary>字面量</summary>
         public ProductionLiteral Literal { get; init; }
@@ -172,7 +172,7 @@ namespace Niveum.ExpressionSchema
     [TaggedUnion]
     public sealed class SyntaxParameterList
     {
-        [Tag] public SyntaxParameterListTag _Tag { get; init; }
+        [Tag] public required SyntaxParameterListTag _Tag { get; init; }
 
         /// <summary>空参数列表</summary>
         public ProductionNullParameterList Null { get; init; }
@@ -200,7 +200,7 @@ namespace Niveum.ExpressionSchema
     [TaggedUnion]
     public sealed class SyntaxNonnullParameterList
     {
-        [Tag] public SyntaxNonnullParameterListTag _Tag { get; init; }
+        [Tag] public required SyntaxNonnullParameterListTag _Tag { get; init; }
 
         /// <summary>单个参数列表</summary>
         public ProductionSingleParameterList Single { get; init; }
@@ -222,50 +222,50 @@ namespace Niveum.ExpressionSchema
     public sealed class ProductionLiteral
     {
         /// <summary>字面量</summary>
-        public TokenLiteral Literal { get; init; }
+        public required TokenLiteral Literal { get; init; }
     }
     /// <summary>函数</summary>
     [Record]
     public sealed class ProductionFunction
     {
         /// <summary>标识符</summary>
-        public TokenIdentifier Identifier { get; init; }
+        public required TokenIdentifier Identifier { get; init; }
         /// <summary>参数列表</summary>
-        public SyntaxParameterList ParameterList { get; init; }
+        public required SyntaxParameterList ParameterList { get; init; }
     }
     /// <summary>单个变量</summary>
     [Record]
     public sealed class ProductionVariable
     {
         /// <summary>标识符</summary>
-        public TokenIdentifier Identifier { get; init; }
+        public required TokenIdentifier Identifier { get; init; }
     }
     /// <summary>括号</summary>
     [Record]
     public sealed class ProductionParen
     {
         /// <summary>表达式</summary>
-        public SyntaxExpr Expr { get; init; }
+        public required SyntaxExpr Expr { get; init; }
     }
     /// <summary>前缀单目运算</summary>
     [Record]
     public sealed class ProductionUnaryOperator
     {
         /// <summary>单目运算符</summary>
-        public TokenUnaryOperator UnaryOperator { get; init; }
+        public required TokenUnaryOperator UnaryOperator { get; init; }
         /// <summary>表达式</summary>
-        public SyntaxExpr Expr { get; init; }
+        public required SyntaxExpr Expr { get; init; }
     }
     /// <summary>中缀二目运算</summary>
     [Record]
     public sealed class ProductionBinaryOperator
     {
         /// <summary>二目运算符</summary>
-        public TokenBinaryOperator BinaryOperator { get; init; }
+        public required TokenBinaryOperator BinaryOperator { get; init; }
         /// <summary>表达式</summary>
-        public SyntaxExpr Left { get; init; }
+        public required SyntaxExpr Left { get; init; }
         /// <summary>表达式</summary>
-        public SyntaxExpr Right { get; init; }
+        public required SyntaxExpr Right { get; init; }
     }
     /// <summary>空参数列表</summary>
     [Record]
@@ -277,23 +277,23 @@ namespace Niveum.ExpressionSchema
     public sealed class ProductionNonnullParameterList
     {
         /// <summary>非空参数列表</summary>
-        public SyntaxNonnullParameterList NonnullParameterList { get; init; }
+        public required SyntaxNonnullParameterList NonnullParameterList { get; init; }
     }
     /// <summary>单个参数列表</summary>
     [Record]
     public sealed class ProductionSingleParameterList
     {
         /// <summary>表达式</summary>
-        public SyntaxExpr Expr { get; init; }
+        public required SyntaxExpr Expr { get; init; }
     }
     /// <summary>多个参数列表</summary>
     [Record]
     public sealed class ProductionMultipleParameterList
     {
         /// <summary>非空参数列表</summary>
-        public SyntaxNonnullParameterList NonnullParameterList { get; init; }
+        public required SyntaxNonnullParameterList NonnullParameterList { get; init; }
         /// <summary>表达式</summary>
-        public SyntaxExpr Expr { get; init; }
+        public required SyntaxExpr Expr { get; init; }
     }
     public enum SyntaxRuleTag
     {
@@ -322,7 +322,7 @@ namespace Niveum.ExpressionSchema
     [TaggedUnion]
     public sealed class SyntaxRule
     {
-        [Tag] public SyntaxRuleTag _Tag { get; init; }
+        [Tag] public required SyntaxRuleTag _Tag { get; init; }
 
         /// <summary>字面量</summary>
         public TokenLiteral Literal { get; init; }

@@ -3,13 +3,12 @@
 //  File:        CSource.cs
 //  Location:    Niveum.Expression <Visual C#>
 //  Description: 表达式结构C源代码生成器
-//  Version:     2022.01.17.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
 
 #nullable enable
-#pragma warning disable CS8618
 
 using Niveum.Expression;
 using System;
@@ -69,9 +68,9 @@ namespace Niveum.ExpressionSchema.CSource
 
         private class FunctionBuilder
         {
-            public String Name { get; init; }
-            public List<PrimitiveType> ParameterTypes { get; init; }
-            public Func<List<String>, String> Build { get; init; }
+            public required String Name { get; init; }
+            public required List<PrimitiveType> ParameterTypes { get; init; }
+            public required Func<List<String>, String> Build { get; init; }
 
             public static FunctionBuilder CreateOperator(String Name, Func<List<String>, String> Build)
             {

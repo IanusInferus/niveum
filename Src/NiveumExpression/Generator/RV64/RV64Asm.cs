@@ -3,13 +3,12 @@
 //  File:        RV64Asm.cs
 //  Location:    Niveum.Expression <Visual C#>
 //  Description: 表达式结构RV64汇编生成器
-//  Version:     2022.01.25.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
 
 #nullable enable
-#pragma warning disable CS8618
 
 using Niveum.Expression;
 using System;
@@ -130,18 +129,18 @@ namespace Niveum.ExpressionSchema.RV64Asm
 
         private class FunctionBuilder
         {
-            public String Name { get; init; }
-            public List<PrimitiveType> ParameterTypes { get; init; }
-            public PrimitiveType ReturnType { get; init; }
-            public Func<List<VariableContext>, VariableContext> Build { get; init; }
+            public required String Name { get; init; }
+            public required List<PrimitiveType> ParameterTypes { get; init; }
+            public required PrimitiveType ReturnType { get; init; }
+            public required Func<List<VariableContext>, VariableContext> Build { get; init; }
         }
 
         private class VariableContext
         {
-            public PrimitiveType Type;
-            public int UseCount;
-            public String RegisterName;
-            public Optional<int> Offset;
+            public required  PrimitiveType Type;
+            public required int UseCount;
+            public required String RegisterName;
+            public required Optional<int> Offset;
         }
 
         private class FunctionBuilderContext

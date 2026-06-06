@@ -34,21 +34,21 @@ namespace Niveum.RelationValue
     public sealed class RelationVal
     {
         /// <summary>行数据</summary>
-        public List<TableVal> Tables { get; init; }
+        public required List<TableVal> Tables { get; init; }
     }
     /// <summary>表数据</summary>
     [Record]
     public sealed class TableVal
     {
         /// <summary>行数据</summary>
-        public List<RowVal> Rows { get; init; }
+        public required List<RowVal> Rows { get; init; }
     }
     /// <summary>行数据</summary>
     [Record]
     public sealed class RowVal
     {
         /// <summary>列数据</summary>
-        public List<ColumnVal> Columns { get; init; }
+        public required List<ColumnVal> Columns { get; init; }
     }
     public enum ColumnValTag
     {
@@ -61,7 +61,7 @@ namespace Niveum.RelationValue
     [TaggedUnion]
     public sealed class ColumnVal
     {
-        [Tag] public ColumnValTag _Tag { get; init; }
+        [Tag] public required ColumnValTag _Tag { get; init; }
 
         /// <summary>基元数据</summary>
         public PrimitiveVal Primitive { get; init; }
@@ -97,7 +97,7 @@ namespace Niveum.RelationValue
     [TaggedUnion]
     public sealed class PrimitiveVal
     {
-        [Tag] public PrimitiveValTag _Tag { get; init; }
+        [Tag] public required PrimitiveValTag _Tag { get; init; }
 
         /// <summary>布尔</summary>
         public Boolean BooleanValue { get; init; }

@@ -3,13 +3,12 @@
 //  File:        ExpressionParser.cs
 //  Location:    Niveum.Expression <Visual C#>
 //  Description: 表达式解析器
-//  Version:     2021.12.22.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
 
 #nullable enable
-#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -22,22 +21,22 @@ namespace Niveum.ExpressionSchema
 {
     public sealed class ExpressionParserDeclarationResult
     {
-        public FunctionDecl Declaration { get; init; }
-        public Dictionary<Object, TextRange> Positions { get; init; }
+        public required FunctionDecl Declaration { get; init; }
+        public required Dictionary<Object, TextRange> Positions { get; init; }
     }
 
     public sealed class ExpressionParserExprResult
     {
-        public Expr Body { get; init; }
-        public Dictionary<Expr, PrimitiveType> TypeDict { get; init; }
-        public Dictionary<Object, TextRange> Positions { get; init; }
+        public required Expr Body { get; init; }
+        public required Dictionary<Expr, PrimitiveType> TypeDict { get; init; }
+        public required Dictionary<Object, TextRange> Positions { get; init; }
     }
 
     public sealed class ExpressionParserResult
     {
-        public FunctionDef Definition { get; init; }
-        public Dictionary<Expr, PrimitiveType> TypeDict { get; init; }
-        public Dictionary<Object, TextRange> Positions { get; init; }
+        public required FunctionDef Definition { get; init; }
+        public required Dictionary<Expr, PrimitiveType> TypeDict { get; init; }
+        public required Dictionary<Object, TextRange> Positions { get; init; }
     }
 
     public static class ExpressionParser

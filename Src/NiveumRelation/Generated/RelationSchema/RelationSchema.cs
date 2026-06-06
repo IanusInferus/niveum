@@ -44,7 +44,7 @@ namespace Niveum.RelationSchema
     [TaggedUnion]
     public sealed class TypeDef
     {
-        [Tag] public TypeDefTag _Tag { get; init; }
+        [Tag] public required TypeDefTag _Tag { get; init; }
 
         /// <summary>基元</summary>
         public PrimitiveDef Primitive { get; init; }
@@ -77,7 +77,7 @@ namespace Niveum.RelationSchema
     [Alias]
     public sealed class TypeRef
     {
-        public String Value { get; init; }
+        public required String Value { get; init; }
 
         public static implicit operator TypeRef(String o)
         {
@@ -101,7 +101,7 @@ namespace Niveum.RelationSchema
     [TaggedUnion]
     public sealed class TypeSpec
     {
-        [Tag] public TypeSpecTag _Tag { get; init; }
+        [Tag] public required TypeSpecTag _Tag { get; init; }
 
         /// <summary>类型引用</summary>
         public TypeRef TypeRef { get; init; }
@@ -129,26 +129,26 @@ namespace Niveum.RelationSchema
     public sealed class PrimitiveDef
     {
         /// <summary>名称</summary>
-        public String Name { get; init; }
+        public required String Name { get; init; }
         /// <summary>特性</summary>
-        public List<KeyValuePair<String, List<String>>> Attributes { get; init; }
+        public required List<KeyValuePair<String, List<String>>> Attributes { get; init; }
         /// <summary>描述</summary>
-        public String Description { get; init; }
+        public required String Description { get; init; }
     }
     /// <summary>变量定义</summary>
     [Record]
     public sealed class VariableDef
     {
         /// <summary>名称</summary>
-        public String Name { get; init; }
+        public required String Name { get; init; }
         /// <summary>类型</summary>
-        public TypeSpec Type { get; init; }
+        public required TypeSpec Type { get; init; }
         /// <summary>特性</summary>
-        public List<KeyValuePair<String, List<String>>> Attributes { get; init; }
+        public required List<KeyValuePair<String, List<String>>> Attributes { get; init; }
         /// <summary>描述</summary>
-        public String Description { get; init; }
+        public required String Description { get; init; }
         /// <summary>特性</summary>
-        public FieldAttribute Attribute { get; init; }
+        public required FieldAttribute Attribute { get; init; }
     }
     public enum FieldAttributeTag
     {
@@ -161,7 +161,7 @@ namespace Niveum.RelationSchema
     [TaggedUnion]
     public sealed class FieldAttribute
     {
-        [Tag] public FieldAttributeTag _Tag { get; init; }
+        [Tag] public required FieldAttributeTag _Tag { get; init; }
 
         /// <summary>列特性</summary>
         public ColumnAttribute Column { get; init; }
@@ -183,89 +183,89 @@ namespace Niveum.RelationSchema
     public sealed class ColumnAttribute
     {
         /// <summary>是否为自增字段</summary>
-        public Boolean IsIdentity { get; init; }
+        public required Boolean IsIdentity { get; init; }
         /// <summary>类型参数</summary>
-        public String TypeParameters { get; init; }
+        public required String TypeParameters { get; init; }
     }
     /// <summary>导航特性</summary>
     [Record]
     public sealed class NavigationAttribute
     {
         /// <summary>是否为反向导航</summary>
-        public Boolean IsReverse { get; init; }
+        public required Boolean IsReverse { get; init; }
         /// <summary>是否为唯一导航</summary>
-        public Boolean IsUnique { get; init; }
+        public required Boolean IsUnique { get; init; }
         /// <summary>当前表的键</summary>
-        public List<String> ThisKey { get; init; }
+        public required List<String> ThisKey { get; init; }
         /// <summary>目标表的键</summary>
-        public List<String> OtherKey { get; init; }
+        public required List<String> OtherKey { get; init; }
     }
     /// <summary>键中的列</summary>
     [Record]
     public sealed class KeyColumn
     {
         /// <summary>名称</summary>
-        public String Name { get; init; }
+        public required String Name { get; init; }
         /// <summary>是否逆序</summary>
-        public Boolean IsDescending { get; init; }
+        public required Boolean IsDescending { get; init; }
     }
     /// <summary>键</summary>
     [Record]
     public sealed class Key
     {
         /// <summary>列</summary>
-        public List<KeyColumn> Columns { get; init; }
+        public required List<KeyColumn> Columns { get; init; }
         /// <summary>是否为聚合索引</summary>
-        public Boolean IsClustered { get; init; }
+        public required Boolean IsClustered { get; init; }
     }
     /// <summary>实体定义</summary>
     [Record]
     public sealed class EntityDef
     {
         /// <summary>名称</summary>
-        public String Name { get; init; }
+        public required String Name { get; init; }
         /// <summary>集合名称</summary>
-        public String CollectionName { get; init; }
+        public required String CollectionName { get; init; }
         /// <summary>字段</summary>
-        public List<VariableDef> Fields { get; init; }
+        public required List<VariableDef> Fields { get; init; }
         /// <summary>特性</summary>
-        public List<KeyValuePair<String, List<String>>> Attributes { get; init; }
+        public required List<KeyValuePair<String, List<String>>> Attributes { get; init; }
         /// <summary>描述</summary>
-        public String Description { get; init; }
+        public required String Description { get; init; }
         /// <summary>主键</summary>
-        public Key PrimaryKey { get; init; }
+        public required Key PrimaryKey { get; init; }
         /// <summary>唯一键</summary>
-        public List<Key> UniqueKeys { get; init; }
+        public required List<Key> UniqueKeys { get; init; }
         /// <summary>非唯一键</summary>
-        public List<Key> NonUniqueKeys { get; init; }
+        public required List<Key> NonUniqueKeys { get; init; }
     }
     /// <summary>字面量定义</summary>
     [Record]
     public sealed class LiteralDef
     {
         /// <summary>名称</summary>
-        public String Name { get; init; }
+        public required String Name { get; init; }
         /// <summary>值</summary>
-        public Int64 Value { get; init; }
+        public required Int64 Value { get; init; }
         /// <summary>特性</summary>
-        public List<KeyValuePair<String, List<String>>> Attributes { get; init; }
+        public required List<KeyValuePair<String, List<String>>> Attributes { get; init; }
         /// <summary>描述</summary>
-        public String Description { get; init; }
+        public required String Description { get; init; }
     }
     /// <summary>枚举定义</summary>
     [Record]
     public sealed class EnumDef
     {
         /// <summary>名称</summary>
-        public String Name { get; init; }
+        public required String Name { get; init; }
         /// <summary>基础类型</summary>
-        public TypeSpec UnderlyingType { get; init; }
+        public required TypeSpec UnderlyingType { get; init; }
         /// <summary>字面量</summary>
-        public List<LiteralDef> Literals { get; init; }
+        public required List<LiteralDef> Literals { get; init; }
         /// <summary>特性</summary>
-        public List<KeyValuePair<String, List<String>>> Attributes { get; init; }
+        public required List<KeyValuePair<String, List<String>>> Attributes { get; init; }
         /// <summary>描述</summary>
-        public String Description { get; init; }
+        public required String Description { get; init; }
     }
     public enum VerbTag
     {
@@ -286,7 +286,7 @@ namespace Niveum.RelationSchema
     [TaggedUnion]
     public sealed class Verb
     {
-        [Tag] public VerbTag _Tag { get; init; }
+        [Tag] public required VerbTag _Tag { get; init; }
 
         /// <summary>映射</summary>
         public Unit Select { get; init; }
@@ -346,7 +346,7 @@ namespace Niveum.RelationSchema
     [TaggedUnion]
     public sealed class Numeral
     {
-        [Tag] public NumeralTag _Tag { get; init; }
+        [Tag] public required NumeralTag _Tag { get; init; }
 
         /// <summary>0..1</summary>
         public Unit Optional { get; init; }
@@ -392,41 +392,41 @@ namespace Niveum.RelationSchema
     public sealed class QueryDef
     {
         /// <summary>实体名称</summary>
-        public String EntityName { get; init; }
+        public required String EntityName { get; init; }
         /// <summary>动词</summary>
-        public Verb Verb { get; init; }
+        public required Verb Verb { get; init; }
         /// <summary>量词</summary>
-        public Numeral Numeral { get; init; }
+        public required Numeral Numeral { get; init; }
         /// <summary>选择索引</summary>
-        public List<String> By { get; init; }
+        public required List<String> By { get; init; }
         /// <summary>排序索引</summary>
-        public List<KeyColumn> OrderBy { get; init; }
+        public required List<KeyColumn> OrderBy { get; init; }
     }
     /// <summary>查询列表</summary>
     [Record]
     public sealed class QueryListDef
     {
         /// <summary>查询</summary>
-        public List<QueryDef> Queries { get; init; }
+        public required List<QueryDef> Queries { get; init; }
     }
     /// <summary>类型路径</summary>
     [Record]
     public sealed class TypePath
     {
         /// <summary>类型名称</summary>
-        public String Name { get; init; }
+        public required String Name { get; init; }
         /// <summary>文件路径</summary>
-        public String Path { get; init; }
+        public required String Path { get; init; }
     }
     /// <summary>类型定义集</summary>
     [Record]
     public sealed class Schema
     {
         /// <summary>类型</summary>
-        public List<TypeDef> Types { get; init; }
+        public required List<TypeDef> Types { get; init; }
         /// <summary>类型引用</summary>
-        public List<TypeDef> TypeRefs { get; init; }
+        public required List<TypeDef> TypeRefs { get; init; }
         /// <summary>命名空间导入</summary>
-        public List<String> Imports { get; init; }
+        public required List<String> Imports { get; init; }
     }
 }

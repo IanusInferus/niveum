@@ -3,13 +3,12 @@
 //  File:        FileParser.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 文件解析器
-//  Version:     2021.12.21.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
 
 #nullable enable
-#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -26,9 +25,9 @@ namespace Nivea.Template.Syntax
 {
     public sealed class FileParserResult
     {
-        public File File { get; init; }
-        public Text Text { get; init; }
-        public Dictionary<Object, TextRange> Positions { get; init; }
+        public required File File { get; init; }
+        public required Text Text { get; init; }
+        public required Dictionary<Object, TextRange> Positions { get; init; }
     }
 
     public static class FileParser

@@ -34,38 +34,38 @@ namespace Niveum.ObjectSchema
     public sealed class QueryDef
     {
         /// <summary>名称</summary>
-        public List<String> Name { get; init; }
+        public required List<String> Name { get; init; }
         /// <summary>根结点类型</summary>
-        public TypeSpec RootType { get; init; }
+        public required TypeSpec RootType { get; init; }
         /// <summary>映射规格</summary>
-        public List<QueryMappingSpec> MappingSpecs { get; init; }
+        public required List<QueryMappingSpec> MappingSpecs { get; init; }
     }
     /// <summary>查询映射规格</summary>
     [Record]
     public sealed class QueryMappingSpec
     {
         /// <summary>名称</summary>
-        public String Name { get; init; }
+        public required String Name { get; init; }
         /// <summary>映射表达式</summary>
-        public QueryMappingExpr Expr { get; init; }
+        public required QueryMappingExpr Expr { get; init; }
     }
     /// <summary>查询映射表达式</summary>
     [Record]
     public sealed class QueryMappingExpr
     {
         /// <summary>变量名称</summary>
-        public Optional<String> Variable { get; init; }
+        public required Optional<String> Variable { get; init; }
         /// <summary>函数映射</summary>
-        public Optional<QueryFunction> Function { get; init; }
+        public required Optional<QueryFunction> Function { get; init; }
         /// <summary>子映射</summary>
-        public Optional<List<QueryMappingSpec>> SubMappings { get; init; }
+        public required Optional<List<QueryMappingSpec>> SubMappings { get; init; }
     }
     /// <summary>查询参数</summary>
     [Record]
     public sealed class QueryParameter
     {
         /// <summary>名称</summary>
-        public String Name { get; init; }
+        public required String Name { get; init; }
     }
     public enum QueryFunctionTag
     {
@@ -80,7 +80,7 @@ namespace Niveum.ObjectSchema
     [TaggedUnion]
     public sealed class QueryFunction
     {
-        [Tag] public QueryFunctionTag _Tag { get; init; }
+        [Tag] public required QueryFunctionTag _Tag { get; init; }
 
         /// <summary>返回空</summary>
         public Unit None { get; init; }
@@ -108,13 +108,13 @@ namespace Niveum.ObjectSchema
     public sealed class QuerySelect
     {
         /// <summary>量词</summary>
-        public Numeral Numeral { get; init; }
+        public required Numeral Numeral { get; init; }
         /// <summary>选择索引</summary>
-        public List<String> By { get; init; }
+        public required List<String> By { get; init; }
         /// <summary>排序索引</summary>
-        public List<OrderedField> OrderBy { get; init; }
+        public required List<OrderedField> OrderBy { get; init; }
         /// <summary>实参</summary>
-        public List<QueryParameter> Arguments { get; init; }
+        public required List<QueryParameter> Arguments { get; init; }
     }
     public enum NumeralTag
     {
@@ -135,7 +135,7 @@ namespace Niveum.ObjectSchema
     [TaggedUnion]
     public sealed class Numeral
     {
-        [Tag] public NumeralTag _Tag { get; init; }
+        [Tag] public required NumeralTag _Tag { get; init; }
 
         /// <summary>0..1</summary>
         public Unit Optional { get; init; }
@@ -181,8 +181,8 @@ namespace Niveum.ObjectSchema
     public sealed class OrderedField
     {
         /// <summary>名称</summary>
-        public String Name { get; init; }
+        public required String Name { get; init; }
         /// <summary>是否逆序</summary>
-        public Boolean IsDescending { get; init; }
+        public required Boolean IsDescending { get; init; }
     }
 }

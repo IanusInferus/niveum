@@ -35,9 +35,9 @@ namespace Niveum.RelationSchemaDiff
     public sealed class EntityMapping
     {
         /// <summary>目的实体名</summary>
-        public String EntityName { get; init; }
+        public required String EntityName { get; init; }
         /// <summary>实体映射方法</summary>
-        public EntityMappingMethod Method { get; init; }
+        public required EntityMappingMethod Method { get; init; }
     }
     public enum EntityMappingMethodTag
     {
@@ -52,7 +52,7 @@ namespace Niveum.RelationSchemaDiff
     [TaggedUnion]
     public sealed class EntityMappingMethod
     {
-        [Tag] public EntityMappingMethodTag _Tag { get; init; }
+        [Tag] public required EntityMappingMethodTag _Tag { get; init; }
 
         /// <summary>创建实体</summary>
         public Unit New { get; init; }
@@ -80,9 +80,9 @@ namespace Niveum.RelationSchemaDiff
     public sealed class FieldMapping
     {
         /// <summary>目的字段名</summary>
-        public String FieldName { get; init; }
+        public required String FieldName { get; init; }
         /// <summary>字段映射方法</summary>
-        public FieldMappingMethod Method { get; init; }
+        public required FieldMappingMethod Method { get; init; }
     }
     public enum FieldMappingMethodTag
     {
@@ -95,7 +95,7 @@ namespace Niveum.RelationSchemaDiff
     [TaggedUnion]
     public sealed class FieldMappingMethod
     {
-        [Tag] public FieldMappingMethodTag _Tag { get; init; }
+        [Tag] public required FieldMappingMethodTag _Tag { get; init; }
 
         /// <summary>创建字段</summary>
         public Optional<PrimitiveVal> New { get; init; }

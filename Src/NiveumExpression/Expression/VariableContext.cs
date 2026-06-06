@@ -3,13 +3,12 @@
 //  File:        VariableContext.cs
 //  Location:    Niveum.Expression <Visual C#>
 //  Description: 默认变量上下文
-//  Version:     2021.12.22.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
 
 #nullable enable
-#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -25,9 +24,9 @@ namespace Niveum.Expression
     {
         private sealed class Variable
         {
-            public Optional<List<Niveum.ExpressionSchema.VariableDef>> Parameters { get; init; }
-            public PrimitiveType ReturnType { get; init; }
-            public Func<VariableContext<T>, Delegate> Create { get; init; }
+            public required Optional<List<Niveum.ExpressionSchema.VariableDef>> Parameters { get; init; }
+            public required PrimitiveType ReturnType { get; init; }
+            public required Func<VariableContext<T>, Delegate> Create { get; init; }
         }
 
         private Dictionary<String, List<Variable>> Dict = new Dictionary<String, List<Variable>>(); //只读时是线程安全的

@@ -5,6 +5,9 @@
 //
 //==========================================================================
 
+#nullable enable
+#pragma warning disable CS8618
+
 using System;
 using System.Collections.Generic;
 using Boolean = System.Boolean;
@@ -42,10 +45,10 @@ namespace Niveum.Json
     [TaggedUnion]
     public struct Optional<T>
     {
-        [Tag] public OptionalTag _Tag;
+        [Tag] public required OptionalTag _Tag { get; init; }
 
-        public Unit None;
-        public T Some;
+        public Unit None { get; init; }
+        public T Some { get; init; }
 
         public static Optional<T> CreateNone() { return new Optional<T> { _Tag = OptionalTag.None, None = new Unit() }; }
         public static Optional<T> CreateSome(T Value) { return new Optional<T> { _Tag = OptionalTag.Some, Some = Value }; }
@@ -54,7 +57,7 @@ namespace Niveum.Json
         public Boolean OnSome { get { return _Tag == OptionalTag.Some; } }
 
         public static Optional<T> Empty { get { return CreateNone(); } }
-        public static implicit operator Optional<T>(T v)
+        public static implicit operator Optional<T>(T? v)
         {
             if (v == null)
             {
@@ -89,7 +92,7 @@ namespace Niveum.Json
         {
             return !Equals(Left, Right);
         }
-        public override Boolean Equals(Object obj)
+        public override Boolean Equals(Object? obj)
         {
             if (obj == null) { return Equals(this, null); }
             if (obj.GetType() != typeof(Optional<T>)) { return false; }
@@ -99,7 +102,7 @@ namespace Niveum.Json
         public override Int32 GetHashCode()
         {
             if (OnNone) { return 0; }
-            return Some.GetHashCode();
+            return Some!.GetHashCode();
         }
 
         private static Boolean Equals(Optional<T> Left, Optional<T> Right)
@@ -112,7 +115,7 @@ namespace Niveum.Json
             {
                 return false;
             }
-            return Left.Some.Equals(Right.Some);
+            return Left.Some!.Equals(Right.Some);
         }
         private static Boolean Equals(Optional<T>? Left, Optional<T>? Right)
         {
@@ -157,7 +160,7 @@ namespace Niveum.Json
         {
             if (OnSome)
             {
-                return Some.ToString();
+                return Some!.ToString()!;
             }
             else
             {

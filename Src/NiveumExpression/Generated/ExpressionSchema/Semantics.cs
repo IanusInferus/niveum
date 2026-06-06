@@ -34,73 +34,73 @@ namespace Niveum.ExpressionSchema
     public sealed class Schema
     {
         /// <summary>模块声明</summary>
-        public List<ModuleDecl> Modules { get; init; }
+        public required List<ModuleDecl> Modules { get; init; }
         /// <summary>命名空间导入</summary>
-        public List<String> Imports { get; init; }
+        public required List<String> Imports { get; init; }
     }
     /// <summary>模块声明</summary>
     [Record]
     public sealed class ModuleDecl
     {
         /// <summary>名称</summary>
-        public String Name { get; init; }
+        public required String Name { get; init; }
         /// <summary>描述</summary>
-        public String Description { get; init; }
+        public required String Description { get; init; }
         /// <summary>函数声明</summary>
-        public List<FunctionDecl> Functions { get; init; }
+        public required List<FunctionDecl> Functions { get; init; }
     }
     /// <summary>函数集</summary>
     [Record]
     public sealed class Assembly
     {
         /// <summary>散列</summary>
-        public UInt64 Hash { get; init; }
+        public required UInt64 Hash { get; init; }
         /// <summary>函数定义</summary>
-        public List<ModuleDef> Modules { get; init; }
+        public required List<ModuleDef> Modules { get; init; }
     }
     /// <summary>模块定义</summary>
     [Record]
     public sealed class ModuleDef
     {
         /// <summary>名称</summary>
-        public String Name { get; init; }
+        public required String Name { get; init; }
         /// <summary>描述</summary>
-        public String Description { get; init; }
+        public required String Description { get; init; }
         /// <summary>函数定义</summary>
-        public List<FunctionDef> Functions { get; init; }
+        public required List<FunctionDef> Functions { get; init; }
     }
     /// <summary>函数声明</summary>
     [Record]
     public sealed class FunctionDecl
     {
         /// <summary>函数名</summary>
-        public String Name { get; init; }
+        public required String Name { get; init; }
         /// <summary>参数</summary>
-        public List<VariableDef> Parameters { get; init; }
+        public required List<VariableDef> Parameters { get; init; }
         /// <summary>返回值类型</summary>
-        public PrimitiveType ReturnValue { get; init; }
+        public required PrimitiveType ReturnValue { get; init; }
     }
     /// <summary>函数定义</summary>
     [Record]
     public sealed class FunctionDef
     {
         /// <summary>函数名</summary>
-        public String Name { get; init; }
+        public required String Name { get; init; }
         /// <summary>参数</summary>
-        public List<VariableDef> Parameters { get; init; }
+        public required List<VariableDef> Parameters { get; init; }
         /// <summary>返回值类型</summary>
-        public PrimitiveType ReturnValue { get; init; }
+        public required PrimitiveType ReturnValue { get; init; }
         /// <summary>函数体</summary>
-        public Expr Body { get; init; }
+        public required Expr Body { get; init; }
     }
     /// <summary>变量</summary>
     [Record]
     public sealed class VariableDef
     {
         /// <summary>变量名</summary>
-        public String Name { get; init; }
+        public required String Name { get; init; }
         /// <summary>类型</summary>
-        public PrimitiveType Type { get; init; }
+        public required PrimitiveType Type { get; init; }
     }
     public enum ExprTag
     {
@@ -121,7 +121,7 @@ namespace Niveum.ExpressionSchema
     [TaggedUnion]
     public sealed class Expr
     {
-        [Tag] public ExprTag _Tag { get; init; }
+        [Tag] public required ExprTag _Tag { get; init; }
 
         /// <summary>字面量表达式</summary>
         public LiteralExpr Literal { get; init; }
@@ -175,7 +175,7 @@ namespace Niveum.ExpressionSchema
     [TaggedUnion]
     public sealed class LiteralExpr
     {
-        [Tag] public LiteralExprTag _Tag { get; init; }
+        [Tag] public required LiteralExprTag _Tag { get; init; }
 
         /// <summary>布尔字面量</summary>
         public Boolean BooleanValue { get; init; }
@@ -203,49 +203,49 @@ namespace Niveum.ExpressionSchema
     public sealed class VariableExpr
     {
         /// <summary>名称</summary>
-        public String Name { get; init; }
+        public required String Name { get; init; }
     }
     /// <summary>函数表达式</summary>
     [Record]
     public sealed class FunctionExpr
     {
         /// <summary>名称</summary>
-        public String Name { get; init; }
+        public required String Name { get; init; }
         /// <summary>参数类型</summary>
-        public List<PrimitiveType> ParameterTypes { get; init; }
+        public required List<PrimitiveType> ParameterTypes { get; init; }
         /// <summary>返回值类型</summary>
-        public PrimitiveType ReturnType { get; init; }
+        public required PrimitiveType ReturnType { get; init; }
         /// <summary>实参</summary>
-        public List<Expr> Arguments { get; init; }
+        public required List<Expr> Arguments { get; init; }
     }
     /// <summary>if伪函数表达式</summary>
     [Record]
     public sealed class IfExpr
     {
         /// <summary>条件</summary>
-        public Expr Condition { get; init; }
+        public required Expr Condition { get; init; }
         /// <summary>条件为真时的值</summary>
-        public Expr TruePart { get; init; }
+        public required Expr TruePart { get; init; }
         /// <summary>条件为假时的值</summary>
-        public Expr FalsePart { get; init; }
+        public required Expr FalsePart { get; init; }
     }
     /// <summary>&amp;&amp;运算符表达式</summary>
     [Record]
     public sealed class AndAlsoExpr
     {
         /// <summary>左部表达式</summary>
-        public Expr Left { get; init; }
+        public required Expr Left { get; init; }
         /// <summary>右部表达式</summary>
-        public Expr Right { get; init; }
+        public required Expr Right { get; init; }
     }
     /// <summary>||运算符表达式</summary>
     [Record]
     public sealed class OrElseExpr
     {
         /// <summary>左部表达式</summary>
-        public Expr Left { get; init; }
+        public required Expr Left { get; init; }
         /// <summary>右部表达式</summary>
-        public Expr Right { get; init; }
+        public required Expr Right { get; init; }
     }
     /// <summary>基元类型</summary>
     public enum PrimitiveType : int

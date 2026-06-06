@@ -4,7 +4,7 @@
       File:        CSharpType.tree
       Location:    Nivea <Tree>
       Description: C#类型代码生成
-      Version:     2022.12.14.
+      Version:     2026.06.06.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -50,7 +50,7 @@
     [TaggedUnion]
     public struct Optional<T>
     {
-        [Tag] public OptionalTag _Tag { get; init; }
+        [Tag] public required OptionalTag _Tag { get; init; }
 
         public Unit None { get; init; }
         public T Some { get; init; }
@@ -182,7 +182,7 @@
     [Alias]
     public sealed class ${Name}
     {
-        public ${Type} Value { get; init; }
+        public required ${Type} Value { get; init; }
 
         public static implicit operator ${Name}(${Type} o)
         {
@@ -206,7 +206,7 @@
             {
                 ##
                     ${GetXmlComment(f.Description)}
-                    public ${GetTypeString(f.Type)} [[${f.Name}]] { get; init; }
+                    public required ${GetTypeString(f.Type)} [[${f.Name}]] { get; init; }
             }
     }
 
@@ -239,7 +239,7 @@
     [TaggedUnion]
     public sealed class ${Name}
     {
-        [Tag] public ${TagName} _Tag { get; init; }
+        [Tag] public required ${TagName} _Tag { get; init; }
 
         $$
             foreach (var a in tu.Alternatives)

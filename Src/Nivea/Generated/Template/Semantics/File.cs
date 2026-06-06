@@ -34,18 +34,18 @@ namespace Nivea.Template.Semantics
     public sealed class File
     {
         /// <summary>过滤器</summary>
-        public List<FilterDef> Filters { get; init; }
+        public required List<FilterDef> Filters { get; init; }
         /// <summary>节列表</summary>
-        public List<SectionDef> Sections { get; init; }
+        public required List<SectionDef> Sections { get; init; }
     }
     /// <summary>过滤器定义</summary>
     [Record]
     public sealed class FilterDef
     {
         /// <summary>名称</summary>
-        public String Name { get; init; }
+        public required String Name { get; init; }
         /// <summary>参数</summary>
-        public List<String> Parameters { get; init; }
+        public required List<String> Parameters { get; init; }
     }
     public enum SectionDefTag
     {
@@ -66,7 +66,7 @@ namespace Nivea.Template.Semantics
     [TaggedUnion]
     public sealed class SectionDef
     {
-        [Tag] public SectionDefTag _Tag { get; init; }
+        [Tag] public required SectionDefTag _Tag { get; init; }
 
         /// <summary>命名空间</summary>
         public List<String> Namespace { get; init; }
@@ -112,28 +112,28 @@ namespace Nivea.Template.Semantics
     public sealed class ConstantValue
     {
         /// <summary>名称</summary>
-        public String Name { get; init; }
+        public required String Name { get; init; }
         /// <summary>类型</summary>
-        public TypeSpec Type { get; init; }
+        public required TypeSpec Type { get; init; }
         /// <summary>值</summary>
-        public Expr Value { get; init; }
+        public required Expr Value { get; init; }
     }
     /// <summary>模板定义</summary>
     [Record]
     public sealed class TemplateDef
     {
         /// <summary>签名</summary>
-        public TemplateSignature Signature { get; init; }
+        public required TemplateSignature Signature { get; init; }
         /// <summary>主体</summary>
-        public List<TemplateExpr> Body { get; init; }
+        public required List<TemplateExpr> Body { get; init; }
     }
     /// <summary>模板签名</summary>
     [Record]
     public sealed class TemplateSignature
     {
         /// <summary>名称</summary>
-        public String Name { get; init; }
+        public required String Name { get; init; }
         /// <summary>参数</summary>
-        public List<VariableDef> Parameters { get; init; }
+        public required List<VariableDef> Parameters { get; init; }
     }
 }

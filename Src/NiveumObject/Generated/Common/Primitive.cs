@@ -43,7 +43,7 @@ public enum OptionalTag
 [TaggedUnion]
 public struct Optional<T>
 {
-    [Tag] public OptionalTag _Tag { get; init; }
+    [Tag] public required OptionalTag _Tag { get; init; }
 
     public Unit None { get; init; }
     public T Some { get; init; }

@@ -3,13 +3,12 @@
 //  File:        FileParser.cs
 //  Location:    Niveum.Object <Visual C#>
 //  Description: 文件解析器
-//  Version:     2022.10.03.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
 
 #nullable enable
-#pragma warning disable CS8618
 
 using Firefly;
 using Firefly.Mapping.TreeText;
@@ -28,13 +27,13 @@ namespace Niveum.ObjectSchema
 
     public sealed class FileParserResult
     {
-        public Text Text { get; init; }
-        public Dictionary<Object, TextRange> Positions { get; init; }
-        public List<TypeDef> Types { get; init; }
-        public List<TypeDef> TypeRefs { get; init; }
-        public List<String> Imports { get; init; }
-        public Dictionary<TypeDef, List<String>> TypeToNamespace { get; init; }
-        public Dictionary<TypeDef, List<List<String>>> TypeToNamespaceImports { get; init; }
+        public required Text Text { get; init; }
+        public required Dictionary<Object, TextRange> Positions { get; init; }
+        public required List<TypeDef> Types { get; init; }
+        public required List<TypeDef> TypeRefs { get; init; }
+        public required List<String> Imports { get; init; }
+        public required Dictionary<TypeDef, List<String>> TypeToNamespace { get; init; }
+        public required Dictionary<TypeDef, List<List<String>>> TypeToNamespaceImports { get; init; }
     }
 
     public static class FileParser
@@ -651,7 +650,7 @@ namespace Niveum.ObjectSchema
                                         oRange = new TextRange { Start = Start, End = Range.End };
                                     }
                                     var Type = ParseTypeSpec(ParameterParts[1], oRange, nm, Positions);
-                                    var v = new VariableDef { Name = ParameterName, Type = Type, Description = "" };
+                                    var v = new VariableDef { Name = ParameterName, Type = Type, Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" };
                                     Mark(v, p);
                                     Parameters.Add(v);
                                 }

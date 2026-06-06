@@ -3,13 +3,12 @@
 //  File:        ExprTransformer.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 表达式转换器
-//  Version:     2021.12.21.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
 
 #nullable enable
-#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -1207,8 +1206,8 @@ namespace Nivea.Template.Syntax
 
         private sealed class TypeVariableMemberChain
         {
-            public TypeSpec Type { get; init; }
-            public VariableRef Variable { get; init; }
+            public required TypeSpec Type { get; init; }
+            public required VariableRef Variable { get; init; }
         }
         private static Optional<TypeVariableMemberChain> TryTransformTypeVariableMemberChain(String NodeString, ExprNode Node, Text Text, Dictionary<Object, TextRange> NodePositions, Dictionary<Object, TextRange> Positions)
         {

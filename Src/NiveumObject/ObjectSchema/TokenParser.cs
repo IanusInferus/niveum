@@ -3,13 +3,12 @@
 //  File:        TokenParser.cs
 //  Location:    Niveum.Object <Visual C#>
 //  Description: 词法解析器
-//  Version:     2021.12.21.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
 
 #nullable enable
-#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -23,13 +22,13 @@ namespace Niveum.ObjectSchema
 {
     public sealed class TokenParserResult
     {
-        public Token Token { get; init; }
-        public Optional<TextRange> RemainingChars { get; init; }
+        public required Token Token { get; init; }
+        public required Optional<TextRange> RemainingChars { get; init; }
     }
     public sealed class DescriptionComposite
     {
-        public List<KeyValuePair<String, List<String>>> Attributes { get; init; }
-        public String Description { get; init; }
+        public required List<KeyValuePair<String, List<String>>> Attributes { get; init; }
+        public required String Description { get; init; }
     }
 
     public static class TokenParser
@@ -98,12 +97,12 @@ namespace Niveum.ObjectSchema
 
         public sealed class Symbol
         {
-            public String Name { get; init; }
-            public int SymbolStartIndex { get; init; }
-            public int SymbolEndIndex { get; init; }
-            public int NameStartIndex { get; init; }
-            public int NameEndIndex { get; init; }
-            public List<KeyValuePair<String, int>> Parameters { get; init; }
+            public required String Name { get; init; }
+            public required int SymbolStartIndex { get; init; }
+            public required int SymbolEndIndex { get; init; }
+            public required int NameStartIndex { get; init; }
+            public required int NameEndIndex { get; init; }
+            public required List<KeyValuePair<String, int>> Parameters { get; init; }
         }
 
         public static Optional<List<Symbol>> TrySplitSymbolMemberChain(String s, out int InvalidCharIndex)

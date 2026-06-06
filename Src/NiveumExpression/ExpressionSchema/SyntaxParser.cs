@@ -3,13 +3,12 @@
 //  File:        SyntaxParser.cs
 //  Location:    Niveum.Expression <Visual C#>
 //  Description: 语法解析器
-//  Version:     2021.12.22.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
 
 #nullable enable
-#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -21,7 +20,7 @@ namespace Niveum.ExpressionSchema
 {
     public sealed class SyntaxParserResult
     {
-        public SyntaxExpr Syntax { get; init; }
+        public required SyntaxExpr Syntax { get; init; }
     }
 
     public class SyntaxParser

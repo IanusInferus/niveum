@@ -3,13 +3,12 @@
 //  File:        Xhtml.cs
 //  Location:    Niveum.Object <Visual C#>
 //  Description: 对象类型结构XHTML代码生成器
-//  Version:     2021.12.21.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
 
 #nullable enable
-#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -21,8 +20,8 @@ namespace Niveum.ObjectSchema.Xhtml
 {
     public sealed class FileResult
     {
-        public String Path { get; init; }
-        public String Content { get; init; }
+        public required String Path { get; init; }
+        public required String Content { get; init; }
     }
     public static class CodeGenerator
     {
@@ -93,10 +92,10 @@ namespace Niveum.ObjectSchema.Xhtml
 
         public class TypeInfo
         {
-            public TypeDef Def;
-            public String FriendlyPath;
-            public String DocFilePath;
-            public String DocPath;
+            public required TypeDef Def;
+            public required String FriendlyPath;
+            public required String DocFilePath;
+            public required String DocPath;
         }
         private Dictionary<String, TypeInfo> TypeInfoDict;
         public String GetTypeString(TypeSpec Type, Boolean WithDescription, Boolean IsInBar = false)

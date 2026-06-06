@@ -3,13 +3,12 @@
 //  File:        TypeBinder.cs
 //  Location:    Niveum.Expression <Visual C#>
 //  Description: 类型绑定器
-//  Version:     2022.01.25.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
 
 #nullable enable
-#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -84,8 +83,8 @@ namespace Niveum.ExpressionSchema
 
     public sealed class TypeBinderResult
     {
-        public Expr Semantics { get; init; }
-        public Dictionary<Expr, PrimitiveType> TypeDict { get; init; }
+        public required Expr Semantics { get; init; }
+        public required Dictionary<Expr, PrimitiveType> TypeDict { get; init; }
     }
 
     public class TypeBinder

@@ -3,13 +3,12 @@
 //  File:        ObjectSchemaExtensions.cs
 //  Location:    Niveum.Object <Visual C#>
 //  Description: 对象类型结构扩展
-//  Version:     2026.05.30.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
 
 #nullable enable
-#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -41,8 +40,8 @@ namespace Niveum.ObjectSchema
 
     public sealed class SchemaClosure
     {
-        public List<TypeDef> TypeDefs { get; init; }
-        public List<TypeSpec> TypeSpecs { get; init; }
+        public required List<TypeDef> TypeDefs { get; init; }
+        public required List<TypeSpec> TypeSpecs { get; init; }
     }
     public interface ISchemaClosureGenerator
     {
@@ -495,8 +494,8 @@ namespace Niveum.ObjectSchema
 
             private sealed class Marker
             {
-                public Func<String, Object, String> GetPositionedMessage { get; init; }
-                public Dictionary<String, TypeDef> SchemaTypes { get; init; }
+                public required Func<String, Object, String> GetPositionedMessage { get; init; }
+                public required Dictionary<String, TypeDef> SchemaTypes { get; init; }
                 public List<TypeDef> TypeDefs = new List<TypeDef>();
                 public HashSet<TypeDef> TypeDefSet = new HashSet<TypeDef>();
                 public List<TypeSpec> TypeSpecs = new List<TypeSpec>();
