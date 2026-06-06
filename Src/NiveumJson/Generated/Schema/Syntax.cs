@@ -6,7 +6,6 @@
 //==========================================================================
 
 #nullable enable
-#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -47,22 +46,22 @@ namespace Niveum.Json.Syntax
         [Tag] public required TokenLiteralTag _Tag { get; init; }
 
         /// <summary>空</summary>
-        public Unit NullValue { get; init; }
+        public Unit? _v_NullValue { get; init; }
         /// <summary>布尔</summary>
-        public Boolean BooleanValue { get; init; }
+        public Boolean? _v_BooleanValue { get; init; }
         /// <summary>实数</summary>
-        public Real NumberValue { get; init; }
+        public Real? _v_NumberValue { get; init; }
         /// <summary>字符串</summary>
-        public String StringValue { get; init; }
+        public String? _v_StringValue { get; init; }
 
         /// <summary>空</summary>
-        public static TokenLiteral CreateNullValue() { return new TokenLiteral { _Tag = TokenLiteralTag.NullValue, NullValue = default(Unit) }; }
+        public static TokenLiteral CreateNullValue() { return new TokenLiteral { _Tag = TokenLiteralTag.NullValue, _v_NullValue = default(Unit) }; }
         /// <summary>布尔</summary>
-        public static TokenLiteral CreateBooleanValue(Boolean Value) { return new TokenLiteral { _Tag = TokenLiteralTag.BooleanValue, BooleanValue = Value }; }
+        public static TokenLiteral CreateBooleanValue(Boolean Value) { return new TokenLiteral { _Tag = TokenLiteralTag.BooleanValue, _v_BooleanValue = Value }; }
         /// <summary>实数</summary>
-        public static TokenLiteral CreateNumberValue(Real Value) { return new TokenLiteral { _Tag = TokenLiteralTag.NumberValue, NumberValue = Value }; }
+        public static TokenLiteral CreateNumberValue(Real Value) { return new TokenLiteral { _Tag = TokenLiteralTag.NumberValue, _v_NumberValue = Value }; }
         /// <summary>字符串</summary>
-        public static TokenLiteral CreateStringValue(String Value) { return new TokenLiteral { _Tag = TokenLiteralTag.StringValue, StringValue = Value }; }
+        public static TokenLiteral CreateStringValue(String Value) { return new TokenLiteral { _Tag = TokenLiteralTag.StringValue, _v_StringValue = Value }; }
 
         /// <summary>空</summary>
         public Boolean OnNullValue { get { return _Tag == TokenLiteralTag.NullValue; } }
@@ -72,6 +71,67 @@ namespace Niveum.Json.Syntax
         public Boolean OnNumberValue { get { return _Tag == TokenLiteralTag.NumberValue; } }
         /// <summary>字符串</summary>
         public Boolean OnStringValue { get { return _Tag == TokenLiteralTag.StringValue; } }
+
+        /// <summary>空</summary>
+        public Unit NullValue
+        {
+            get
+            {
+                if (OnNullValue)
+                {
+                    return (Unit)_v_NullValue!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>布尔</summary>
+        public Boolean BooleanValue
+        {
+            get
+            {
+                if (OnBooleanValue)
+                {
+                    return (Boolean)_v_BooleanValue!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>实数</summary>
+        public Real NumberValue
+        {
+            get
+            {
+                if (OnNumberValue)
+                {
+                    return (Real)_v_NumberValue!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>字符串</summary>
+        public String StringValue
+        {
+            get
+            {
+                if (OnStringValue)
+                {
+                    return (String)_v_StringValue!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
     }
     public enum SyntaxValueTag
     {
@@ -89,18 +149,18 @@ namespace Niveum.Json.Syntax
         [Tag] public required SyntaxValueTag _Tag { get; init; }
 
         /// <summary>字面量</summary>
-        public TokenLiteral Literal { get; init; }
+        public TokenLiteral? _v_Literal { get; init; }
         /// <summary>对象字面量</summary>
-        public SyntaxObject Object { get; init; }
+        public SyntaxObject? _v_Object { get; init; }
         /// <summary>数组字面量</summary>
-        public SyntaxArray Array { get; init; }
+        public SyntaxArray? _v_Array { get; init; }
 
         /// <summary>字面量</summary>
-        public static SyntaxValue CreateLiteral(TokenLiteral Value) { return new SyntaxValue { _Tag = SyntaxValueTag.Literal, Literal = Value }; }
+        public static SyntaxValue CreateLiteral(TokenLiteral Value) { return new SyntaxValue { _Tag = SyntaxValueTag.Literal, _v_Literal = Value }; }
         /// <summary>对象字面量</summary>
-        public static SyntaxValue CreateObject(SyntaxObject Value) { return new SyntaxValue { _Tag = SyntaxValueTag.Object, Object = Value }; }
+        public static SyntaxValue CreateObject(SyntaxObject Value) { return new SyntaxValue { _Tag = SyntaxValueTag.Object, _v_Object = Value }; }
         /// <summary>数组字面量</summary>
-        public static SyntaxValue CreateArray(SyntaxArray Value) { return new SyntaxValue { _Tag = SyntaxValueTag.Array, Array = Value }; }
+        public static SyntaxValue CreateArray(SyntaxArray Value) { return new SyntaxValue { _Tag = SyntaxValueTag.Array, _v_Array = Value }; }
 
         /// <summary>字面量</summary>
         public Boolean OnLiteral { get { return _Tag == SyntaxValueTag.Literal; } }
@@ -108,6 +168,52 @@ namespace Niveum.Json.Syntax
         public Boolean OnObject { get { return _Tag == SyntaxValueTag.Object; } }
         /// <summary>数组字面量</summary>
         public Boolean OnArray { get { return _Tag == SyntaxValueTag.Array; } }
+
+        /// <summary>字面量</summary>
+        public TokenLiteral Literal
+        {
+            get
+            {
+                if (OnLiteral)
+                {
+                    return (TokenLiteral)_v_Literal!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>对象字面量</summary>
+        public SyntaxObject Object
+        {
+            get
+            {
+                if (OnObject)
+                {
+                    return (SyntaxObject)_v_Object!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>数组字面量</summary>
+        public SyntaxArray Array
+        {
+            get
+            {
+                if (OnArray)
+                {
+                    return (SyntaxArray)_v_Array!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
     }
     /// <summary>对象字面量</summary>
     [Record]
@@ -130,19 +236,50 @@ namespace Niveum.Json.Syntax
         [Tag] public required SyntaxMembersTag _Tag { get; init; }
 
         /// <summary>单个成员</summary>
-        public Tuple<TokenLiteral, SyntaxValue> Single { get; init; }
+        public Tuple<TokenLiteral, SyntaxValue>? _v_Single { get; init; }
         /// <summary>多个成员</summary>
-        public Tuple<SyntaxMembers, TokenLiteral, SyntaxValue> Multiple { get; init; }
+        public Tuple<SyntaxMembers, TokenLiteral, SyntaxValue>? _v_Multiple { get; init; }
 
         /// <summary>单个成员</summary>
-        public static SyntaxMembers CreateSingle(Tuple<TokenLiteral, SyntaxValue> Value) { return new SyntaxMembers { _Tag = SyntaxMembersTag.Single, Single = Value }; }
+        public static SyntaxMembers CreateSingle(Tuple<TokenLiteral, SyntaxValue> Value) { return new SyntaxMembers { _Tag = SyntaxMembersTag.Single, _v_Single = Value }; }
         /// <summary>多个成员</summary>
-        public static SyntaxMembers CreateMultiple(Tuple<SyntaxMembers, TokenLiteral, SyntaxValue> Value) { return new SyntaxMembers { _Tag = SyntaxMembersTag.Multiple, Multiple = Value }; }
+        public static SyntaxMembers CreateMultiple(Tuple<SyntaxMembers, TokenLiteral, SyntaxValue> Value) { return new SyntaxMembers { _Tag = SyntaxMembersTag.Multiple, _v_Multiple = Value }; }
 
         /// <summary>单个成员</summary>
         public Boolean OnSingle { get { return _Tag == SyntaxMembersTag.Single; } }
         /// <summary>多个成员</summary>
         public Boolean OnMultiple { get { return _Tag == SyntaxMembersTag.Multiple; } }
+
+        /// <summary>单个成员</summary>
+        public Tuple<TokenLiteral, SyntaxValue> Single
+        {
+            get
+            {
+                if (OnSingle)
+                {
+                    return (Tuple<TokenLiteral, SyntaxValue>)_v_Single!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>多个成员</summary>
+        public Tuple<SyntaxMembers, TokenLiteral, SyntaxValue> Multiple
+        {
+            get
+            {
+                if (OnMultiple)
+                {
+                    return (Tuple<SyntaxMembers, TokenLiteral, SyntaxValue>)_v_Multiple!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
     }
     /// <summary>数组字面量</summary>
     [Record]
@@ -165,19 +302,50 @@ namespace Niveum.Json.Syntax
         [Tag] public required SyntaxElementsTag _Tag { get; init; }
 
         /// <summary>单个元素</summary>
-        public SyntaxValue Single { get; init; }
+        public SyntaxValue? _v_Single { get; init; }
         /// <summary>多个元素</summary>
-        public Tuple<SyntaxElements, SyntaxValue> Multiple { get; init; }
+        public Tuple<SyntaxElements, SyntaxValue>? _v_Multiple { get; init; }
 
         /// <summary>单个元素</summary>
-        public static SyntaxElements CreateSingle(SyntaxValue Value) { return new SyntaxElements { _Tag = SyntaxElementsTag.Single, Single = Value }; }
+        public static SyntaxElements CreateSingle(SyntaxValue Value) { return new SyntaxElements { _Tag = SyntaxElementsTag.Single, _v_Single = Value }; }
         /// <summary>多个元素</summary>
-        public static SyntaxElements CreateMultiple(Tuple<SyntaxElements, SyntaxValue> Value) { return new SyntaxElements { _Tag = SyntaxElementsTag.Multiple, Multiple = Value }; }
+        public static SyntaxElements CreateMultiple(Tuple<SyntaxElements, SyntaxValue> Value) { return new SyntaxElements { _Tag = SyntaxElementsTag.Multiple, _v_Multiple = Value }; }
 
         /// <summary>单个元素</summary>
         public Boolean OnSingle { get { return _Tag == SyntaxElementsTag.Single; } }
         /// <summary>多个元素</summary>
         public Boolean OnMultiple { get { return _Tag == SyntaxElementsTag.Multiple; } }
+
+        /// <summary>单个元素</summary>
+        public SyntaxValue Single
+        {
+            get
+            {
+                if (OnSingle)
+                {
+                    return (SyntaxValue)_v_Single!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>多个元素</summary>
+        public Tuple<SyntaxElements, SyntaxValue> Multiple
+        {
+            get
+            {
+                if (OnMultiple)
+                {
+                    return (Tuple<SyntaxElements, SyntaxValue>)_v_Multiple!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
     }
     public enum SyntaxRuleTag
     {
@@ -215,58 +383,58 @@ namespace Niveum.Json.Syntax
         [Tag] public required SyntaxRuleTag _Tag { get; init; }
 
         /// <summary>字面量</summary>
-        public TokenLiteral Literal { get; init; }
+        public TokenLiteral? _v_Literal { get; init; }
         /// <summary>左方括号</summary>
-        public Unit LeftBracket { get; init; }
+        public Unit? _v_LeftBracket { get; init; }
         /// <summary>右方括号</summary>
-        public Unit RightBracket { get; init; }
+        public Unit? _v_RightBracket { get; init; }
         /// <summary>左花括号</summary>
-        public Unit LeftBrace { get; init; }
+        public Unit? _v_LeftBrace { get; init; }
         /// <summary>右花括号</summary>
-        public Unit RightBrace { get; init; }
+        public Unit? _v_RightBrace { get; init; }
         /// <summary>冒号</summary>
-        public Unit Colon { get; init; }
+        public Unit? _v_Colon { get; init; }
         /// <summary>逗号</summary>
-        public Unit Comma { get; init; }
+        public Unit? _v_Comma { get; init; }
         /// <summary>空白</summary>
-        public Unit Whitespace { get; init; }
+        public Unit? _v_Whitespace { get; init; }
         /// <summary>值</summary>
-        public SyntaxValue Value { get; init; }
+        public SyntaxValue? _v_Value { get; init; }
         /// <summary>对象</summary>
-        public SyntaxObject Object { get; init; }
+        public SyntaxObject? _v_Object { get; init; }
         /// <summary>成员</summary>
-        public SyntaxMembers Members { get; init; }
+        public SyntaxMembers? _v_Members { get; init; }
         /// <summary>数组</summary>
-        public SyntaxArray Array { get; init; }
+        public SyntaxArray? _v_Array { get; init; }
         /// <summary>元素</summary>
-        public SyntaxElements Elements { get; init; }
+        public SyntaxElements? _v_Elements { get; init; }
 
         /// <summary>字面量</summary>
-        public static SyntaxRule CreateLiteral(TokenLiteral Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.Literal, Literal = Value }; }
+        public static SyntaxRule CreateLiteral(TokenLiteral Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.Literal, _v_Literal = Value }; }
         /// <summary>左方括号</summary>
-        public static SyntaxRule CreateLeftBracket() { return new SyntaxRule { _Tag = SyntaxRuleTag.LeftBracket, LeftBracket = default(Unit) }; }
+        public static SyntaxRule CreateLeftBracket() { return new SyntaxRule { _Tag = SyntaxRuleTag.LeftBracket, _v_LeftBracket = default(Unit) }; }
         /// <summary>右方括号</summary>
-        public static SyntaxRule CreateRightBracket() { return new SyntaxRule { _Tag = SyntaxRuleTag.RightBracket, RightBracket = default(Unit) }; }
+        public static SyntaxRule CreateRightBracket() { return new SyntaxRule { _Tag = SyntaxRuleTag.RightBracket, _v_RightBracket = default(Unit) }; }
         /// <summary>左花括号</summary>
-        public static SyntaxRule CreateLeftBrace() { return new SyntaxRule { _Tag = SyntaxRuleTag.LeftBrace, LeftBrace = default(Unit) }; }
+        public static SyntaxRule CreateLeftBrace() { return new SyntaxRule { _Tag = SyntaxRuleTag.LeftBrace, _v_LeftBrace = default(Unit) }; }
         /// <summary>右花括号</summary>
-        public static SyntaxRule CreateRightBrace() { return new SyntaxRule { _Tag = SyntaxRuleTag.RightBrace, RightBrace = default(Unit) }; }
+        public static SyntaxRule CreateRightBrace() { return new SyntaxRule { _Tag = SyntaxRuleTag.RightBrace, _v_RightBrace = default(Unit) }; }
         /// <summary>冒号</summary>
-        public static SyntaxRule CreateColon() { return new SyntaxRule { _Tag = SyntaxRuleTag.Colon, Colon = default(Unit) }; }
+        public static SyntaxRule CreateColon() { return new SyntaxRule { _Tag = SyntaxRuleTag.Colon, _v_Colon = default(Unit) }; }
         /// <summary>逗号</summary>
-        public static SyntaxRule CreateComma() { return new SyntaxRule { _Tag = SyntaxRuleTag.Comma, Comma = default(Unit) }; }
+        public static SyntaxRule CreateComma() { return new SyntaxRule { _Tag = SyntaxRuleTag.Comma, _v_Comma = default(Unit) }; }
         /// <summary>空白</summary>
-        public static SyntaxRule CreateWhitespace() { return new SyntaxRule { _Tag = SyntaxRuleTag.Whitespace, Whitespace = default(Unit) }; }
+        public static SyntaxRule CreateWhitespace() { return new SyntaxRule { _Tag = SyntaxRuleTag.Whitespace, _v_Whitespace = default(Unit) }; }
         /// <summary>值</summary>
-        public static SyntaxRule CreateValue(SyntaxValue Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.Value, Value = Value }; }
+        public static SyntaxRule CreateValue(SyntaxValue Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.Value, _v_Value = Value }; }
         /// <summary>对象</summary>
-        public static SyntaxRule CreateObject(SyntaxObject Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.Object, Object = Value }; }
+        public static SyntaxRule CreateObject(SyntaxObject Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.Object, _v_Object = Value }; }
         /// <summary>成员</summary>
-        public static SyntaxRule CreateMembers(SyntaxMembers Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.Members, Members = Value }; }
+        public static SyntaxRule CreateMembers(SyntaxMembers Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.Members, _v_Members = Value }; }
         /// <summary>数组</summary>
-        public static SyntaxRule CreateArray(SyntaxArray Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.Array, Array = Value }; }
+        public static SyntaxRule CreateArray(SyntaxArray Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.Array, _v_Array = Value }; }
         /// <summary>元素</summary>
-        public static SyntaxRule CreateElements(SyntaxElements Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.Elements, Elements = Value }; }
+        public static SyntaxRule CreateElements(SyntaxElements Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.Elements, _v_Elements = Value }; }
 
         /// <summary>字面量</summary>
         public Boolean OnLiteral { get { return _Tag == SyntaxRuleTag.Literal; } }
@@ -294,5 +462,201 @@ namespace Niveum.Json.Syntax
         public Boolean OnArray { get { return _Tag == SyntaxRuleTag.Array; } }
         /// <summary>元素</summary>
         public Boolean OnElements { get { return _Tag == SyntaxRuleTag.Elements; } }
+
+        /// <summary>字面量</summary>
+        public TokenLiteral Literal
+        {
+            get
+            {
+                if (OnLiteral)
+                {
+                    return (TokenLiteral)_v_Literal!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>左方括号</summary>
+        public Unit LeftBracket
+        {
+            get
+            {
+                if (OnLeftBracket)
+                {
+                    return (Unit)_v_LeftBracket!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>右方括号</summary>
+        public Unit RightBracket
+        {
+            get
+            {
+                if (OnRightBracket)
+                {
+                    return (Unit)_v_RightBracket!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>左花括号</summary>
+        public Unit LeftBrace
+        {
+            get
+            {
+                if (OnLeftBrace)
+                {
+                    return (Unit)_v_LeftBrace!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>右花括号</summary>
+        public Unit RightBrace
+        {
+            get
+            {
+                if (OnRightBrace)
+                {
+                    return (Unit)_v_RightBrace!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>冒号</summary>
+        public Unit Colon
+        {
+            get
+            {
+                if (OnColon)
+                {
+                    return (Unit)_v_Colon!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>逗号</summary>
+        public Unit Comma
+        {
+            get
+            {
+                if (OnComma)
+                {
+                    return (Unit)_v_Comma!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>空白</summary>
+        public Unit Whitespace
+        {
+            get
+            {
+                if (OnWhitespace)
+                {
+                    return (Unit)_v_Whitespace!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>值</summary>
+        public SyntaxValue Value
+        {
+            get
+            {
+                if (OnValue)
+                {
+                    return (SyntaxValue)_v_Value!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>对象</summary>
+        public SyntaxObject Object
+        {
+            get
+            {
+                if (OnObject)
+                {
+                    return (SyntaxObject)_v_Object!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>成员</summary>
+        public SyntaxMembers Members
+        {
+            get
+            {
+                if (OnMembers)
+                {
+                    return (SyntaxMembers)_v_Members!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>数组</summary>
+        public SyntaxArray Array
+        {
+            get
+            {
+                if (OnArray)
+                {
+                    return (SyntaxArray)_v_Array!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>元素</summary>
+        public SyntaxElements Elements
+        {
+            get
+            {
+                if (OnElements)
+                {
+                    return (SyntaxElements)_v_Elements!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
     }
 }

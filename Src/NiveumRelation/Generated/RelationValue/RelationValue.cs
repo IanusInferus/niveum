@@ -6,7 +6,6 @@
 //==========================================================================
 
 #nullable enable
-#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -64,19 +63,50 @@ namespace Niveum.RelationValue
         [Tag] public required ColumnValTag _Tag { get; init; }
 
         /// <summary>基元数据</summary>
-        public PrimitiveVal Primitive { get; init; }
+        public PrimitiveVal? _v_Primitive { get; init; }
         /// <summary>可选数据</summary>
-        public Optional<PrimitiveVal> Optional { get; init; }
+        public Optional<PrimitiveVal>? _v_Optional { get; init; }
 
         /// <summary>基元数据</summary>
-        public static ColumnVal CreatePrimitive(PrimitiveVal Value) { return new ColumnVal { _Tag = ColumnValTag.Primitive, Primitive = Value }; }
+        public static ColumnVal CreatePrimitive(PrimitiveVal Value) { return new ColumnVal { _Tag = ColumnValTag.Primitive, _v_Primitive = Value }; }
         /// <summary>可选数据</summary>
-        public static ColumnVal CreateOptional(Optional<PrimitiveVal> Value) { return new ColumnVal { _Tag = ColumnValTag.Optional, Optional = Value }; }
+        public static ColumnVal CreateOptional(Optional<PrimitiveVal> Value) { return new ColumnVal { _Tag = ColumnValTag.Optional, _v_Optional = Value }; }
 
         /// <summary>基元数据</summary>
         public Boolean OnPrimitive { get { return _Tag == ColumnValTag.Primitive; } }
         /// <summary>可选数据</summary>
         public Boolean OnOptional { get { return _Tag == ColumnValTag.Optional; } }
+
+        /// <summary>基元数据</summary>
+        public PrimitiveVal Primitive
+        {
+            get
+            {
+                if (OnPrimitive)
+                {
+                    return (PrimitiveVal)_v_Primitive!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>可选数据</summary>
+        public Optional<PrimitiveVal> Optional
+        {
+            get
+            {
+                if (OnOptional)
+                {
+                    return (Optional<PrimitiveVal>)_v_Optional!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
     }
     public enum PrimitiveValTag
     {
@@ -100,30 +130,30 @@ namespace Niveum.RelationValue
         [Tag] public required PrimitiveValTag _Tag { get; init; }
 
         /// <summary>布尔</summary>
-        public Boolean BooleanValue { get; init; }
+        public Boolean? _v_BooleanValue { get; init; }
         /// <summary>字符串</summary>
-        public String StringValue { get; init; }
+        public String? _v_StringValue { get; init; }
         /// <summary>整数</summary>
-        public Int IntValue { get; init; }
+        public Int? _v_IntValue { get; init; }
         /// <summary>实数</summary>
-        public Real RealValue { get; init; }
+        public Real? _v_RealValue { get; init; }
         /// <summary>二进制</summary>
-        public List<Byte> BinaryValue { get; init; }
+        public List<Byte>? _v_BinaryValue { get; init; }
         /// <summary>64位有符号整数</summary>
-        public Int64 Int64Value { get; init; }
+        public Int64? _v_Int64Value { get; init; }
 
         /// <summary>布尔</summary>
-        public static PrimitiveVal CreateBooleanValue(Boolean Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.BooleanValue, BooleanValue = Value }; }
+        public static PrimitiveVal CreateBooleanValue(Boolean Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.BooleanValue, _v_BooleanValue = Value }; }
         /// <summary>字符串</summary>
-        public static PrimitiveVal CreateStringValue(String Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.StringValue, StringValue = Value }; }
+        public static PrimitiveVal CreateStringValue(String Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.StringValue, _v_StringValue = Value }; }
         /// <summary>整数</summary>
-        public static PrimitiveVal CreateIntValue(Int Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.IntValue, IntValue = Value }; }
+        public static PrimitiveVal CreateIntValue(Int Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.IntValue, _v_IntValue = Value }; }
         /// <summary>实数</summary>
-        public static PrimitiveVal CreateRealValue(Real Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.RealValue, RealValue = Value }; }
+        public static PrimitiveVal CreateRealValue(Real Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.RealValue, _v_RealValue = Value }; }
         /// <summary>二进制</summary>
-        public static PrimitiveVal CreateBinaryValue(List<Byte> Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.BinaryValue, BinaryValue = Value }; }
+        public static PrimitiveVal CreateBinaryValue(List<Byte> Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.BinaryValue, _v_BinaryValue = Value }; }
         /// <summary>64位有符号整数</summary>
-        public static PrimitiveVal CreateInt64Value(Int64 Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.Int64Value, Int64Value = Value }; }
+        public static PrimitiveVal CreateInt64Value(Int64 Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.Int64Value, _v_Int64Value = Value }; }
 
         /// <summary>布尔</summary>
         public Boolean OnBooleanValue { get { return _Tag == PrimitiveValTag.BooleanValue; } }
@@ -137,5 +167,96 @@ namespace Niveum.RelationValue
         public Boolean OnBinaryValue { get { return _Tag == PrimitiveValTag.BinaryValue; } }
         /// <summary>64位有符号整数</summary>
         public Boolean OnInt64Value { get { return _Tag == PrimitiveValTag.Int64Value; } }
+
+        /// <summary>布尔</summary>
+        public Boolean BooleanValue
+        {
+            get
+            {
+                if (OnBooleanValue)
+                {
+                    return (Boolean)_v_BooleanValue!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>字符串</summary>
+        public String StringValue
+        {
+            get
+            {
+                if (OnStringValue)
+                {
+                    return (String)_v_StringValue!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>整数</summary>
+        public Int IntValue
+        {
+            get
+            {
+                if (OnIntValue)
+                {
+                    return (Int)_v_IntValue!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>实数</summary>
+        public Real RealValue
+        {
+            get
+            {
+                if (OnRealValue)
+                {
+                    return (Real)_v_RealValue!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>二进制</summary>
+        public List<Byte> BinaryValue
+        {
+            get
+            {
+                if (OnBinaryValue)
+                {
+                    return (List<Byte>)_v_BinaryValue!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>64位有符号整数</summary>
+        public Int64 Int64Value
+        {
+            get
+            {
+                if (OnInt64Value)
+                {
+                    return (Int64)_v_Int64Value!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
     }
 }

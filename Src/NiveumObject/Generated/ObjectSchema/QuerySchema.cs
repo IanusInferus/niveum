@@ -6,7 +6,6 @@
 //==========================================================================
 
 #nullable enable
-#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -83,18 +82,18 @@ namespace Niveum.ObjectSchema
         [Tag] public required QueryFunctionTag _Tag { get; init; }
 
         /// <summary>返回空</summary>
-        public Unit None { get; init; }
+        public Unit? _v_None { get; init; }
         /// <summary>获取长度</summary>
-        public Unit Count { get; init; }
+        public Unit? _v_Count { get; init; }
         /// <summary>选择器</summary>
-        public QuerySelect Select { get; init; }
+        public QuerySelect? _v_Select { get; init; }
 
         /// <summary>返回空</summary>
-        public static QueryFunction CreateNone() { return new QueryFunction { _Tag = QueryFunctionTag.None, None = default(Unit) }; }
+        public static QueryFunction CreateNone() { return new QueryFunction { _Tag = QueryFunctionTag.None, _v_None = default(Unit) }; }
         /// <summary>获取长度</summary>
-        public static QueryFunction CreateCount() { return new QueryFunction { _Tag = QueryFunctionTag.Count, Count = default(Unit) }; }
+        public static QueryFunction CreateCount() { return new QueryFunction { _Tag = QueryFunctionTag.Count, _v_Count = default(Unit) }; }
         /// <summary>选择器</summary>
-        public static QueryFunction CreateSelect(QuerySelect Value) { return new QueryFunction { _Tag = QueryFunctionTag.Select, Select = Value }; }
+        public static QueryFunction CreateSelect(QuerySelect Value) { return new QueryFunction { _Tag = QueryFunctionTag.Select, _v_Select = Value }; }
 
         /// <summary>返回空</summary>
         public Boolean OnNone { get { return _Tag == QueryFunctionTag.None; } }
@@ -102,6 +101,52 @@ namespace Niveum.ObjectSchema
         public Boolean OnCount { get { return _Tag == QueryFunctionTag.Count; } }
         /// <summary>选择器</summary>
         public Boolean OnSelect { get { return _Tag == QueryFunctionTag.Select; } }
+
+        /// <summary>返回空</summary>
+        public Unit None
+        {
+            get
+            {
+                if (OnNone)
+                {
+                    return (Unit)_v_None!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>获取长度</summary>
+        public Unit Count
+        {
+            get
+            {
+                if (OnCount)
+                {
+                    return (Unit)_v_Count!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>选择器</summary>
+        public QuerySelect Select
+        {
+            get
+            {
+                if (OnSelect)
+                {
+                    return (QuerySelect)_v_Select!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
     }
     /// <summary>查询选择器</summary>
     [Record]
@@ -138,30 +183,30 @@ namespace Niveum.ObjectSchema
         [Tag] public required NumeralTag _Tag { get; init; }
 
         /// <summary>0..1</summary>
-        public Unit Optional { get; init; }
+        public Unit? _v_Optional { get; init; }
         /// <summary>1</summary>
-        public Unit One { get; init; }
+        public Unit? _v_One { get; init; }
         /// <summary>*</summary>
-        public Unit Many { get; init; }
+        public Unit? _v_Many { get; init; }
         /// <summary>全部</summary>
-        public Unit All { get; init; }
+        public Unit? _v_All { get; init; }
         /// <summary>区间</summary>
-        public Unit Range { get; init; }
+        public Unit? _v_Range { get; init; }
         /// <summary>数量</summary>
-        public Unit Count { get; init; }
+        public Unit? _v_Count { get; init; }
 
         /// <summary>0..1</summary>
-        public static Numeral CreateOptional() { return new Numeral { _Tag = NumeralTag.Optional, Optional = default(Unit) }; }
+        public static Numeral CreateOptional() { return new Numeral { _Tag = NumeralTag.Optional, _v_Optional = default(Unit) }; }
         /// <summary>1</summary>
-        public static Numeral CreateOne() { return new Numeral { _Tag = NumeralTag.One, One = default(Unit) }; }
+        public static Numeral CreateOne() { return new Numeral { _Tag = NumeralTag.One, _v_One = default(Unit) }; }
         /// <summary>*</summary>
-        public static Numeral CreateMany() { return new Numeral { _Tag = NumeralTag.Many, Many = default(Unit) }; }
+        public static Numeral CreateMany() { return new Numeral { _Tag = NumeralTag.Many, _v_Many = default(Unit) }; }
         /// <summary>全部</summary>
-        public static Numeral CreateAll() { return new Numeral { _Tag = NumeralTag.All, All = default(Unit) }; }
+        public static Numeral CreateAll() { return new Numeral { _Tag = NumeralTag.All, _v_All = default(Unit) }; }
         /// <summary>区间</summary>
-        public static Numeral CreateRange() { return new Numeral { _Tag = NumeralTag.Range, Range = default(Unit) }; }
+        public static Numeral CreateRange() { return new Numeral { _Tag = NumeralTag.Range, _v_Range = default(Unit) }; }
         /// <summary>数量</summary>
-        public static Numeral CreateCount() { return new Numeral { _Tag = NumeralTag.Count, Count = default(Unit) }; }
+        public static Numeral CreateCount() { return new Numeral { _Tag = NumeralTag.Count, _v_Count = default(Unit) }; }
 
         /// <summary>0..1</summary>
         public Boolean OnOptional { get { return _Tag == NumeralTag.Optional; } }
@@ -175,6 +220,97 @@ namespace Niveum.ObjectSchema
         public Boolean OnRange { get { return _Tag == NumeralTag.Range; } }
         /// <summary>数量</summary>
         public Boolean OnCount { get { return _Tag == NumeralTag.Count; } }
+
+        /// <summary>0..1</summary>
+        public Unit Optional
+        {
+            get
+            {
+                if (OnOptional)
+                {
+                    return (Unit)_v_Optional!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>1</summary>
+        public Unit One
+        {
+            get
+            {
+                if (OnOne)
+                {
+                    return (Unit)_v_One!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>*</summary>
+        public Unit Many
+        {
+            get
+            {
+                if (OnMany)
+                {
+                    return (Unit)_v_Many!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>全部</summary>
+        public Unit All
+        {
+            get
+            {
+                if (OnAll)
+                {
+                    return (Unit)_v_All!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>区间</summary>
+        public Unit Range
+        {
+            get
+            {
+                if (OnRange)
+                {
+                    return (Unit)_v_Range!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>数量</summary>
+        public Unit Count
+        {
+            get
+            {
+                if (OnCount)
+                {
+                    return (Unit)_v_Count!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
     }
     /// <summary>带序字段</summary>
     [Record]

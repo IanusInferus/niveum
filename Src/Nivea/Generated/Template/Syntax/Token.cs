@@ -6,7 +6,6 @@
 //==========================================================================
 
 #nullable enable
-#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -70,42 +69,42 @@ namespace Nivea.Template.Syntax
         [Tag] public required TokenTypeTag _Tag { get; init; }
 
         /// <summary>直接</summary>
-        public String Direct { get; init; }
+        public String? _v_Direct { get; init; }
         /// <summary>双引号引用</summary>
-        public String Quoted { get; init; }
+        public String? _v_Quoted { get; init; }
         /// <summary>双双引号引用</summary>
-        public String Escaped { get; init; }
+        public String? _v_Escaped { get; init; }
         /// <summary>左括号</summary>
-        public Unit LeftParenthesis { get; init; }
+        public Unit? _v_LeftParenthesis { get; init; }
         /// <summary>右括号</summary>
-        public Unit RightParenthesis { get; init; }
+        public Unit? _v_RightParenthesis { get; init; }
         /// <summary>逗号</summary>
-        public Unit Comma { get; init; }
+        public Unit? _v_Comma { get; init; }
         /// <summary>预处理指令</summary>
-        public String PreprocessDirective { get; init; }
+        public String? _v_PreprocessDirective { get; init; }
         /// <summary>运算符</summary>
-        public String Operator { get; init; }
+        public String? _v_Operator { get; init; }
         /// <summary>单行注释</summary>
-        public String SingleLineComment { get; init; }
+        public String? _v_SingleLineComment { get; init; }
 
         /// <summary>直接</summary>
-        public static TokenType CreateDirect(String Value) { return new TokenType { _Tag = TokenTypeTag.Direct, Direct = Value }; }
+        public static TokenType CreateDirect(String Value) { return new TokenType { _Tag = TokenTypeTag.Direct, _v_Direct = Value }; }
         /// <summary>双引号引用</summary>
-        public static TokenType CreateQuoted(String Value) { return new TokenType { _Tag = TokenTypeTag.Quoted, Quoted = Value }; }
+        public static TokenType CreateQuoted(String Value) { return new TokenType { _Tag = TokenTypeTag.Quoted, _v_Quoted = Value }; }
         /// <summary>双双引号引用</summary>
-        public static TokenType CreateEscaped(String Value) { return new TokenType { _Tag = TokenTypeTag.Escaped, Escaped = Value }; }
+        public static TokenType CreateEscaped(String Value) { return new TokenType { _Tag = TokenTypeTag.Escaped, _v_Escaped = Value }; }
         /// <summary>左括号</summary>
-        public static TokenType CreateLeftParenthesis() { return new TokenType { _Tag = TokenTypeTag.LeftParenthesis, LeftParenthesis = default(Unit) }; }
+        public static TokenType CreateLeftParenthesis() { return new TokenType { _Tag = TokenTypeTag.LeftParenthesis, _v_LeftParenthesis = default(Unit) }; }
         /// <summary>右括号</summary>
-        public static TokenType CreateRightParenthesis() { return new TokenType { _Tag = TokenTypeTag.RightParenthesis, RightParenthesis = default(Unit) }; }
+        public static TokenType CreateRightParenthesis() { return new TokenType { _Tag = TokenTypeTag.RightParenthesis, _v_RightParenthesis = default(Unit) }; }
         /// <summary>逗号</summary>
-        public static TokenType CreateComma() { return new TokenType { _Tag = TokenTypeTag.Comma, Comma = default(Unit) }; }
+        public static TokenType CreateComma() { return new TokenType { _Tag = TokenTypeTag.Comma, _v_Comma = default(Unit) }; }
         /// <summary>预处理指令</summary>
-        public static TokenType CreatePreprocessDirective(String Value) { return new TokenType { _Tag = TokenTypeTag.PreprocessDirective, PreprocessDirective = Value }; }
+        public static TokenType CreatePreprocessDirective(String Value) { return new TokenType { _Tag = TokenTypeTag.PreprocessDirective, _v_PreprocessDirective = Value }; }
         /// <summary>运算符</summary>
-        public static TokenType CreateOperator(String Value) { return new TokenType { _Tag = TokenTypeTag.Operator, Operator = Value }; }
+        public static TokenType CreateOperator(String Value) { return new TokenType { _Tag = TokenTypeTag.Operator, _v_Operator = Value }; }
         /// <summary>单行注释</summary>
-        public static TokenType CreateSingleLineComment(String Value) { return new TokenType { _Tag = TokenTypeTag.SingleLineComment, SingleLineComment = Value }; }
+        public static TokenType CreateSingleLineComment(String Value) { return new TokenType { _Tag = TokenTypeTag.SingleLineComment, _v_SingleLineComment = Value }; }
 
         /// <summary>直接</summary>
         public Boolean OnDirect { get { return _Tag == TokenTypeTag.Direct; } }
@@ -125,6 +124,142 @@ namespace Nivea.Template.Syntax
         public Boolean OnOperator { get { return _Tag == TokenTypeTag.Operator; } }
         /// <summary>单行注释</summary>
         public Boolean OnSingleLineComment { get { return _Tag == TokenTypeTag.SingleLineComment; } }
+
+        /// <summary>直接</summary>
+        public String Direct
+        {
+            get
+            {
+                if (OnDirect)
+                {
+                    return (String)_v_Direct!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>双引号引用</summary>
+        public String Quoted
+        {
+            get
+            {
+                if (OnQuoted)
+                {
+                    return (String)_v_Quoted!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>双双引号引用</summary>
+        public String Escaped
+        {
+            get
+            {
+                if (OnEscaped)
+                {
+                    return (String)_v_Escaped!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>左括号</summary>
+        public Unit LeftParenthesis
+        {
+            get
+            {
+                if (OnLeftParenthesis)
+                {
+                    return (Unit)_v_LeftParenthesis!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>右括号</summary>
+        public Unit RightParenthesis
+        {
+            get
+            {
+                if (OnRightParenthesis)
+                {
+                    return (Unit)_v_RightParenthesis!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>逗号</summary>
+        public Unit Comma
+        {
+            get
+            {
+                if (OnComma)
+                {
+                    return (Unit)_v_Comma!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>预处理指令</summary>
+        public String PreprocessDirective
+        {
+            get
+            {
+                if (OnPreprocessDirective)
+                {
+                    return (String)_v_PreprocessDirective!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>运算符</summary>
+        public String Operator
+        {
+            get
+            {
+                if (OnOperator)
+                {
+                    return (String)_v_Operator!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>单行注释</summary>
+        public String SingleLineComment
+        {
+            get
+            {
+                if (OnSingleLineComment)
+                {
+                    return (String)_v_SingleLineComment!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
     }
     /// <summary>括号类型</summary>
     public enum ParenthesisType : int

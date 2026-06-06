@@ -6,7 +6,6 @@
 //==========================================================================
 
 #nullable enable
-#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -47,14 +46,44 @@ namespace Niveum.Json
     {
         [Tag] public required OptionalTag _Tag { get; init; }
 
-        public Unit None { get; init; }
-        public T Some { get; init; }
+        private Unit? _v_None;
+        private T? _v_Some;
 
-        public static Optional<T> CreateNone() { return new Optional<T> { _Tag = OptionalTag.None, None = new Unit() }; }
-        public static Optional<T> CreateSome(T Value) { return new Optional<T> { _Tag = OptionalTag.Some, Some = Value }; }
+        public static Optional<T> CreateNone() { return new Optional<T> { _Tag = OptionalTag.None, _v_None = new Unit() }; }
+        public static Optional<T> CreateSome(T Value) { return new Optional<T> { _Tag = OptionalTag.Some, _v_Some = Value }; }
 
         public Boolean OnNone { get { return _Tag == OptionalTag.None; } }
         public Boolean OnSome { get { return _Tag == OptionalTag.Some; } }
+
+        public Unit None
+        {
+            get
+            {
+                if (OnNone)
+                {
+                    return (Unit)_v_None!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+
+        public T Some
+        {
+            get
+            {
+                if (OnSome)
+                {
+                    return (T)_v_Some!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
 
         public static Optional<T> Empty { get { return CreateNone(); } }
         public static implicit operator Optional<T>(T? v)
@@ -153,6 +182,17 @@ namespace Niveum.Json
             else
             {
                 return Default;
+            }
+        }
+        public T? ValueOrNull()
+        {
+            if (OnSome)
+            {
+                return Some;
+            }
+            else
+            {
+                return default(T);
             }
         }
 

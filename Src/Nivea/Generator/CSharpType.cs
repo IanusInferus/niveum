@@ -3,10 +3,12 @@
 //  File:        CSharpType.cs
 //  Location:    Nivea <Visual C#>
 //  Description: C#类型代码生成
-//  Version:     2018.12.01.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;

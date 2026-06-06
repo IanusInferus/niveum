@@ -6,7 +6,6 @@
 //==========================================================================
 
 #nullable enable
-#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -49,26 +48,26 @@ namespace Nivea.Template.Semantics
         [Tag] public required TypeDefTag _Tag { get; init; }
 
         /// <summary>基元</summary>
-        public PrimitiveDef Primitive { get; init; }
+        public PrimitiveDef? _v_Primitive { get; init; }
         /// <summary>别名</summary>
-        public AliasDef Alias { get; init; }
+        public AliasDef? _v_Alias { get; init; }
         /// <summary>记录</summary>
-        public RecordDef Record { get; init; }
+        public RecordDef? _v_Record { get; init; }
         /// <summary>标签联合</summary>
-        public TaggedUnionDef TaggedUnion { get; init; }
+        public TaggedUnionDef? _v_TaggedUnion { get; init; }
         /// <summary>枚举</summary>
-        public EnumDef Enum { get; init; }
+        public EnumDef? _v_Enum { get; init; }
 
         /// <summary>基元</summary>
-        public static TypeDef CreatePrimitive(PrimitiveDef Value) { return new TypeDef { _Tag = TypeDefTag.Primitive, Primitive = Value }; }
+        public static TypeDef CreatePrimitive(PrimitiveDef Value) { return new TypeDef { _Tag = TypeDefTag.Primitive, _v_Primitive = Value }; }
         /// <summary>别名</summary>
-        public static TypeDef CreateAlias(AliasDef Value) { return new TypeDef { _Tag = TypeDefTag.Alias, Alias = Value }; }
+        public static TypeDef CreateAlias(AliasDef Value) { return new TypeDef { _Tag = TypeDefTag.Alias, _v_Alias = Value }; }
         /// <summary>记录</summary>
-        public static TypeDef CreateRecord(RecordDef Value) { return new TypeDef { _Tag = TypeDefTag.Record, Record = Value }; }
+        public static TypeDef CreateRecord(RecordDef Value) { return new TypeDef { _Tag = TypeDefTag.Record, _v_Record = Value }; }
         /// <summary>标签联合</summary>
-        public static TypeDef CreateTaggedUnion(TaggedUnionDef Value) { return new TypeDef { _Tag = TypeDefTag.TaggedUnion, TaggedUnion = Value }; }
+        public static TypeDef CreateTaggedUnion(TaggedUnionDef Value) { return new TypeDef { _Tag = TypeDefTag.TaggedUnion, _v_TaggedUnion = Value }; }
         /// <summary>枚举</summary>
-        public static TypeDef CreateEnum(EnumDef Value) { return new TypeDef { _Tag = TypeDefTag.Enum, Enum = Value }; }
+        public static TypeDef CreateEnum(EnumDef Value) { return new TypeDef { _Tag = TypeDefTag.Enum, _v_Enum = Value }; }
 
         /// <summary>基元</summary>
         public Boolean OnPrimitive { get { return _Tag == TypeDefTag.Primitive; } }
@@ -80,6 +79,82 @@ namespace Nivea.Template.Semantics
         public Boolean OnTaggedUnion { get { return _Tag == TypeDefTag.TaggedUnion; } }
         /// <summary>枚举</summary>
         public Boolean OnEnum { get { return _Tag == TypeDefTag.Enum; } }
+
+        /// <summary>基元</summary>
+        public PrimitiveDef Primitive
+        {
+            get
+            {
+                if (OnPrimitive)
+                {
+                    return (PrimitiveDef)_v_Primitive!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>别名</summary>
+        public AliasDef Alias
+        {
+            get
+            {
+                if (OnAlias)
+                {
+                    return (AliasDef)_v_Alias!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>记录</summary>
+        public RecordDef Record
+        {
+            get
+            {
+                if (OnRecord)
+                {
+                    return (RecordDef)_v_Record!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>标签联合</summary>
+        public TaggedUnionDef TaggedUnion
+        {
+            get
+            {
+                if (OnTaggedUnion)
+                {
+                    return (TaggedUnionDef)_v_TaggedUnion!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>枚举</summary>
+        public EnumDef Enum
+        {
+            get
+            {
+                if (OnEnum)
+                {
+                    return (EnumDef)_v_Enum!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
     }
     /// <summary>类型引用</summary>
     [Record]
@@ -112,30 +187,30 @@ namespace Nivea.Template.Semantics
         [Tag] public required TypeSpecTag _Tag { get; init; }
 
         /// <summary>类型引用</summary>
-        public TypeRef TypeRef { get; init; }
+        public TypeRef? _v_TypeRef { get; init; }
         /// <summary>泛型参数引用</summary>
-        public String GenericParameterRef { get; init; }
+        public String? _v_GenericParameterRef { get; init; }
         /// <summary>元组规格</summary>
-        public List<TypeSpec> Tuple { get; init; }
+        public List<TypeSpec>? _v_Tuple { get; init; }
         /// <summary>泛型特化规格</summary>
-        public GenericTypeSpec GenericTypeSpec { get; init; }
+        public GenericTypeSpec? _v_GenericTypeSpec { get; init; }
         /// <summary>数组规格</summary>
-        public TypeSpec Array { get; init; }
+        public TypeSpec? _v_Array { get; init; }
         /// <summary>成员类型规格</summary>
-        public TypeMemberSpec Member { get; init; }
+        public TypeMemberSpec? _v_Member { get; init; }
 
         /// <summary>类型引用</summary>
-        public static TypeSpec CreateTypeRef(TypeRef Value) { return new TypeSpec { _Tag = TypeSpecTag.TypeRef, TypeRef = Value }; }
+        public static TypeSpec CreateTypeRef(TypeRef Value) { return new TypeSpec { _Tag = TypeSpecTag.TypeRef, _v_TypeRef = Value }; }
         /// <summary>泛型参数引用</summary>
-        public static TypeSpec CreateGenericParameterRef(String Value) { return new TypeSpec { _Tag = TypeSpecTag.GenericParameterRef, GenericParameterRef = Value }; }
+        public static TypeSpec CreateGenericParameterRef(String Value) { return new TypeSpec { _Tag = TypeSpecTag.GenericParameterRef, _v_GenericParameterRef = Value }; }
         /// <summary>元组规格</summary>
-        public static TypeSpec CreateTuple(List<TypeSpec> Value) { return new TypeSpec { _Tag = TypeSpecTag.Tuple, Tuple = Value }; }
+        public static TypeSpec CreateTuple(List<TypeSpec> Value) { return new TypeSpec { _Tag = TypeSpecTag.Tuple, _v_Tuple = Value }; }
         /// <summary>泛型特化规格</summary>
-        public static TypeSpec CreateGenericTypeSpec(GenericTypeSpec Value) { return new TypeSpec { _Tag = TypeSpecTag.GenericTypeSpec, GenericTypeSpec = Value }; }
+        public static TypeSpec CreateGenericTypeSpec(GenericTypeSpec Value) { return new TypeSpec { _Tag = TypeSpecTag.GenericTypeSpec, _v_GenericTypeSpec = Value }; }
         /// <summary>数组规格</summary>
-        public static TypeSpec CreateArray(TypeSpec Value) { return new TypeSpec { _Tag = TypeSpecTag.Array, Array = Value }; }
+        public static TypeSpec CreateArray(TypeSpec Value) { return new TypeSpec { _Tag = TypeSpecTag.Array, _v_Array = Value }; }
         /// <summary>成员类型规格</summary>
-        public static TypeSpec CreateMember(TypeMemberSpec Value) { return new TypeSpec { _Tag = TypeSpecTag.Member, Member = Value }; }
+        public static TypeSpec CreateMember(TypeMemberSpec Value) { return new TypeSpec { _Tag = TypeSpecTag.Member, _v_Member = Value }; }
 
         /// <summary>类型引用</summary>
         public Boolean OnTypeRef { get { return _Tag == TypeSpecTag.TypeRef; } }
@@ -149,6 +224,97 @@ namespace Nivea.Template.Semantics
         public Boolean OnArray { get { return _Tag == TypeSpecTag.Array; } }
         /// <summary>成员类型规格</summary>
         public Boolean OnMember { get { return _Tag == TypeSpecTag.Member; } }
+
+        /// <summary>类型引用</summary>
+        public TypeRef TypeRef
+        {
+            get
+            {
+                if (OnTypeRef)
+                {
+                    return (TypeRef)_v_TypeRef!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>泛型参数引用</summary>
+        public String GenericParameterRef
+        {
+            get
+            {
+                if (OnGenericParameterRef)
+                {
+                    return (String)_v_GenericParameterRef!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>元组规格</summary>
+        public List<TypeSpec> Tuple
+        {
+            get
+            {
+                if (OnTuple)
+                {
+                    return (List<TypeSpec>)_v_Tuple!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>泛型特化规格</summary>
+        public GenericTypeSpec GenericTypeSpec
+        {
+            get
+            {
+                if (OnGenericTypeSpec)
+                {
+                    return (GenericTypeSpec)_v_GenericTypeSpec!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>数组规格</summary>
+        public TypeSpec Array
+        {
+            get
+            {
+                if (OnArray)
+                {
+                    return (TypeSpec)_v_Array!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>成员类型规格</summary>
+        public TypeMemberSpec Member
+        {
+            get
+            {
+                if (OnMember)
+                {
+                    return (TypeMemberSpec)_v_Member!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
     }
     /// <summary>基元定义</summary>
     [Record]

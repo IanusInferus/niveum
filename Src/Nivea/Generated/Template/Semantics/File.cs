@@ -6,7 +6,6 @@
 //==========================================================================
 
 #nullable enable
-#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -69,30 +68,30 @@ namespace Nivea.Template.Semantics
         [Tag] public required SectionDefTag _Tag { get; init; }
 
         /// <summary>命名空间</summary>
-        public List<String> Namespace { get; init; }
+        public List<String>? _v_Namespace { get; init; }
         /// <summary>程序集引用</summary>
-        public List<String> Assembly { get; init; }
+        public List<String>? _v_Assembly { get; init; }
         /// <summary>命名空间和类空间导入</summary>
-        public List<List<String>> Import { get; init; }
+        public List<List<String>>? _v_Import { get; init; }
         /// <summary>类型定义</summary>
-        public TypeDef Type { get; init; }
+        public TypeDef? _v_Type { get; init; }
         /// <summary>常量值</summary>
-        public ConstantValue Constant { get; init; }
+        public ConstantValue? _v_Constant { get; init; }
         /// <summary>模板定义</summary>
-        public TemplateDef Template { get; init; }
+        public TemplateDef? _v_Template { get; init; }
 
         /// <summary>命名空间</summary>
-        public static SectionDef CreateNamespace(List<String> Value) { return new SectionDef { _Tag = SectionDefTag.Namespace, Namespace = Value }; }
+        public static SectionDef CreateNamespace(List<String> Value) { return new SectionDef { _Tag = SectionDefTag.Namespace, _v_Namespace = Value }; }
         /// <summary>程序集引用</summary>
-        public static SectionDef CreateAssembly(List<String> Value) { return new SectionDef { _Tag = SectionDefTag.Assembly, Assembly = Value }; }
+        public static SectionDef CreateAssembly(List<String> Value) { return new SectionDef { _Tag = SectionDefTag.Assembly, _v_Assembly = Value }; }
         /// <summary>命名空间和类空间导入</summary>
-        public static SectionDef CreateImport(List<List<String>> Value) { return new SectionDef { _Tag = SectionDefTag.Import, Import = Value }; }
+        public static SectionDef CreateImport(List<List<String>> Value) { return new SectionDef { _Tag = SectionDefTag.Import, _v_Import = Value }; }
         /// <summary>类型定义</summary>
-        public static SectionDef CreateType(TypeDef Value) { return new SectionDef { _Tag = SectionDefTag.Type, Type = Value }; }
+        public static SectionDef CreateType(TypeDef Value) { return new SectionDef { _Tag = SectionDefTag.Type, _v_Type = Value }; }
         /// <summary>常量值</summary>
-        public static SectionDef CreateConstant(ConstantValue Value) { return new SectionDef { _Tag = SectionDefTag.Constant, Constant = Value }; }
+        public static SectionDef CreateConstant(ConstantValue Value) { return new SectionDef { _Tag = SectionDefTag.Constant, _v_Constant = Value }; }
         /// <summary>模板定义</summary>
-        public static SectionDef CreateTemplate(TemplateDef Value) { return new SectionDef { _Tag = SectionDefTag.Template, Template = Value }; }
+        public static SectionDef CreateTemplate(TemplateDef Value) { return new SectionDef { _Tag = SectionDefTag.Template, _v_Template = Value }; }
 
         /// <summary>命名空间</summary>
         public Boolean OnNamespace { get { return _Tag == SectionDefTag.Namespace; } }
@@ -106,6 +105,97 @@ namespace Nivea.Template.Semantics
         public Boolean OnConstant { get { return _Tag == SectionDefTag.Constant; } }
         /// <summary>模板定义</summary>
         public Boolean OnTemplate { get { return _Tag == SectionDefTag.Template; } }
+
+        /// <summary>命名空间</summary>
+        public List<String> Namespace
+        {
+            get
+            {
+                if (OnNamespace)
+                {
+                    return (List<String>)_v_Namespace!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>程序集引用</summary>
+        public List<String> Assembly
+        {
+            get
+            {
+                if (OnAssembly)
+                {
+                    return (List<String>)_v_Assembly!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>命名空间和类空间导入</summary>
+        public List<List<String>> Import
+        {
+            get
+            {
+                if (OnImport)
+                {
+                    return (List<List<String>>)_v_Import!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>类型定义</summary>
+        public TypeDef Type
+        {
+            get
+            {
+                if (OnType)
+                {
+                    return (TypeDef)_v_Type!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>常量值</summary>
+        public ConstantValue Constant
+        {
+            get
+            {
+                if (OnConstant)
+                {
+                    return (ConstantValue)_v_Constant!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>模板定义</summary>
+        public TemplateDef Template
+        {
+            get
+            {
+                if (OnTemplate)
+                {
+                    return (TemplateDef)_v_Template!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
     }
     /// <summary>常量值</summary>
     [Record]

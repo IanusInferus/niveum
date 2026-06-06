@@ -11,6 +11,7 @@ Niveum.RelationSchemaManipulator, Examples:
 增加SQLite和PostgreSQL创建脚本导出。
 Nivea, *:
 使用required修饰符，要求record需要在初始化时赋值。
+修改Optional和TaggedUnion，消除CS8618警告。
 Yuki.Relation:
 移除项目。
 

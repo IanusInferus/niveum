@@ -6,7 +6,6 @@
 //==========================================================================
 
 #nullable enable
-#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -55,18 +54,18 @@ namespace Niveum.RelationSchemaDiff
         [Tag] public required EntityMappingMethodTag _Tag { get; init; }
 
         /// <summary>创建实体</summary>
-        public Unit New { get; init; }
+        public Unit? _v_New { get; init; }
         /// <summary>复制实体，源实体名</summary>
-        public String Copy { get; init; }
+        public String? _v_Copy { get; init; }
         /// <summary>字段映射</summary>
-        public FieldMapping Field { get; init; }
+        public FieldMapping? _v_Field { get; init; }
 
         /// <summary>创建实体</summary>
-        public static EntityMappingMethod CreateNew() { return new EntityMappingMethod { _Tag = EntityMappingMethodTag.New, New = default(Unit) }; }
+        public static EntityMappingMethod CreateNew() { return new EntityMappingMethod { _Tag = EntityMappingMethodTag.New, _v_New = default(Unit) }; }
         /// <summary>复制实体，源实体名</summary>
-        public static EntityMappingMethod CreateCopy(String Value) { return new EntityMappingMethod { _Tag = EntityMappingMethodTag.Copy, Copy = Value }; }
+        public static EntityMappingMethod CreateCopy(String Value) { return new EntityMappingMethod { _Tag = EntityMappingMethodTag.Copy, _v_Copy = Value }; }
         /// <summary>字段映射</summary>
-        public static EntityMappingMethod CreateField(FieldMapping Value) { return new EntityMappingMethod { _Tag = EntityMappingMethodTag.Field, Field = Value }; }
+        public static EntityMappingMethod CreateField(FieldMapping Value) { return new EntityMappingMethod { _Tag = EntityMappingMethodTag.Field, _v_Field = Value }; }
 
         /// <summary>创建实体</summary>
         public Boolean OnNew { get { return _Tag == EntityMappingMethodTag.New; } }
@@ -74,6 +73,52 @@ namespace Niveum.RelationSchemaDiff
         public Boolean OnCopy { get { return _Tag == EntityMappingMethodTag.Copy; } }
         /// <summary>字段映射</summary>
         public Boolean OnField { get { return _Tag == EntityMappingMethodTag.Field; } }
+
+        /// <summary>创建实体</summary>
+        public Unit New
+        {
+            get
+            {
+                if (OnNew)
+                {
+                    return (Unit)_v_New!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>复制实体，源实体名</summary>
+        public String Copy
+        {
+            get
+            {
+                if (OnCopy)
+                {
+                    return (String)_v_Copy!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>字段映射</summary>
+        public FieldMapping Field
+        {
+            get
+            {
+                if (OnField)
+                {
+                    return (FieldMapping)_v_Field!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
     }
     /// <summary>字段映射</summary>
     [Record]
@@ -98,18 +143,49 @@ namespace Niveum.RelationSchemaDiff
         [Tag] public required FieldMappingMethodTag _Tag { get; init; }
 
         /// <summary>创建字段</summary>
-        public Optional<PrimitiveVal> New { get; init; }
+        public Optional<PrimitiveVal>? _v_New { get; init; }
         /// <summary>复制字段，源字段名</summary>
-        public String Copy { get; init; }
+        public String? _v_Copy { get; init; }
 
         /// <summary>创建字段</summary>
-        public static FieldMappingMethod CreateNew(Optional<PrimitiveVal> Value) { return new FieldMappingMethod { _Tag = FieldMappingMethodTag.New, New = Value }; }
+        public static FieldMappingMethod CreateNew(Optional<PrimitiveVal> Value) { return new FieldMappingMethod { _Tag = FieldMappingMethodTag.New, _v_New = Value }; }
         /// <summary>复制字段，源字段名</summary>
-        public static FieldMappingMethod CreateCopy(String Value) { return new FieldMappingMethod { _Tag = FieldMappingMethodTag.Copy, Copy = Value }; }
+        public static FieldMappingMethod CreateCopy(String Value) { return new FieldMappingMethod { _Tag = FieldMappingMethodTag.Copy, _v_Copy = Value }; }
 
         /// <summary>创建字段</summary>
         public Boolean OnNew { get { return _Tag == FieldMappingMethodTag.New; } }
         /// <summary>复制字段，源字段名</summary>
         public Boolean OnCopy { get { return _Tag == FieldMappingMethodTag.Copy; } }
+
+        /// <summary>创建字段</summary>
+        public Optional<PrimitiveVal> New
+        {
+            get
+            {
+                if (OnNew)
+                {
+                    return (Optional<PrimitiveVal>)_v_New!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>复制字段，源字段名</summary>
+        public String Copy
+        {
+            get
+            {
+                if (OnCopy)
+                {
+                    return (String)_v_Copy!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
     }
 }

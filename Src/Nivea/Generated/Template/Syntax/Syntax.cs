@@ -6,7 +6,6 @@
 //==========================================================================
 
 #nullable enable
-#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -55,38 +54,38 @@ namespace Nivea.Template.Syntax
         [Tag] public required ExprNodeTag _Tag { get; init; }
 
         /// <summary>直接</summary>
-        public String Direct { get; init; }
+        public String? _v_Direct { get; init; }
         /// <summary>字面量</summary>
-        public String Literal { get; init; }
+        public String? _v_Literal { get; init; }
         /// <summary>运算符</summary>
-        public String Operator { get; init; }
+        public String? _v_Operator { get; init; }
         /// <summary>内嵌模板</summary>
-        public List<Semantics.TemplateExpr> Template { get; init; }
+        public List<Semantics.TemplateExpr>? _v_Template { get; init; }
         /// <summary>内嵌模板生成</summary>
-        public List<Semantics.TemplateExpr> YieldTemplate { get; init; }
+        public List<Semantics.TemplateExpr>? _v_YieldTemplate { get; init; }
         /// <summary>茎</summary>
-        public ExprNodeStem Stem { get; init; }
+        public ExprNodeStem? _v_Stem { get; init; }
         /// <summary>待定序列</summary>
-        public ExprNodeUndetermined Undetermined { get; init; }
+        public ExprNodeUndetermined? _v_Undetermined { get; init; }
         /// <summary>成员</summary>
-        public ExprNodeMember Member { get; init; }
+        public ExprNodeMember? _v_Member { get; init; }
 
         /// <summary>直接</summary>
-        public static ExprNode CreateDirect(String Value) { return new ExprNode { _Tag = ExprNodeTag.Direct, Direct = Value }; }
+        public static ExprNode CreateDirect(String Value) { return new ExprNode { _Tag = ExprNodeTag.Direct, _v_Direct = Value }; }
         /// <summary>字面量</summary>
-        public static ExprNode CreateLiteral(String Value) { return new ExprNode { _Tag = ExprNodeTag.Literal, Literal = Value }; }
+        public static ExprNode CreateLiteral(String Value) { return new ExprNode { _Tag = ExprNodeTag.Literal, _v_Literal = Value }; }
         /// <summary>运算符</summary>
-        public static ExprNode CreateOperator(String Value) { return new ExprNode { _Tag = ExprNodeTag.Operator, Operator = Value }; }
+        public static ExprNode CreateOperator(String Value) { return new ExprNode { _Tag = ExprNodeTag.Operator, _v_Operator = Value }; }
         /// <summary>内嵌模板</summary>
-        public static ExprNode CreateTemplate(List<Semantics.TemplateExpr> Value) { return new ExprNode { _Tag = ExprNodeTag.Template, Template = Value }; }
+        public static ExprNode CreateTemplate(List<Semantics.TemplateExpr> Value) { return new ExprNode { _Tag = ExprNodeTag.Template, _v_Template = Value }; }
         /// <summary>内嵌模板生成</summary>
-        public static ExprNode CreateYieldTemplate(List<Semantics.TemplateExpr> Value) { return new ExprNode { _Tag = ExprNodeTag.YieldTemplate, YieldTemplate = Value }; }
+        public static ExprNode CreateYieldTemplate(List<Semantics.TemplateExpr> Value) { return new ExprNode { _Tag = ExprNodeTag.YieldTemplate, _v_YieldTemplate = Value }; }
         /// <summary>茎</summary>
-        public static ExprNode CreateStem(ExprNodeStem Value) { return new ExprNode { _Tag = ExprNodeTag.Stem, Stem = Value }; }
+        public static ExprNode CreateStem(ExprNodeStem Value) { return new ExprNode { _Tag = ExprNodeTag.Stem, _v_Stem = Value }; }
         /// <summary>待定序列</summary>
-        public static ExprNode CreateUndetermined(ExprNodeUndetermined Value) { return new ExprNode { _Tag = ExprNodeTag.Undetermined, Undetermined = Value }; }
+        public static ExprNode CreateUndetermined(ExprNodeUndetermined Value) { return new ExprNode { _Tag = ExprNodeTag.Undetermined, _v_Undetermined = Value }; }
         /// <summary>成员</summary>
-        public static ExprNode CreateMember(ExprNodeMember Value) { return new ExprNode { _Tag = ExprNodeTag.Member, Member = Value }; }
+        public static ExprNode CreateMember(ExprNodeMember Value) { return new ExprNode { _Tag = ExprNodeTag.Member, _v_Member = Value }; }
 
         /// <summary>直接</summary>
         public Boolean OnDirect { get { return _Tag == ExprNodeTag.Direct; } }
@@ -104,6 +103,127 @@ namespace Nivea.Template.Syntax
         public Boolean OnUndetermined { get { return _Tag == ExprNodeTag.Undetermined; } }
         /// <summary>成员</summary>
         public Boolean OnMember { get { return _Tag == ExprNodeTag.Member; } }
+
+        /// <summary>直接</summary>
+        public String Direct
+        {
+            get
+            {
+                if (OnDirect)
+                {
+                    return (String)_v_Direct!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>字面量</summary>
+        public String Literal
+        {
+            get
+            {
+                if (OnLiteral)
+                {
+                    return (String)_v_Literal!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>运算符</summary>
+        public String Operator
+        {
+            get
+            {
+                if (OnOperator)
+                {
+                    return (String)_v_Operator!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>内嵌模板</summary>
+        public List<Semantics.TemplateExpr> Template
+        {
+            get
+            {
+                if (OnTemplate)
+                {
+                    return (List<Semantics.TemplateExpr>)_v_Template!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>内嵌模板生成</summary>
+        public List<Semantics.TemplateExpr> YieldTemplate
+        {
+            get
+            {
+                if (OnYieldTemplate)
+                {
+                    return (List<Semantics.TemplateExpr>)_v_YieldTemplate!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>茎</summary>
+        public ExprNodeStem Stem
+        {
+            get
+            {
+                if (OnStem)
+                {
+                    return (ExprNodeStem)_v_Stem!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>待定序列</summary>
+        public ExprNodeUndetermined Undetermined
+        {
+            get
+            {
+                if (OnUndetermined)
+                {
+                    return (ExprNodeUndetermined)_v_Undetermined!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>成员</summary>
+        public ExprNodeMember Member
+        {
+            get
+            {
+                if (OnMember)
+                {
+                    return (ExprNodeMember)_v_Member!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
     }
     /// <summary>表达式结点茎</summary>
     [Record]
@@ -146,18 +266,49 @@ namespace Nivea.Template.Syntax
         [Tag] public required StackNodeTag _Tag { get; init; }
 
         /// <summary>结点</summary>
-        public ExprNode Node { get; init; }
+        public ExprNode? _v_Node { get; init; }
         /// <summary>词</summary>
-        public Token Token { get; init; }
+        public Token? _v_Token { get; init; }
 
         /// <summary>结点</summary>
-        public static StackNode CreateNode(ExprNode Value) { return new StackNode { _Tag = StackNodeTag.Node, Node = Value }; }
+        public static StackNode CreateNode(ExprNode Value) { return new StackNode { _Tag = StackNodeTag.Node, _v_Node = Value }; }
         /// <summary>词</summary>
-        public static StackNode CreateToken(Token Value) { return new StackNode { _Tag = StackNodeTag.Token, Token = Value }; }
+        public static StackNode CreateToken(Token Value) { return new StackNode { _Tag = StackNodeTag.Token, _v_Token = Value }; }
 
         /// <summary>结点</summary>
         public Boolean OnNode { get { return _Tag == StackNodeTag.Node; } }
         /// <summary>词</summary>
         public Boolean OnToken { get { return _Tag == StackNodeTag.Token; } }
+
+        /// <summary>结点</summary>
+        public ExprNode Node
+        {
+            get
+            {
+                if (OnNode)
+                {
+                    return (ExprNode)_v_Node!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>词</summary>
+        public Token Token
+        {
+            get
+            {
+                if (OnToken)
+                {
+                    return (Token)_v_Token!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
     }
 }

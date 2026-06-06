@@ -3,7 +3,7 @@
 //  File:        EmbeddedCSharpGenerator.cs
 //  Location:    Nivea <Visual C#>
 //  Description: 嵌入C#代码生成器
-//  Version:     2021.12.21.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -11,13 +11,11 @@
 #nullable enable
 
 using Firefly;
-using Firefly.Texting.TreeFormat.Semantics;
 using Nivea.Template.Semantics;
 using Nivea.Template.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace Nivea.Generator
 {
@@ -35,7 +33,6 @@ namespace Nivea.Generator
             yield return "//==========================================================================";
             yield return "";
             yield return "#nullable enable";
-            yield return "#pragma warning disable CS8618";
             yield return "";
             yield return "using System;";
             yield return "using System.Collections.Generic;";

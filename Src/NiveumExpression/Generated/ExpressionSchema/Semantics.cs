@@ -6,7 +6,6 @@
 //==========================================================================
 
 #nullable enable
-#pragma warning disable CS8618
 
 using System;
 using System.Collections.Generic;
@@ -124,30 +123,30 @@ namespace Niveum.ExpressionSchema
         [Tag] public required ExprTag _Tag { get; init; }
 
         /// <summary>字面量表达式</summary>
-        public LiteralExpr Literal { get; init; }
+        public LiteralExpr? _v_Literal { get; init; }
         /// <summary>变量表达式</summary>
-        public VariableExpr Variable { get; init; }
+        public VariableExpr? _v_Variable { get; init; }
         /// <summary>函数表达式</summary>
-        public FunctionExpr Function { get; init; }
+        public FunctionExpr? _v_Function { get; init; }
         /// <summary>if伪函数表达式</summary>
-        public IfExpr If { get; init; }
+        public IfExpr? _v_If { get; init; }
         /// <summary>&amp;&amp;运算符表达式</summary>
-        public AndAlsoExpr AndAlso { get; init; }
+        public AndAlsoExpr? _v_AndAlso { get; init; }
         /// <summary>||运算符表达式</summary>
-        public OrElseExpr OrElse { get; init; }
+        public OrElseExpr? _v_OrElse { get; init; }
 
         /// <summary>字面量表达式</summary>
-        public static Expr CreateLiteral(LiteralExpr Value) { return new Expr { _Tag = ExprTag.Literal, Literal = Value }; }
+        public static Expr CreateLiteral(LiteralExpr Value) { return new Expr { _Tag = ExprTag.Literal, _v_Literal = Value }; }
         /// <summary>变量表达式</summary>
-        public static Expr CreateVariable(VariableExpr Value) { return new Expr { _Tag = ExprTag.Variable, Variable = Value }; }
+        public static Expr CreateVariable(VariableExpr Value) { return new Expr { _Tag = ExprTag.Variable, _v_Variable = Value }; }
         /// <summary>函数表达式</summary>
-        public static Expr CreateFunction(FunctionExpr Value) { return new Expr { _Tag = ExprTag.Function, Function = Value }; }
+        public static Expr CreateFunction(FunctionExpr Value) { return new Expr { _Tag = ExprTag.Function, _v_Function = Value }; }
         /// <summary>if伪函数表达式</summary>
-        public static Expr CreateIf(IfExpr Value) { return new Expr { _Tag = ExprTag.If, If = Value }; }
+        public static Expr CreateIf(IfExpr Value) { return new Expr { _Tag = ExprTag.If, _v_If = Value }; }
         /// <summary>&amp;&amp;运算符表达式</summary>
-        public static Expr CreateAndAlso(AndAlsoExpr Value) { return new Expr { _Tag = ExprTag.AndAlso, AndAlso = Value }; }
+        public static Expr CreateAndAlso(AndAlsoExpr Value) { return new Expr { _Tag = ExprTag.AndAlso, _v_AndAlso = Value }; }
         /// <summary>||运算符表达式</summary>
-        public static Expr CreateOrElse(OrElseExpr Value) { return new Expr { _Tag = ExprTag.OrElse, OrElse = Value }; }
+        public static Expr CreateOrElse(OrElseExpr Value) { return new Expr { _Tag = ExprTag.OrElse, _v_OrElse = Value }; }
 
         /// <summary>字面量表达式</summary>
         public Boolean OnLiteral { get { return _Tag == ExprTag.Literal; } }
@@ -161,6 +160,97 @@ namespace Niveum.ExpressionSchema
         public Boolean OnAndAlso { get { return _Tag == ExprTag.AndAlso; } }
         /// <summary>||运算符表达式</summary>
         public Boolean OnOrElse { get { return _Tag == ExprTag.OrElse; } }
+
+        /// <summary>字面量表达式</summary>
+        public LiteralExpr Literal
+        {
+            get
+            {
+                if (OnLiteral)
+                {
+                    return (LiteralExpr)_v_Literal!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>变量表达式</summary>
+        public VariableExpr Variable
+        {
+            get
+            {
+                if (OnVariable)
+                {
+                    return (VariableExpr)_v_Variable!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>函数表达式</summary>
+        public FunctionExpr Function
+        {
+            get
+            {
+                if (OnFunction)
+                {
+                    return (FunctionExpr)_v_Function!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>if伪函数表达式</summary>
+        public IfExpr If
+        {
+            get
+            {
+                if (OnIf)
+                {
+                    return (IfExpr)_v_If!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>&amp;&amp;运算符表达式</summary>
+        public AndAlsoExpr AndAlso
+        {
+            get
+            {
+                if (OnAndAlso)
+                {
+                    return (AndAlsoExpr)_v_AndAlso!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>||运算符表达式</summary>
+        public OrElseExpr OrElse
+        {
+            get
+            {
+                if (OnOrElse)
+                {
+                    return (OrElseExpr)_v_OrElse!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
     }
     public enum LiteralExprTag
     {
@@ -178,18 +268,18 @@ namespace Niveum.ExpressionSchema
         [Tag] public required LiteralExprTag _Tag { get; init; }
 
         /// <summary>布尔字面量</summary>
-        public Boolean BooleanValue { get; init; }
+        public Boolean? _v_BooleanValue { get; init; }
         /// <summary>整数字面量</summary>
-        public Int IntValue { get; init; }
+        public Int? _v_IntValue { get; init; }
         /// <summary>实数字面量</summary>
-        public Real RealValue { get; init; }
+        public Real? _v_RealValue { get; init; }
 
         /// <summary>布尔字面量</summary>
-        public static LiteralExpr CreateBooleanValue(Boolean Value) { return new LiteralExpr { _Tag = LiteralExprTag.BooleanValue, BooleanValue = Value }; }
+        public static LiteralExpr CreateBooleanValue(Boolean Value) { return new LiteralExpr { _Tag = LiteralExprTag.BooleanValue, _v_BooleanValue = Value }; }
         /// <summary>整数字面量</summary>
-        public static LiteralExpr CreateIntValue(Int Value) { return new LiteralExpr { _Tag = LiteralExprTag.IntValue, IntValue = Value }; }
+        public static LiteralExpr CreateIntValue(Int Value) { return new LiteralExpr { _Tag = LiteralExprTag.IntValue, _v_IntValue = Value }; }
         /// <summary>实数字面量</summary>
-        public static LiteralExpr CreateRealValue(Real Value) { return new LiteralExpr { _Tag = LiteralExprTag.RealValue, RealValue = Value }; }
+        public static LiteralExpr CreateRealValue(Real Value) { return new LiteralExpr { _Tag = LiteralExprTag.RealValue, _v_RealValue = Value }; }
 
         /// <summary>布尔字面量</summary>
         public Boolean OnBooleanValue { get { return _Tag == LiteralExprTag.BooleanValue; } }
@@ -197,6 +287,52 @@ namespace Niveum.ExpressionSchema
         public Boolean OnIntValue { get { return _Tag == LiteralExprTag.IntValue; } }
         /// <summary>实数字面量</summary>
         public Boolean OnRealValue { get { return _Tag == LiteralExprTag.RealValue; } }
+
+        /// <summary>布尔字面量</summary>
+        public Boolean BooleanValue
+        {
+            get
+            {
+                if (OnBooleanValue)
+                {
+                    return (Boolean)_v_BooleanValue!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>整数字面量</summary>
+        public Int IntValue
+        {
+            get
+            {
+                if (OnIntValue)
+                {
+                    return (Int)_v_IntValue!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+        /// <summary>实数字面量</summary>
+        public Real RealValue
+        {
+            get
+            {
+                if (OnRealValue)
+                {
+                    return (Real)_v_RealValue!;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
     }
     /// <summary>变量表达式</summary>
     [Record]
