@@ -1,0 +1,595 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        CSharpSqlServer.tree
+      Location:    Niveum.Relation <Tree>
+      Description: 关系类型结构C# SQL Server代码模板
+      Version:     2026.06.06.
+      Copyright(C) F.R.C.
+
+    ==========================================================================
+
+#Option
+    EnableEmbeddedExpr True
+
+#Namespace Niveum.RelationSchema.CSharpSqlServer
+
+#Import
+    System
+    System.Collections.Generic
+    System.Linq
+
+#Template DataAccessBase
+    public partial class SqlServerDataAccess : IDataAccess
+    {
+        private SqlConnection Connection;
+        private SqlTransaction Transaction;
+        private ITransactionLock TransactionLock;
+        public SqlServerDataAccess(String ConnectionString, IsolationLevel IsolationLevel, ITransactionLock TransactionLock)
+        {
+            Connection = new SqlConnection(ConnectionString);
+            Connection.Open();
+            Transaction = Connection.BeginTransaction(IsolationLevel);
+            this.TransactionLock = TransactionLock;
+        }
+        public SqlServerDataAccess(String ConnectionString, IsolationLevel IsolationLevel, Func<SqlConnection, SqlTransaction, ITransactionLock> TransactionLockFactory)
+        {
+            Connection = new SqlConnection(ConnectionString);
+            Connection.Open();
+            Transaction = Connection.BeginTransaction(IsolationLevel);
+            this.TransactionLock = TransactionLockFactory(Connection, Transaction);
+        }
+
+        public void Dispose()
+        {
+            if (Transaction != null)
+            {
+                Transaction.Rollback();
+                Transaction.Dispose();
+                Transaction = null;
+            }
+            if (TransactionLock != null)
+            {
+                TransactionLock.ExitAll();
+                TransactionLock = null;
+            }
+            if (Connection != null)
+            {
+                Connection.Dispose();
+                Connection = null;
+            }
+        }
+
+        public void Complete()
+        {
+            if (Transaction != null)
+            {
+                Transaction.Commit();
+                Transaction.Dispose();
+                Transaction = null;
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+            if (TransactionLock != null)
+            {
+                TransactionLock.ExitAll();
+                TransactionLock = null;
+            }
+            if (Connection != null)
+            {
+                Connection.Dispose();
+                Connection = null;
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+        }
+
+        private SqlCommand CreateTextCommand()
+        {
+            var cmd = Connection.CreateCommand();
+            cmd.Transaction = Transaction;
+            cmd.CommandType = CommandType.Text;
+            return cmd;
+        }
+
+        private static void Add(SqlCommand cmd, String ParameterName, Boolean Value)
+        {
+            var p = cmd.CreateParameter();
+            p.ParameterName = ParameterName;
+            p.DbType = DbType.Boolean;
+            p.Value = Value;
+            cmd.Parameters.Add(p);
+        }
+        private static void Add(SqlCommand cmd, String ParameterName, String Value)
+        {
+            var p = cmd.CreateParameter();
+            p.ParameterName = ParameterName;
+            p.DbType = DbType.String;
+            p.Value = Value;
+            cmd.Parameters.Add(p);
+        }
+        private static void Add(SqlCommand cmd, String ParameterName, Int Value)
+        {
+            var p = cmd.CreateParameter();
+            p.ParameterName = ParameterName;
+            p.DbType = DbType.Int32;
+            p.Value = Value;
+            cmd.Parameters.Add(p);
+        }
+        private static void Add(SqlCommand cmd, String ParameterName, Int64 Value)
+        {
+            var p = cmd.CreateParameter();
+            p.ParameterName = ParameterName;
+            p.DbType = DbType.Int64;
+            p.Value = Value;
+            cmd.Parameters.Add(p);
+        }
+        private static void Add(SqlCommand cmd, String ParameterName, Real Value)
+        {
+            var p = cmd.CreateParameter();
+            p.ParameterName = ParameterName;
+            p.DbType = DbType.Single;
+            p.Value = (Single)(Value);
+            cmd.Parameters.Add(p);
+        }
+        private static void Add(SqlCommand cmd, String ParameterName, List<Byte> Value)
+        {
+            var p = cmd.CreateParameter();
+            p.ParameterName = ParameterName;
+            p.DbType = DbType.Binary;
+            p.Value = Value.ToArray();
+            cmd.Parameters.Add(p);
+        }
+        private static void Add(SqlCommand cmd, String ParameterName, Optional<Boolean> Value)
+        {
+            var p = cmd.CreateParameter();
+            p.ParameterName = ParameterName;
+            p.DbType = DbType.Boolean;
+            if (Value.OnSome)
+            {
+                p.Value = Value.Value;
+            }
+            else
+            {
+                p.Value = DBNull.Value;
+            }
+            cmd.Parameters.Add(p);
+        }
+        private static void Add(SqlCommand cmd, String ParameterName, Optional<String> Value)
+        {
+            var p = cmd.CreateParameter();
+            p.ParameterName = ParameterName;
+            p.DbType = DbType.String;
+            if (Value.OnSome)
+            {
+                p.Value = Value.Value;
+            }
+            else
+            {
+                p.Value = DBNull.Value;
+            }
+            cmd.Parameters.Add(p);
+        }
+        private static void Add(SqlCommand cmd, String ParameterName, Optional<Int> Value)
+        {
+            var p = cmd.CreateParameter();
+            p.ParameterName = ParameterName;
+            p.DbType = DbType.Int32;
+            if (Value.OnSome)
+            {
+                p.Value = Value.Value;
+            }
+            else
+            {
+                p.Value = DBNull.Value;
+            }
+            cmd.Parameters.Add(p);
+        }
+        private static void Add(SqlCommand cmd, String ParameterName, Optional<Int64> Value)
+        {
+            var p = cmd.CreateParameter();
+            p.ParameterName = ParameterName;
+            p.DbType = DbType.Int64;
+            if (Value.OnSome)
+            {
+                p.Value = Value.Value;
+            }
+            else
+            {
+                p.Value = DBNull.Value;
+            }
+            cmd.Parameters.Add(p);
+        }
+        private static void Add(SqlCommand cmd, String ParameterName, Optional<Real> Value)
+        {
+            var p = cmd.CreateParameter();
+            p.ParameterName = ParameterName;
+            p.DbType = DbType.Single;
+            if (Value.OnSome)
+            {
+                p.Value = (Single)(Value.Value);
+            }
+            else
+            {
+                p.Value = DBNull.Value;
+            }
+            cmd.Parameters.Add(p);
+        }
+        private static void Add(SqlCommand cmd, String ParameterName, Optional<List<Byte>> Value)
+        {
+            var p = cmd.CreateParameter();
+            p.ParameterName = ParameterName;
+            p.DbType = DbType.Binary;
+            if (Value.OnSome)
+            {
+                p.Value = Value.Value.ToArray();
+            }
+            else
+            {
+                p.Value = DBNull.Value;
+            }
+            cmd.Parameters.Add(p);
+        }
+        private static Boolean GetBoolean(SqlDataReader dr, String FieldName)
+        {
+            return dr.GetBoolean(dr.GetOrdinal(FieldName));
+        }
+        private static String GetString(SqlDataReader dr, String FieldName)
+        {
+            var v = dr.GetSqlString(dr.GetOrdinal(FieldName));
+            if (v.IsNull) { throw new InvalidOperationException(); }
+            return v.Value;
+        }
+        private static Int GetInt(SqlDataReader dr, String FieldName)
+        {
+            return dr.GetInt32(dr.GetOrdinal(FieldName));
+        }
+        private static Int64 GetInt64(SqlDataReader dr, String FieldName)
+        {
+            return dr.GetInt64(dr.GetOrdinal(FieldName));
+        }
+        private static Double GetReal(SqlDataReader dr, String FieldName)
+        {
+            return dr.GetFloat(dr.GetOrdinal(FieldName));
+        }
+        private static List<Byte> GetBinary(SqlDataReader dr, String FieldName)
+        {
+            var v = dr.GetSqlBinary(dr.GetOrdinal(FieldName));
+            if (v.IsNull) { throw new InvalidOperationException(); }
+            return new List<Byte>(v.Value);
+        }
+        private static Optional<Boolean> GetOptionalOfBoolean(SqlDataReader dr, String FieldName)
+        {
+            var v = dr.GetSqlBoolean(dr.GetOrdinal(FieldName));
+            if (v.IsNull) { return Optional<Boolean>.Empty; }
+            return v.Value;
+        }
+        private static Optional<String> GetOptionalOfString(SqlDataReader dr, String FieldName)
+        {
+            var v = dr.GetSqlString(dr.GetOrdinal(FieldName));
+            if (v.IsNull) { return Optional<String>.Empty; }
+            return v.Value;
+        }
+        private static Optional<Int> GetOptionalOfInt(SqlDataReader dr, String FieldName)
+        {
+            var v = dr.GetSqlInt32(dr.GetOrdinal(FieldName));
+            if (v.IsNull) { return Optional<Int>.Empty; }
+            return v.Value;
+        }
+        private static Optional<Int64> GetOptionalOfInt64(SqlDataReader dr, String FieldName)
+        {
+            var v = dr.GetSqlInt64(dr.GetOrdinal(FieldName));
+            if (v.IsNull) { return Optional<Int64>.Empty; }
+            return v.Value;
+        }
+        private static Optional<Real> GetOptionalOfReal(SqlDataReader dr, String FieldName)
+        {
+            var v = dr.GetSqlSingle(dr.GetOrdinal(FieldName));
+            if (v.IsNull) { return Optional<Real>.Empty; }
+            return (Real)(v.Value);
+        }
+        private static Optional<List<Byte>> GetOptionalOfBinary(SqlDataReader dr, String FieldName)
+        {
+            var v = dr.GetSqlBinary(dr.GetOrdinal(FieldName));
+            if (v.IsNull) { return Optional<List<Byte>>.Empty; }
+            return new List<Byte>(v.Value);
+        }
+    }
+
+#Template DataAccessEnums Enums:IEnumerable<String>
+    public partial class SqlServerDataAccess
+    {
+        ${Enums}
+    }
+
+#Template DataAccessEnum EnumName:String
+    private static [[${EnumName}]] [[Get${EnumName}]](SqlDataReader dr, String FieldName)
+    {
+        return ([[${EnumName}]])(GetInt(dr, FieldName));
+    }
+    private static Optional<[[${EnumName}]]> [[GetOptionalOf${EnumName}]](SqlDataReader dr, String FieldName)
+    {
+        var v = GetOptionalOfInt(dr, FieldName);
+        if (v.OnNone) { return Optional<[[${EnumName}]]>.Empty; }
+        return ([[${EnumName}]])(v.Value);
+    }
+    private static void Add(SqlCommand cmd, String ParameterName, [[${EnumName}]] Value)
+    {
+        Add(cmd, ParameterName, (Int)(Value));
+    }
+    private static void Add(SqlCommand cmd, String ParameterName, Optional<[[${EnumName}]]> Value)
+    {
+        if (Value.OnNone)
+        {
+            Add(cmd, ParameterName, Optional<Int>.Empty);
+        }
+        else
+        {
+            Add(cmd, ParameterName, (Int)(Value.Value));
+        }
+    }
+
+#Template DataAccess Queries:IEnumerable<String>
+    public partial class SqlServerDataAccess
+    {
+        ${Queries}
+    }
+
+#Template Query Signature:String Content:IEnumerable<String>
+    public ${Signature}
+    {
+        ${Content}
+    }
+
+#Template SelectLock_Optional EntityName:String LockingStatement:IEnumerable<String> SQL:String ParameterAdds:IEnumerable<String> ResultSets:IEnumerable<String>
+    ${LockingStatement}
+    var cmd = CreateTextCommand();
+    cmd.CommandText = @"${SQL}";
+    ${ParameterAdds}
+    var v = Optional<[[${EntityName}]]>.Empty;
+    using (var dr = cmd.ExecuteReader())
+    {
+        if (dr.Read())
+        {
+            v = new [[${EntityName}]]
+            {
+                ${ResultSets}
+            };
+        }
+        if (dr.Read())
+        {
+            throw new InvalidOperationException();
+        }
+    }
+    return v;
+
+#Template SelectLock_One EntityName:String LockingStatement:IEnumerable<String> SQL:String ParameterAdds:IEnumerable<String> ResultSets:IEnumerable<String>
+    ${LockingStatement}
+    var cmd = CreateTextCommand();
+    cmd.CommandText = @"${SQL}";
+    ${ParameterAdds}
+    [[${EntityName}]] v = null;
+    using (var dr = cmd.ExecuteReader())
+    {
+        if (dr.Read())
+        {
+            v = new [[${EntityName}]]
+            {
+                ${ResultSets}
+            };
+        }
+        if (dr.Read())
+        {
+            throw new InvalidOperationException();
+        }
+    }
+    if (v == null) { throw new InvalidOperationException(); }
+    return v;
+
+#Template SelectLock_ManyAllRange EntityName:String LockingStatement:IEnumerable<String> SQL:String ParameterAdds:IEnumerable<String> ResultSets:IEnumerable<String>
+    ${LockingStatement}
+    var cmd = CreateTextCommand();
+    cmd.CommandText = @"${SQL}";
+    ${ParameterAdds}
+    var l = new List<[[${EntityName}]]>();
+    using (var dr = cmd.ExecuteReader())
+    {
+        while (dr.Read())
+        {
+            var v = new [[${EntityName}]]
+            {
+                ${ResultSets}
+            };
+            l.Add(v);
+        }
+    }
+    return l;
+
+#Template SelectLock_Count EntityName:String LockingStatement:IEnumerable<String> SQL:String ParameterAdds:IEnumerable<String>
+    ${LockingStatement}
+    var cmd = CreateTextCommand();
+    cmd.CommandText = @"${SQL}";
+    ${ParameterAdds}
+    return Convert.ToInt32(cmd.ExecuteScalar());
+
+#Template InsertUpdate_Optional SQL:String ParameterAdds:IEnumerable<String>
+    var cmd = CreateTextCommand();
+    cmd.CommandText = @"${SQL}";
+    ${ParameterAdds}
+    cmd.ExecuteNonQuery();
+
+#Template InsertUpdateUpsert_One SQL:String ParameterAdds:IEnumerable<String>
+    var cmd = CreateTextCommand();
+    cmd.CommandText = @"${SQL}";
+    ${ParameterAdds}
+    if (cmd.ExecuteNonQuery() != 1)
+    {
+        throw new InvalidOperationException();
+    }
+
+#Template InsertUpdateUpsert_Many SQL:String ParameterAdds:IEnumerable<String>
+    foreach (var v in l)
+    {
+        var cmd = CreateTextCommand();
+        cmd.CommandText = @"${SQL}";
+        ${ParameterAdds}
+        if (cmd.ExecuteNonQuery() != 1)
+        {
+            throw new InvalidOperationException();
+        }
+    }
+
+#Template InsertWithIdentity_One SQL:String ParameterAdds:IEnumerable<String> ResultSets:IEnumerable<String>
+    var cmd = CreateTextCommand();
+    cmd.CommandText = @"${SQL}";
+    ${ParameterAdds}
+    using (var dr = cmd.ExecuteReader())
+    {
+        if (dr.Read())
+        {
+            ${ResultSets}
+        }
+        if (dr.Read())
+        {
+            throw new InvalidOperationException();
+        }
+    }
+
+#Template InsertWithIdentity_Many SQL:String ParameterAdds:IEnumerable<String> ResultSets:IEnumerable<String>
+    foreach (var v in l)
+    {
+        var cmd = CreateTextCommand();
+        cmd.CommandText = @"${SQL}";
+        ${ParameterAdds}
+        using (var dr = cmd.ExecuteReader())
+        {
+            if (dr.Read())
+            {
+                ${ResultSets}
+            }
+            if (dr.Read())
+            {
+                throw new InvalidOperationException();
+            }
+        }
+    }
+
+#Template Delete_Optional SQL:String ParameterAdds:IEnumerable<String>
+    var cmd = CreateTextCommand();
+    cmd.CommandText = @"${SQL}";
+    ${ParameterAdds}
+    var Count = cmd.ExecuteNonQuery();
+    if ((Count != 0) && (Count != 1))
+    {
+        throw new InvalidOperationException();
+    }
+
+#Template Delete_One SQL:String ParameterAdds:IEnumerable<String>
+    var cmd = CreateTextCommand();
+    cmd.CommandText = @"${SQL}";
+    ${ParameterAdds}
+    if (cmd.ExecuteNonQuery() != 1)
+    {
+        throw new InvalidOperationException();
+    }
+
+#Template Delete_ManyAll SQL:String ParameterAdds:IEnumerable<String>
+    var cmd = CreateTextCommand();
+    cmd.CommandText = @"${SQL}";
+    ${ParameterAdds}
+    cmd.ExecuteNonQuery();
+
+#Template Lock_LockingStatement EntityNameAndParameterAndValues:String
+    if (TransactionLock != null) { TransactionLock.Enter(new Object[] { ${EntityNameAndParameterAndValues} }); }
+
+#Template SelectLockDelete_ParameterAdd ParameterName:String
+    Add(cmd, "${ParameterName}", [[${ParameterName}]]);
+
+#Template InsertUpdateUpsert_ParameterAdd ParameterName:String
+    Add(cmd, "${ParameterName}", v.[[${ParameterName}]]);
+
+#Template SelectLock_ResultSet ParameterName:String TypeGet:String
+    [[${ParameterName}]] = [[${TypeGet}]](dr, "${ParameterName}"),
+
+#Template SelectLock_ResultSet_Last ParameterName:String TypeGet:String
+    [[${ParameterName}]] = [[${TypeGet}]](dr, "${ParameterName}")
+
+#Template Insert_ResultSet ParameterName:String TypeGet:String
+    v.[[${ParameterName}]] = [[${TypeGet}]](dr, "${ParameterName}");
+
+#Template DataAccessPool Hash:String
+    public class SqlServerDataAccessPool
+    {
+        public UInt64 Hash
+        {
+            get
+            {
+                return 0x${Hash};
+            }
+        }
+
+        public IDataAccess Create(String ConnectionString)
+        {
+            return new SqlServerDataAccess(ConnectionString, IsolationLevel.ReadCommitted, (ITransactionLock)(null));
+        }
+        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel)
+        {
+            return new SqlServerDataAccess(ConnectionString, IsolationLevel, (ITransactionLock)(null));
+        }
+        public IDataAccess Create(String ConnectionString, ITransactionLock TransactionLock)
+        {
+            return new SqlServerDataAccess(ConnectionString, IsolationLevel.ReadCommitted, TransactionLock);
+        }
+        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, ITransactionLock TransactionLock)
+        {
+            return new SqlServerDataAccess(ConnectionString, IsolationLevel, TransactionLock);
+        }
+        public IDataAccess Create(String ConnectionString, IsolationLevel IsolationLevel, Func<SqlConnection, SqlTransaction, ITransactionLock> TransactionLockFactory)
+        {
+            return new SqlServerDataAccess(ConnectionString, IsolationLevel, TransactionLockFactory);
+        }
+    }
+
+#Template Main NamespaceName:String Imports:IEnumerable<String> Primitives:IEnumerable<String> ComplexTypes:IEnumerable<String>
+    //==========================================================================
+    //
+    //  Notice:      This file is automatically generated.
+    //               Please don't modify this file.
+    //
+    //==========================================================================
+
+    //Reference:
+
+    using System;
+    using System.Collections.Generic;
+    using System.Data;
+    using System.Data.SqlClient;
+    $$
+        if (EntityNamespaceName != NamespaceName && EntityNamespaceName != "")
+        {
+            ##
+                using ${EntityNamespaceName};
+        }
+    using ${Imports};
+    ${Primitives}
+
+    $$
+        if (NamespaceName == "")
+        {
+            ##
+                ${ComplexTypes}
+        }
+        else
+        {
+            ##
+                namespace [[${NamespaceName}]]
+                {
+                    ${ComplexTypes}
+                }
+        }
+
+$End

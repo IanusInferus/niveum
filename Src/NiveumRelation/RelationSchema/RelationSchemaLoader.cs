@@ -3,7 +3,7 @@
 //  File:        RelationSchemaLoader.cs
 //  Location:    Niveum.Relation <Visual C#>
 //  Description: 关系类型结构加载器
-//  Version:     2026.06.04.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -36,10 +36,10 @@ namespace Niveum.RelationSchema
 
         public RelationSchemaLoaderResult GetResult()
         {
-            var PrimitiveNames = new HashSet<String>(TypeRefs.Concat(Types).Where(t => t.OnPrimitive).Select(t => t.Primitive.Name).Distinct());
-            if (PrimitiveNames.Contains("Byte") && !PrimitiveNames.Contains("Binary"))
+            var PrimitiveNameToPrimitive = TypeRefs.Concat(Types).Where(t => t.OnPrimitive).GroupBy(t => t.Primitive.Name).ToDictionary(g => g.Key, g => g.First());
+            if (PrimitiveNameToPrimitive.ContainsKey("Byte") && !PrimitiveNameToPrimitive.ContainsKey("Binary"))
             {
-                Types.Add(TypeDef.CreatePrimitive(new PrimitiveDef { Name = "Binary", Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }));
+                Types.Add(Mark(PrimitiveNameToPrimitive["Byte"], TypeDef.CreatePrimitive(Mark(PrimitiveNameToPrimitive["Byte"].Primitive, new PrimitiveDef { Name = "Binary", Attributes = new List<KeyValuePair<String, List<String>>> { }, Description = "" }))));
             }
 
             var rslr = new RelationSchemaLoaderResult { Schema = new Schema { Types = Types, TypeRefs = TypeRefs, Imports = Imports }, Positions = Positions };
@@ -49,13 +49,13 @@ namespace Niveum.RelationSchema
             {
                 if (!Types[i].OnEntity) continue;
                 var e = Types[i].Entity;
-                Types[i] = TypeDef.CreateEntity(FillEntity(e, Entities));
+                Types[i] = Mark(Types[i], TypeDef.CreateEntity(FillEntity(e, Entities)));
             }
             for (int i = 0; i < Types.Count; i++)
             {
                 if (!Types[i].OnEntity) continue;
                 var e = Types[i].Entity;
-                Types[i] = TypeDef.CreateEntity(FillEntityNavigations(e, Entities));
+                Types[i] = Mark(Types[i], TypeDef.CreateEntity(FillEntityNavigations(e, Entities)));
             }
             return rslr;
         }
@@ -528,6 +528,18 @@ namespace Niveum.RelationSchema
                 throw new InvalidOperationException(String.Format("键无效: {0}", Parameters));
             }
             return Columns;
+        }
+
+        private T Mark<T>(T sOld, T sNew)
+        {
+            if (sOld == null) { throw new ArgumentNullException(nameof(sOld)); }
+            if (sNew == null) { throw new ArgumentNullException(nameof(sNew)); }
+
+            if (Positions.ContainsKey(sOld) && !Positions.ContainsKey(sNew))
+            {
+                Positions.Add(sNew, Positions[sOld]);
+            }
+            return sNew;
         }
     }
 }
