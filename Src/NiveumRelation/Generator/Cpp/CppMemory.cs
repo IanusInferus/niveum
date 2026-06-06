@@ -8,6 +8,8 @@
 //
 //==========================================================================
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -257,7 +259,7 @@ namespace Niveum.RelationSchema.CppMemory
                 else if (q.Numeral.OnAll)
                 {
                     NumberalTemplate = (IndexName, Fetches, ByIndex, Filters) => SelectLock_All(AllName, OrderBys, e.Name);
-                    WhenEmpty = null;
+                    WhenEmpty = new List<String> { };
                 }
                 else if (q.Numeral.OnRange)
                 {
@@ -283,13 +285,13 @@ namespace Niveum.RelationSchema.CppMemory
 
                 if (q.Numeral.OnAll)
                 {
-                    Content = NumberalTemplate(null, null, null, null);
+                    Content = NumberalTemplate("", Enumerable.Empty<String>(), "", "");
                 }
                 else
                 {
                     var NondirectionalKeys = (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys).Select(kk => kk.Columns.Select(c => c.Name).ToList()).Distinct(new StringArrayComparer()).ToList();
                     var Key = q.By.ToList();
-                    List<String> k = null;
+                    List<String>? k = null;
                     if (NondirectionalKeys.Contains(Key))
                     {
                         k = Key;

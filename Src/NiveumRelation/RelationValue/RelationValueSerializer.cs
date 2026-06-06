@@ -3,10 +3,12 @@
 //  File:        RelationValueSerializer.cs
 //  Location:    Niveum.Relation <Visual C#>
 //  Description: 关系类型结构数据序列化器
-//  Version:     2026.06.04.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;

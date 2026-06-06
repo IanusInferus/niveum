@@ -3,10 +3,12 @@
 //  File:        RelationSchemaDiffLoader.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构差异加载器
-//  Version:     2026.06.04.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -29,8 +31,8 @@ namespace Niveum.RelationSchemaDiff
         private Dictionary<String, Dictionary<String, VariableDef>> EntityFields;
         private List<Semantics.Node> EntityMappings;
         private Dictionary<Object, Syntax.FileTextRange> Positions;
-        private TreeFormatParseSetting tfpo = null;
-        private TreeFormatEvaluateSetting tfeo = null;
+        private TreeFormatParseSetting? tfpo = null;
+        private TreeFormatEvaluateSetting? tfeo = null;
         private XmlSerializer xs = new XmlSerializer();
 
         public RelationSchemaDiffLoader(RelationSchema.Schema SchemaNew)
@@ -38,7 +40,7 @@ namespace Niveum.RelationSchemaDiff
         {
         }
 
-        public RelationSchemaDiffLoader(RelationSchema.Schema SchemaNew, TreeFormatParseSetting OuterParsingSetting, TreeFormatEvaluateSetting OuterEvaluateSetting)
+        public RelationSchemaDiffLoader(RelationSchema.Schema SchemaNew, TreeFormatParseSetting? OuterParsingSetting, TreeFormatEvaluateSetting? OuterEvaluateSetting)
         {
             EntityFields = SchemaNew.GetMap().Where(p => p.Value.OnEntity).ToDictionary(p => p.Key, p => p.Value.Entity.Fields.ToDictionary(f => f.Name));
             EntityMappings = new List<Semantics.Node>();
@@ -178,7 +180,7 @@ namespace Niveum.RelationSchemaDiff
             Func<int, Syntax.TextLine, ISemanticsNodeMaker, List<Semantics.Node>> ParseEntityMappingsAsSemanticsNodes = (IndentLevel, Line, nm) =>
             {
                 var l = new List<Semantics.Node>();
-                List<Semantics.Node> cl = null;
+                List<Semantics.Node>? cl = null;
                 Syntax.TextPosition clStart = default(Syntax.TextPosition);
                 Syntax.TextPosition clEnd = default(Syntax.TextPosition);
                 if (Line.Text.Length < IndentLevel * 4)

@@ -8,6 +8,8 @@
 //
 //==========================================================================
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -68,7 +70,7 @@ namespace Niveum.RelationSchema.CSharpKrustallos
                 }
                 var ByColumns = new HashSet<String>(By, StringComparer.OrdinalIgnoreCase);
                 var ActualOrderBy = q.OrderBy.Where(c => !ByColumns.Contains(c.Name)).ToList();
-                Key SearchKey = null;
+                Key? SearchKey = null;
                 foreach (var k in KeysDict[e.Name])
                 {
                     if (k.Columns.Count < By.Count + ActualOrderBy.Count) { continue; }

@@ -3,18 +3,18 @@
 //  File:        RelationValueTreeSerializer.cs
 //  Location:    Niveum.Relation <Visual C#>
 //  Description: 关系类型结构数据Tree序列化器
-//  Version:     2026.06.04.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Firefly;
-using Firefly.TextEncoding;
-using Firefly.Texting.TreeFormat;
 using Firefly.Texting.TreeFormat.Semantics;
 using Niveum.RelationSchema;
 
@@ -191,7 +191,7 @@ namespace Niveum.RelationValue
             {
                 throw new InvalidOperationException();
             }
-            Dictionary<String, Int64> EnumParser = null;
+            Dictionary<String, Int64>? EnumParser = null;
             if (EnumUnderlyingTypes.ContainsKey(TypeName))
             {
                 EnumParser = EnumParsers[TypeName];
@@ -666,7 +666,7 @@ namespace Niveum.RelationValue
             {
                 throw new InvalidOperationException();
             }
-            Dictionary<Int64, String> EnumWriter = null;
+            Dictionary<Int64, String>? EnumWriter = null;
             if (EnumUnderlyingTypes.ContainsKey(TypeName))
             {
                 EnumWriter = EnumWriters[TypeName];

@@ -3,10 +3,12 @@
 //  File:        RelationSchemaDiffVerifier.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构差异验证器
-//  Version:     2026.06.04.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;

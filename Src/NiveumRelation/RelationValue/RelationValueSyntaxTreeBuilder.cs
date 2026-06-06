@@ -3,18 +3,17 @@
 //  File:        RelationValueSyntaxTreeBuilder.cs
 //  Location:    Niveum.Relation <Visual C#>
 //  Description: 关系类型结构数据语法Tree构建器
-//  Version:     2026.06.04.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Firefly;
-using Firefly.TextEncoding;
-using Firefly.Texting.TreeFormat;
 using Firefly.Texting.TreeFormat.Syntax;
 using Semantics = Firefly.Texting.TreeFormat.Semantics;
 using Niveum.RelationSchema;

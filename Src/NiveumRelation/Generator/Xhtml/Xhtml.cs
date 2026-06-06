@@ -8,18 +8,19 @@
 //
 //==========================================================================
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Firefly;
 
 namespace Niveum.RelationSchema.Xhtml
 {
     public sealed class FileResult
     {
-        public String Path { get; init; }
-        public String Content { get; init; }
+        public required String Path { get; init; }
+        public required String Content { get; init; }
     }
 
     public static class CodeGenerator
@@ -87,10 +88,10 @@ namespace Niveum.RelationSchema.Xhtml
 
         public class TypeInfo
         {
-            public TypeDef Def;
-            public String FriendlyPath;
-            public String DocFilePath;
-            public String DocPath;
+            public required TypeDef Def;
+            public required String FriendlyPath;
+            public required String DocFilePath;
+            public required String DocPath;
         }
         private Dictionary<String, TypeInfo> TypeInfoDict;
 

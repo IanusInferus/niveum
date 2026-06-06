@@ -3,10 +3,12 @@
 //  File:        RelationSchemaDiffTranslator.cs
 //  Location:    Niveum.Relation <Visual C#>
 //  Description: 关系类型结构差异转换器
-//  Version:     2026.06.04.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -87,8 +89,9 @@ namespace Niveum.RelationSchemaDiff
                 }
             }
 
-            var OldEntityName = NewEntityNameToOldEntityName[NewEntityName].ValueOrDefault(null);
-            if (OldEntityName == null) { throw new InvalidOperationException(); }
+            var oOldEntityName = NewEntityNameToOldEntityName[NewEntityName];
+            if (oOldEntityName.OnNone) { throw new InvalidOperationException(); }
+            var OldEntityName = oOldEntityName.Value;
 
             var FieldMappings = NewEntityNameToFieldMappings[NewEntityName];
             var OldColumns = OldTypes[OldEntityName].Entity.Fields.Where(f => f.Attribute.OnColumn).ToList();

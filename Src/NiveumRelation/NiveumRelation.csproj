@@ -3,7 +3,7 @@
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <LangVersion>11.0</LangVersion>
     <ImplicitUsings>disable</ImplicitUsings>
-    <Nullable>disable</Nullable>
+    <Nullable>enable</Nullable>
     <RootNamespace>Niveum.RelationSchema</RootNamespace>
     <PackageId>Niveum.Relation</PackageId>
     <Product>Niveum.Relation</Product>

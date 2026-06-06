@@ -8,6 +8,8 @@
 //
 //==========================================================================
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,8 +25,8 @@ namespace Niveum.RelationSchema
 {
     public class RelationSchemaLoaderResult
     {
-        public Schema Schema;
-        public Dictionary<Object, FileTextRange> Positions;
+        public required Schema Schema;
+        public required Dictionary<Object, FileTextRange> Positions;
     }
 
     public sealed class RelationSchemaLoader
@@ -188,14 +190,14 @@ namespace Niveum.RelationSchema
             {
                 throw new InvalidOperationException();
             }
-            FieldAttribute fa = null;
+            FieldAttribute? fa = null;
 
             var IsNullable = false;
 
             if (IsColumn)
             {
                 var IsIdentity = false;
-                String TypeParameters = null;
+                String? TypeParameters = null;
                 foreach (var a in f.Attributes)
                 {
                     if (a.Key == "I")
@@ -277,7 +279,7 @@ namespace Niveum.RelationSchema
                 }
                 if (fa == null)
                 {
-                    fa = FieldAttribute.CreateNavigation(null);
+                    fa = FieldAttribute.CreateNavigation(new NavigationAttribute { IsReverse = false, IsUnique = false, ThisKey = new List<String> { }, OtherKey = new List<String> { } });
                 }
             }
 
@@ -317,7 +319,7 @@ namespace Niveum.RelationSchema
             //如果不存在CN，则默认使用<EntityName>
             var CollectionName = e.Name;
 
-            Key PrimaryKey = null;
+            Key? PrimaryKey = null;
             var UniqueKeys = new List<Key>();
             var NonUniqueKeys = new List<Key>();
 
@@ -490,8 +492,8 @@ namespace Niveum.RelationSchema
 
         private class KeyMap
         {
-            public List<String> ThisKey;
-            public List<String> OtherKey;
+            public required List<String> ThisKey;
+            public required List<String> OtherKey;
         }
         private KeyMap GetKeyMap(String Parameters)
         {

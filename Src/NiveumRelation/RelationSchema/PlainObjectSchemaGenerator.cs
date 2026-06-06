@@ -3,15 +3,16 @@
 //  File:        PlainObjectSchemaGenerator.cs
 //  Location:    Niveum.Relation <Visual C#>
 //  Description: 简单对象类型结构生成器
-//  Version:     2026.06.04.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Niveum.ObjectSchema;
 using OS = Niveum.ObjectSchema;
 using RS = Niveum.RelationSchema;
@@ -28,10 +29,10 @@ namespace Niveum.RelationSchema
 
         private class Generator
         {
-            public RS.Schema Schema;
-            public List<String> NamespaceParts;
-            public List<OS.TypeDef> AdditionalTypeRefs;
-            private HashSet<String> PrimitiveNames;
+            public required RS.Schema Schema;
+            public required List<String> NamespaceParts;
+            public required List<OS.TypeDef> AdditionalTypeRefs;
+            private HashSet<String> PrimitiveNames = new HashSet<String>();
                       
             public OS.Schema Generate(Boolean ForcePrimitive)
             {

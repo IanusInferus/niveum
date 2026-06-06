@@ -8,6 +8,8 @@
 //
 //==========================================================================
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -255,7 +257,7 @@ namespace Niveum.RelationSchema.CSharpLinqToEntities
             ForeignKey fk;
             if (a.IsReverse)
             {
-                EntityDef ThisTable = null;
+                EntityDef ThisTable;
                 if (f.Type.OnTypeRef)
                 {
                     ThisTable = Records[f.Type.TypeRef.Value];

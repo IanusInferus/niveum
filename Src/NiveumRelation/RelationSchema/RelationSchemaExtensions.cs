@@ -3,10 +3,12 @@
 //  File:        RelationSchemaExtensions.cs
 //  Location:    Niveum.Relation <Visual C#>
 //  Description: 关系类型结构扩展
-//  Version:     2026.06.04.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -50,10 +52,10 @@ namespace Niveum.RelationSchema
 
     public class ForeignKey
     {
-        public String ThisTableName;
-        public List<String> ThisKeyColumns;
-        public String OtherTableName;
-        public List<String> OtherKeyColumns;
+        public required String ThisTableName;
+        public required List<String> ThisKeyColumns;
+        public required String OtherTableName;
+        public required List<String> OtherKeyColumns;
 
         public override bool Equals(object obj)
         {
@@ -171,7 +173,7 @@ namespace Niveum.RelationSchema
 
         private class Marker
         {
-            public Dictionary<String, TypeDef> Types;
+            public required Dictionary<String, TypeDef> Types;
             public HashSet<TypeDef> Marked = new HashSet<TypeDef>();
             public void Mark(TypeDef t)
             {
@@ -336,7 +338,7 @@ namespace Niveum.RelationSchema
 
         private class ByIndex
         {
-            public List<String> Columns;
+            public required List<String> Columns;
 
             public override bool Equals(object obj)
             {
@@ -580,7 +582,7 @@ namespace Niveum.RelationSchema
                         {
                             var ByColumns = new HashSet<String>(q.By, StringComparer.OrdinalIgnoreCase);
                             var ActualOrderBy = q.OrderBy.Where(c => !ByColumns.Contains(c.Name)).ToList();
-                            Key SearchKey = null;
+                            Key? SearchKey = null;
                             var IsByIndexExist = false;
                             foreach (var k in (new Key[] { e.PrimaryKey }).Concat(e.UniqueKeys).Concat(e.NonUniqueKeys))
                             {

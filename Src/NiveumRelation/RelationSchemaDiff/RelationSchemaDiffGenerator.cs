@@ -3,10 +3,12 @@
 //  File:        RelationSchemaDiffGenerator.cs
 //  Location:    Yuki.Core <Visual C#>
 //  Description: 关系类型结构差异生成器
-//  Version:     2026.06.04.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -18,9 +20,9 @@ namespace Niveum.RelationSchemaDiff
 {
     public sealed class EntityMappingDiff
     {
-        public List<EntityMapping> Mappings;
-        public HashSet<String> DeletedEntities;
-        public Dictionary<String, HashSet<String>> DeletedFields;
+        public required List<EntityMapping> Mappings;
+        public required HashSet<String> DeletedEntities;
+        public required Dictionary<String, HashSet<String>> DeletedFields;
     }
 
     public sealed class RelationSchemaDiffGenerator

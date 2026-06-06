@@ -3,10 +3,12 @@
 //  File:        FileParser.cs
 //  Location:    Niveum.Relation <Visual C#>
 //  Description: 文件解析器
-//  Version:     2026.06.04.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using Firefly;
 using Firefly.Mapping.TreeText;
@@ -26,9 +28,9 @@ namespace Niveum.RelationSchema
 
     public class FileParserResult
     {
-        public Schema Schema;
-        public Text Text;
-        public Dictionary<Object, TextRange> Positions;
+        public required Schema Schema;
+        public required Text Text;
+        public required Dictionary<Object, TextRange> Positions;
     }
 
     public static class FileParser
@@ -116,8 +118,8 @@ namespace Niveum.RelationSchema
 
                                             foreach (var Line in ContentLines)
                                             {
-                                                String cName = null;
-                                                TypeSpec cType = null;
+                                                String? cName = null;
+                                                TypeSpec? cType = null;
                                                 var cAttributes = new List<KeyValuePair<String, List<String>>>();
                                                 var cDescription = "";
 
@@ -147,7 +149,7 @@ namespace Niveum.RelationSchema
                                                 if (cName.StartsWith("'"))
                                                 {
                                                     cName = new String(cName.Skip(1).ToArray());
-                                                    var gp = new VariableDef { Name = cName, Type = cType, Attributes = cAttributes, Description = cDescription, Attribute = null };
+                                                    var gp = new VariableDef { Name = cName, Type = cType, Attributes = cAttributes, Description = cDescription, Attribute = FieldAttribute.CreateColumn(new ColumnAttribute { IsIdentity = false, TypeParameters = "" }) };
                                                     Mark(gp, Line);
                                                     GenericParameters.Add(gp);
                                                 }
@@ -170,8 +172,8 @@ namespace Niveum.RelationSchema
 
                                             foreach (var Line in ContentLines)
                                             {
-                                                String cName = null;
-                                                TypeSpec cType = null;
+                                                String? cName = null;
+                                                TypeSpec? cType = null;
                                                 var cAttributes = new List<KeyValuePair<String, List<String>>>();
                                                 var cDescription = "";
 
@@ -198,12 +200,12 @@ namespace Niveum.RelationSchema
                                                     throw new InvalidEvaluationException("InvalidLineNodeCount", nm.GetFileRange(Line), Line);
                                                 }
 
-                                                var p = new VariableDef { Name = cName, Type = cType, Attributes = cAttributes, Description = cDescription, Attribute = null };
+                                                var p = new VariableDef { Name = cName, Type = cType, Attributes = cAttributes, Description = cDescription, Attribute = FieldAttribute.CreateColumn(new ColumnAttribute { IsIdentity = false, TypeParameters = "" }) };
                                                 Mark(p, Line);
                                                 Fields.Add(p);
                                             }
 
-                                            var ed = new EntityDef { Name = Name, Fields = Fields, Attributes = Attributes, Description = Description, CollectionName = null, PrimaryKey = null, UniqueKeys = null, NonUniqueKeys = null };
+                                            var ed = new EntityDef { Name = Name, Fields = Fields, Attributes = Attributes, Description = Description, CollectionName = "", PrimaryKey = new Key { Columns = new List<KeyColumn> { }, IsClustered = false }, UniqueKeys = new List<Key> { }, NonUniqueKeys = new List<Key> { } };
                                             Mark(ed, f);
                                             var t = TypeDef.CreateEntity(ed);
                                             Mark(t, f);
@@ -217,7 +219,7 @@ namespace Niveum.RelationSchema
                                             Int64 NextValue = 0;
                                             foreach (var Line in ContentLines)
                                             {
-                                                String cName = null;
+                                                String? cName = null;
                                                 Int64 cValue = NextValue;
                                                 var cAttributes = new List<KeyValuePair<String, List<String>>>();
                                                 var cDescription = "";
@@ -298,7 +300,7 @@ namespace Niveum.RelationSchema
                                 Func<int, TextLine, List<QueryDef>> ParseQueryDef = (IndentLevel, Line) =>
                                 {
                                     var l = new List<TFSemantics.Node>();
-                                    List<TFSemantics.Node> cl = null;
+                                    List<TFSemantics.Node>? cl = null;
                                     TextPosition clStart = default(TextPosition);
                                     TextPosition clEnd = default(TextPosition);
                                     if (Line.Text.Length < IndentLevel * 4)
