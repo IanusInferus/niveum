@@ -1,6 +1,8 @@
 ﻿2026.06.06
 Niveum.Relation, Yuki.Relation:
 迁移CSharpMySql、CSharpSqlServer、Xhtml。
+Niveum.Relation:
+整理using。
 
 2026.06.05
 Niveum.Relation, Yuki.Relation:

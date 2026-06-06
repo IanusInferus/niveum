@@ -3,7 +3,7 @@
 //  File:        CppMemory.cs
 //  Location:    Niveum.Relation <Visual C#>
 //  Description: 关系类型结构C++ Memory代码生成器
-//  Version:     2026.06.05.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -11,10 +11,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Firefly;
-using Firefly.Mapping.TreeText;
-using Firefly.TextEncoding;
-using Niveum.RelationSchema;
 using OS = Niveum.ObjectSchema;
 
 namespace Niveum.RelationSchema.CppMemory

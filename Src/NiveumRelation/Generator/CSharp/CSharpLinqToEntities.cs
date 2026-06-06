@@ -3,7 +3,7 @@
 //  File:        CSharpLinqToEntities.cs
 //  Location:    Niveum.Relation <Visual C#>
 //  Description: 关系类型结构C# Linq to Entities数据库代码生成器
-//  Version:     2026.06.05.
+//  Version:     2026.06.06.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -13,7 +13,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Firefly;
 using Firefly.TextEncoding;
-using Niveum.RelationSchema;
 using OS = Niveum.ObjectSchema;
 
 namespace Niveum.RelationSchema.CSharpLinqToEntities
