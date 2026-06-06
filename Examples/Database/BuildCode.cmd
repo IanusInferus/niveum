@@ -14,6 +14,13 @@ RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2csmysql:MailCSharp\Src\MySql\MySqlDataAccess.cs,Database.Database,Database.MySql
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2cskrs:MailCSharp\Src\Krustallos\KrustallosDataAccess.cs,Database.Database,Database.Krustallos
 
+:: SQL
+@if not exist SQL @md SQL
+RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2sqlite:SQL\Mail.sqlite.sql,Database
+RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2tsql:SQL\Mail.tsql.sql,Database
+RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2pgsql:SQL\Mail.pgsql.sql,Database
+RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /t2mysql:SQL\Mail.mysql.sql,Database
+
 :: Test
 
 :: C#
@@ -28,6 +35,13 @@ RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2
 @if not exist TestCPP\Src @md TestCPP\Src
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2cppdp:TestCPP\Src\Database.h,Database.Database
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /import:"""Database.h""" /t2cppm:TestCPP\Src\Memory\MemoryDataAccess.h,Database.Database,Database.Memory
+
+:: SQL
+@if not exist SQL @md SQL
+RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2sqlite:SQL\Test.sqlite.sql,Database
+RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2tsql:SQL\Test.tsql.sql,Database
+RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2pgsql:SQL\Test.pgsql.sql,Database
+RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2mysql:SQL\Test.mysql.sql,Database
 
 :: Xhtml
 @if not exist XHTML @md XHTML

@@ -19,7 +19,9 @@ using Firefly.Texting;
 using Firefly.Texting.TreeFormat;
 using Niveum.RelationSchema;
 using RS = Niveum.RelationSchema;
+using Yuki.RelationSchema.Sqlite;
 using Yuki.RelationSchema.TSql;
+using Yuki.RelationSchema.PostgreSql;
 using Yuki.RelationSchema.MySql;
 using Niveum.RelationSchema.CSharpLinqToEntities;
 using Niveum.RelationSchema.CSharpPlain;
@@ -180,12 +182,38 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
+                else if (optNameLower == "t2sqlite")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 2)
+                    {
+                        RelationSchemaToSqliteCode(args[0], args[1]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else if (optNameLower == "t2tsql")
                 {
                     var args = opt.Arguments;
                     if (args.Length == 2)
                     {
                         RelationSchemaToTSqlCode(args[0], args[1]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
+                else if (optNameLower == "t2pgsql")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 2)
+                    {
+                        RelationSchemaToPostgreSqlCode(args[0], args[1]);
                     }
                     else
                     {
@@ -368,8 +396,12 @@ namespace Yuki.RelationSchemaManipulator
             Console.WriteLine(@"/loadtype:<RelationSchemaDir|RelationSchemaFile>");
             Console.WriteLine(@"增加命名空间引用");
             Console.WriteLine(@"/import:<NamespaceName>");
+            Console.WriteLine(@"生成Sqlite数据库CREATE脚本");
+            Console.WriteLine(@"/t2sqlite:<SqlCodePath>,<DatabaseName>");
             Console.WriteLine(@"生成T-SQL(SQL Server)数据库DROP和CREATE脚本");
             Console.WriteLine(@"/t2tsql:<SqlCodePath>,<DatabaseName>");
+            Console.WriteLine(@"生成PostgreSQL数据库CREATE脚本");
+            Console.WriteLine(@"/t2pgsql:<SqlCodePath>,<DatabaseName>");
             Console.WriteLine(@"生成MySQL数据库DROP和CREATE脚本");
             Console.WriteLine(@"/t2mysql:<SqlCodePath>,<DatabaseName>");
             Console.WriteLine(@"生成C#数据库Linq to Entities类型");
@@ -424,10 +456,44 @@ namespace Yuki.RelationSchemaManipulator
             rslr = null;
         }
 
+        public static void RelationSchemaToSqliteCode(String SqlCodePath, String DatabaseName)
+        {
+            var RelationSchema = GetRelationSchema();
+            var Compiled = RelationSchema.CompileToSqlite(DatabaseName, true);
+            if (File.Exists(SqlCodePath))
+            {
+                var Original = Txt.ReadFile(SqlCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var SqlCodeDir = FileNameHandling.GetFileDirectory(SqlCodePath);
+            if (SqlCodeDir != "" && !Directory.Exists(SqlCodeDir)) { Directory.CreateDirectory(SqlCodeDir); }
+            Txt.WriteFile(SqlCodePath, Compiled);
+        }
+
         public static void RelationSchemaToTSqlCode(String SqlCodePath, String DatabaseName)
         {
             var RelationSchema = GetRelationSchema();
             var Compiled = RelationSchema.CompileToTSql(DatabaseName, true);
+            if (File.Exists(SqlCodePath))
+            {
+                var Original = Txt.ReadFile(SqlCodePath);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var SqlCodeDir = FileNameHandling.GetFileDirectory(SqlCodePath);
+            if (SqlCodeDir != "" && !Directory.Exists(SqlCodeDir)) { Directory.CreateDirectory(SqlCodeDir); }
+            Txt.WriteFile(SqlCodePath, Compiled);
+        }
+
+        public static void RelationSchemaToPostgreSqlCode(String SqlCodePath, String DatabaseName)
+        {
+            var RelationSchema = GetRelationSchema();
+            var Compiled = RelationSchema.CompileToPostgreSql(DatabaseName, true);
             if (File.Exists(SqlCodePath))
             {
                 var Original = Txt.ReadFile(SqlCodePath);
