@@ -3,6 +3,8 @@ Niveum.Object, Niveum.Relation, Niveum.SchemaManipulator, Niveum.RelationSchemaM
 C#代码生成均支持/nullable。
 Nivea, Niveum.Object, *:
 修改Optional和TaggedUnion。
+*:
+对批处理文件使用更好的explorer检测机制。
 
 2026.06.06
 Niveum.Relation, Yuki.Relation:
