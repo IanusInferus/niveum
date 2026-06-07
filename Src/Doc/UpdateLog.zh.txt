@@ -5,6 +5,7 @@ Nivea, Niveum.Object, *:
 修改Optional和TaggedUnion。
 *:
 对批处理文件使用更好的explorer检测机制。
+更新对Visual Studio 2026的支持。
 
 2026.06.06
 Niveum.Relation, Yuki.Relation:
