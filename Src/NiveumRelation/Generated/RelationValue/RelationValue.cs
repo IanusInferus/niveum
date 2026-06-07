@@ -68,9 +68,9 @@ namespace Niveum.RelationValue
         private Optional<PrimitiveVal>? _v_Optional;
 
         /// <summary>基元数据</summary>
-        public static ColumnVal CreatePrimitive(PrimitiveVal Value) { return new ColumnVal { _Tag = ColumnValTag.Primitive, _v_Primitive = Value }; }
+        public static ColumnVal CreatePrimitive(PrimitiveVal Value) { return new ColumnVal { _Tag = ColumnValTag.Primitive, Primitive = Value }; }
         /// <summary>可选数据</summary>
-        public static ColumnVal CreateOptional(Optional<PrimitiveVal> Value) { return new ColumnVal { _Tag = ColumnValTag.Optional, _v_Optional = Value }; }
+        public static ColumnVal CreateOptional(Optional<PrimitiveVal> Value) { return new ColumnVal { _Tag = ColumnValTag.Optional, Optional = Value }; }
 
         /// <summary>基元数据</summary>
         public Boolean OnPrimitive { get { return _Tag == ColumnValTag.Primitive; } }
@@ -91,6 +91,10 @@ namespace Niveum.RelationValue
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Primitive = value;
+            }
         }
         /// <summary>可选数据</summary>
         public Optional<PrimitiveVal> Optional
@@ -105,6 +109,10 @@ namespace Niveum.RelationValue
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Optional = value;
             }
         }
     }
@@ -143,17 +151,17 @@ namespace Niveum.RelationValue
         private Int64? _v_Int64Value;
 
         /// <summary>布尔</summary>
-        public static PrimitiveVal CreateBooleanValue(Boolean Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.BooleanValue, _v_BooleanValue = Value }; }
+        public static PrimitiveVal CreateBooleanValue(Boolean Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.BooleanValue, BooleanValue = Value }; }
         /// <summary>字符串</summary>
-        public static PrimitiveVal CreateStringValue(String Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.StringValue, _v_StringValue = Value }; }
+        public static PrimitiveVal CreateStringValue(String Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.StringValue, StringValue = Value }; }
         /// <summary>整数</summary>
-        public static PrimitiveVal CreateIntValue(Int Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.IntValue, _v_IntValue = Value }; }
+        public static PrimitiveVal CreateIntValue(Int Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.IntValue, IntValue = Value }; }
         /// <summary>实数</summary>
-        public static PrimitiveVal CreateRealValue(Real Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.RealValue, _v_RealValue = Value }; }
+        public static PrimitiveVal CreateRealValue(Real Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.RealValue, RealValue = Value }; }
         /// <summary>二进制</summary>
-        public static PrimitiveVal CreateBinaryValue(List<Byte> Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.BinaryValue, _v_BinaryValue = Value }; }
+        public static PrimitiveVal CreateBinaryValue(List<Byte> Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.BinaryValue, BinaryValue = Value }; }
         /// <summary>64位有符号整数</summary>
-        public static PrimitiveVal CreateInt64Value(Int64 Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.Int64Value, _v_Int64Value = Value }; }
+        public static PrimitiveVal CreateInt64Value(Int64 Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.Int64Value, Int64Value = Value }; }
 
         /// <summary>布尔</summary>
         public Boolean OnBooleanValue { get { return _Tag == PrimitiveValTag.BooleanValue; } }
@@ -182,6 +190,10 @@ namespace Niveum.RelationValue
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_BooleanValue = value;
+            }
         }
         /// <summary>字符串</summary>
         public String StringValue
@@ -196,6 +208,10 @@ namespace Niveum.RelationValue
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_StringValue = value;
             }
         }
         /// <summary>整数</summary>
@@ -212,6 +228,10 @@ namespace Niveum.RelationValue
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_IntValue = value;
+            }
         }
         /// <summary>实数</summary>
         public Real RealValue
@@ -226,6 +246,10 @@ namespace Niveum.RelationValue
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_RealValue = value;
             }
         }
         /// <summary>二进制</summary>
@@ -242,6 +266,10 @@ namespace Niveum.RelationValue
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_BinaryValue = value;
+            }
         }
         /// <summary>64位有符号整数</summary>
         public Int64 Int64Value
@@ -256,6 +284,10 @@ namespace Niveum.RelationValue
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Int64Value = value;
             }
         }
     }

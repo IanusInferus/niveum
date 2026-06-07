@@ -81,17 +81,17 @@ namespace Nivea.Template.Semantics
         private TemplateDef? _v_Template;
 
         /// <summary>命名空间</summary>
-        public static SectionDef CreateNamespace(List<String> Value) { return new SectionDef { _Tag = SectionDefTag.Namespace, _v_Namespace = Value }; }
+        public static SectionDef CreateNamespace(List<String> Value) { return new SectionDef { _Tag = SectionDefTag.Namespace, Namespace = Value }; }
         /// <summary>程序集引用</summary>
-        public static SectionDef CreateAssembly(List<String> Value) { return new SectionDef { _Tag = SectionDefTag.Assembly, _v_Assembly = Value }; }
+        public static SectionDef CreateAssembly(List<String> Value) { return new SectionDef { _Tag = SectionDefTag.Assembly, Assembly = Value }; }
         /// <summary>命名空间和类空间导入</summary>
-        public static SectionDef CreateImport(List<List<String>> Value) { return new SectionDef { _Tag = SectionDefTag.Import, _v_Import = Value }; }
+        public static SectionDef CreateImport(List<List<String>> Value) { return new SectionDef { _Tag = SectionDefTag.Import, Import = Value }; }
         /// <summary>类型定义</summary>
-        public static SectionDef CreateType(TypeDef Value) { return new SectionDef { _Tag = SectionDefTag.Type, _v_Type = Value }; }
+        public static SectionDef CreateType(TypeDef Value) { return new SectionDef { _Tag = SectionDefTag.Type, Type = Value }; }
         /// <summary>常量值</summary>
-        public static SectionDef CreateConstant(ConstantValue Value) { return new SectionDef { _Tag = SectionDefTag.Constant, _v_Constant = Value }; }
+        public static SectionDef CreateConstant(ConstantValue Value) { return new SectionDef { _Tag = SectionDefTag.Constant, Constant = Value }; }
         /// <summary>模板定义</summary>
-        public static SectionDef CreateTemplate(TemplateDef Value) { return new SectionDef { _Tag = SectionDefTag.Template, _v_Template = Value }; }
+        public static SectionDef CreateTemplate(TemplateDef Value) { return new SectionDef { _Tag = SectionDefTag.Template, Template = Value }; }
 
         /// <summary>命名空间</summary>
         public Boolean OnNamespace { get { return _Tag == SectionDefTag.Namespace; } }
@@ -120,6 +120,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Namespace = value;
+            }
         }
         /// <summary>程序集引用</summary>
         public List<String> Assembly
@@ -134,6 +138,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Assembly = value;
             }
         }
         /// <summary>命名空间和类空间导入</summary>
@@ -150,6 +158,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Import = value;
+            }
         }
         /// <summary>类型定义</summary>
         public TypeDef Type
@@ -164,6 +176,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Type = value;
             }
         }
         /// <summary>常量值</summary>
@@ -180,6 +196,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Constant = value;
+            }
         }
         /// <summary>模板定义</summary>
         public TemplateDef Template
@@ -194,6 +214,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Template = value;
             }
         }
     }

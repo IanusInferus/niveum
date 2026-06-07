@@ -61,11 +61,11 @@ namespace Niveum.RelationSchemaDiff
         private FieldMapping? _v_Field;
 
         /// <summary>创建实体</summary>
-        public static EntityMappingMethod CreateNew() { return new EntityMappingMethod { _Tag = EntityMappingMethodTag.New, _v_New = default(Unit) }; }
+        public static EntityMappingMethod CreateNew() { return new EntityMappingMethod { _Tag = EntityMappingMethodTag.New, New = default(Unit) }; }
         /// <summary>复制实体，源实体名</summary>
-        public static EntityMappingMethod CreateCopy(String Value) { return new EntityMappingMethod { _Tag = EntityMappingMethodTag.Copy, _v_Copy = Value }; }
+        public static EntityMappingMethod CreateCopy(String Value) { return new EntityMappingMethod { _Tag = EntityMappingMethodTag.Copy, Copy = Value }; }
         /// <summary>字段映射</summary>
-        public static EntityMappingMethod CreateField(FieldMapping Value) { return new EntityMappingMethod { _Tag = EntityMappingMethodTag.Field, _v_Field = Value }; }
+        public static EntityMappingMethod CreateField(FieldMapping Value) { return new EntityMappingMethod { _Tag = EntityMappingMethodTag.Field, Field = Value }; }
 
         /// <summary>创建实体</summary>
         public Boolean OnNew { get { return _Tag == EntityMappingMethodTag.New; } }
@@ -88,6 +88,10 @@ namespace Niveum.RelationSchemaDiff
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_New = value;
+            }
         }
         /// <summary>复制实体，源实体名</summary>
         public String Copy
@@ -103,6 +107,10 @@ namespace Niveum.RelationSchemaDiff
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Copy = value;
+            }
         }
         /// <summary>字段映射</summary>
         public FieldMapping Field
@@ -117,6 +125,10 @@ namespace Niveum.RelationSchemaDiff
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Field = value;
             }
         }
     }
@@ -148,9 +160,9 @@ namespace Niveum.RelationSchemaDiff
         private String? _v_Copy;
 
         /// <summary>创建字段</summary>
-        public static FieldMappingMethod CreateNew(Optional<PrimitiveVal> Value) { return new FieldMappingMethod { _Tag = FieldMappingMethodTag.New, _v_New = Value }; }
+        public static FieldMappingMethod CreateNew(Optional<PrimitiveVal> Value) { return new FieldMappingMethod { _Tag = FieldMappingMethodTag.New, New = Value }; }
         /// <summary>复制字段，源字段名</summary>
-        public static FieldMappingMethod CreateCopy(String Value) { return new FieldMappingMethod { _Tag = FieldMappingMethodTag.Copy, _v_Copy = Value }; }
+        public static FieldMappingMethod CreateCopy(String Value) { return new FieldMappingMethod { _Tag = FieldMappingMethodTag.Copy, Copy = Value }; }
 
         /// <summary>创建字段</summary>
         public Boolean OnNew { get { return _Tag == FieldMappingMethodTag.New; } }
@@ -171,6 +183,10 @@ namespace Niveum.RelationSchemaDiff
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_New = value;
+            }
         }
         /// <summary>复制字段，源字段名</summary>
         public String Copy
@@ -185,6 +201,10 @@ namespace Niveum.RelationSchemaDiff
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Copy = value;
             }
         }
     }

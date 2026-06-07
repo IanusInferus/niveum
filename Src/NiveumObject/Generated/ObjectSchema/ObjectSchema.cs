@@ -71,21 +71,21 @@ namespace Niveum.ObjectSchema
         private QueryDef? _v_Query;
 
         /// <summary>基元</summary>
-        public static TypeDef CreatePrimitive(PrimitiveDef Value) { return new TypeDef { _Tag = TypeDefTag.Primitive, _v_Primitive = Value }; }
+        public static TypeDef CreatePrimitive(PrimitiveDef Value) { return new TypeDef { _Tag = TypeDefTag.Primitive, Primitive = Value }; }
         /// <summary>别名</summary>
-        public static TypeDef CreateAlias(AliasDef Value) { return new TypeDef { _Tag = TypeDefTag.Alias, _v_Alias = Value }; }
+        public static TypeDef CreateAlias(AliasDef Value) { return new TypeDef { _Tag = TypeDefTag.Alias, Alias = Value }; }
         /// <summary>记录</summary>
-        public static TypeDef CreateRecord(RecordDef Value) { return new TypeDef { _Tag = TypeDefTag.Record, _v_Record = Value }; }
+        public static TypeDef CreateRecord(RecordDef Value) { return new TypeDef { _Tag = TypeDefTag.Record, Record = Value }; }
         /// <summary>标签联合</summary>
-        public static TypeDef CreateTaggedUnion(TaggedUnionDef Value) { return new TypeDef { _Tag = TypeDefTag.TaggedUnion, _v_TaggedUnion = Value }; }
+        public static TypeDef CreateTaggedUnion(TaggedUnionDef Value) { return new TypeDef { _Tag = TypeDefTag.TaggedUnion, TaggedUnion = Value }; }
         /// <summary>枚举</summary>
-        public static TypeDef CreateEnum(EnumDef Value) { return new TypeDef { _Tag = TypeDefTag.Enum, _v_Enum = Value }; }
+        public static TypeDef CreateEnum(EnumDef Value) { return new TypeDef { _Tag = TypeDefTag.Enum, Enum = Value }; }
         /// <summary>客户端命令</summary>
-        public static TypeDef CreateClientCommand(ClientCommandDef Value) { return new TypeDef { _Tag = TypeDefTag.ClientCommand, _v_ClientCommand = Value }; }
+        public static TypeDef CreateClientCommand(ClientCommandDef Value) { return new TypeDef { _Tag = TypeDefTag.ClientCommand, ClientCommand = Value }; }
         /// <summary>服务端命令</summary>
-        public static TypeDef CreateServerCommand(ServerCommandDef Value) { return new TypeDef { _Tag = TypeDefTag.ServerCommand, _v_ServerCommand = Value }; }
+        public static TypeDef CreateServerCommand(ServerCommandDef Value) { return new TypeDef { _Tag = TypeDefTag.ServerCommand, ServerCommand = Value }; }
         /// <summary>查询</summary>
-        public static TypeDef CreateQuery(QueryDef Value) { return new TypeDef { _Tag = TypeDefTag.Query, _v_Query = Value }; }
+        public static TypeDef CreateQuery(QueryDef Value) { return new TypeDef { _Tag = TypeDefTag.Query, Query = Value }; }
 
         /// <summary>基元</summary>
         public Boolean OnPrimitive { get { return _Tag == TypeDefTag.Primitive; } }
@@ -118,6 +118,10 @@ namespace Niveum.ObjectSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Primitive = value;
+            }
         }
         /// <summary>别名</summary>
         public AliasDef Alias
@@ -132,6 +136,10 @@ namespace Niveum.ObjectSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Alias = value;
             }
         }
         /// <summary>记录</summary>
@@ -148,6 +156,10 @@ namespace Niveum.ObjectSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Record = value;
+            }
         }
         /// <summary>标签联合</summary>
         public TaggedUnionDef TaggedUnion
@@ -162,6 +174,10 @@ namespace Niveum.ObjectSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_TaggedUnion = value;
             }
         }
         /// <summary>枚举</summary>
@@ -178,6 +194,10 @@ namespace Niveum.ObjectSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Enum = value;
+            }
         }
         /// <summary>客户端命令</summary>
         public ClientCommandDef ClientCommand
@@ -192,6 +212,10 @@ namespace Niveum.ObjectSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_ClientCommand = value;
             }
         }
         /// <summary>服务端命令</summary>
@@ -208,6 +232,10 @@ namespace Niveum.ObjectSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_ServerCommand = value;
+            }
         }
         /// <summary>查询</summary>
         public QueryDef Query
@@ -222,6 +250,10 @@ namespace Niveum.ObjectSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Query = value;
             }
         }
     }
@@ -261,13 +293,13 @@ namespace Niveum.ObjectSchema
         private GenericTypeSpec? _v_GenericTypeSpec;
 
         /// <summary>类型引用</summary>
-        public static TypeSpec CreateTypeRef(TypeRef Value) { return new TypeSpec { _Tag = TypeSpecTag.TypeRef, _v_TypeRef = Value }; }
+        public static TypeSpec CreateTypeRef(TypeRef Value) { return new TypeSpec { _Tag = TypeSpecTag.TypeRef, TypeRef = Value }; }
         /// <summary>泛型参数引用</summary>
-        public static TypeSpec CreateGenericParameterRef(String Value) { return new TypeSpec { _Tag = TypeSpecTag.GenericParameterRef, _v_GenericParameterRef = Value }; }
+        public static TypeSpec CreateGenericParameterRef(String Value) { return new TypeSpec { _Tag = TypeSpecTag.GenericParameterRef, GenericParameterRef = Value }; }
         /// <summary>元组规格</summary>
-        public static TypeSpec CreateTuple(List<TypeSpec> Value) { return new TypeSpec { _Tag = TypeSpecTag.Tuple, _v_Tuple = Value }; }
+        public static TypeSpec CreateTuple(List<TypeSpec> Value) { return new TypeSpec { _Tag = TypeSpecTag.Tuple, Tuple = Value }; }
         /// <summary>泛型特化规格</summary>
-        public static TypeSpec CreateGenericTypeSpec(GenericTypeSpec Value) { return new TypeSpec { _Tag = TypeSpecTag.GenericTypeSpec, _v_GenericTypeSpec = Value }; }
+        public static TypeSpec CreateGenericTypeSpec(GenericTypeSpec Value) { return new TypeSpec { _Tag = TypeSpecTag.GenericTypeSpec, GenericTypeSpec = Value }; }
 
         /// <summary>类型引用</summary>
         public Boolean OnTypeRef { get { return _Tag == TypeSpecTag.TypeRef; } }
@@ -292,6 +324,10 @@ namespace Niveum.ObjectSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_TypeRef = value;
+            }
         }
         /// <summary>泛型参数引用</summary>
         public String GenericParameterRef
@@ -306,6 +342,10 @@ namespace Niveum.ObjectSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_GenericParameterRef = value;
             }
         }
         /// <summary>元组规格</summary>
@@ -322,6 +362,10 @@ namespace Niveum.ObjectSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Tuple = value;
+            }
         }
         /// <summary>泛型特化规格</summary>
         public GenericTypeSpec GenericTypeSpec
@@ -336,6 +380,10 @@ namespace Niveum.ObjectSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_GenericTypeSpec = value;
             }
         }
     }

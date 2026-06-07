@@ -59,15 +59,15 @@ namespace Nivea.Template.Semantics
         private EnumDef? _v_Enum;
 
         /// <summary>基元</summary>
-        public static TypeDef CreatePrimitive(PrimitiveDef Value) { return new TypeDef { _Tag = TypeDefTag.Primitive, _v_Primitive = Value }; }
+        public static TypeDef CreatePrimitive(PrimitiveDef Value) { return new TypeDef { _Tag = TypeDefTag.Primitive, Primitive = Value }; }
         /// <summary>别名</summary>
-        public static TypeDef CreateAlias(AliasDef Value) { return new TypeDef { _Tag = TypeDefTag.Alias, _v_Alias = Value }; }
+        public static TypeDef CreateAlias(AliasDef Value) { return new TypeDef { _Tag = TypeDefTag.Alias, Alias = Value }; }
         /// <summary>记录</summary>
-        public static TypeDef CreateRecord(RecordDef Value) { return new TypeDef { _Tag = TypeDefTag.Record, _v_Record = Value }; }
+        public static TypeDef CreateRecord(RecordDef Value) { return new TypeDef { _Tag = TypeDefTag.Record, Record = Value }; }
         /// <summary>标签联合</summary>
-        public static TypeDef CreateTaggedUnion(TaggedUnionDef Value) { return new TypeDef { _Tag = TypeDefTag.TaggedUnion, _v_TaggedUnion = Value }; }
+        public static TypeDef CreateTaggedUnion(TaggedUnionDef Value) { return new TypeDef { _Tag = TypeDefTag.TaggedUnion, TaggedUnion = Value }; }
         /// <summary>枚举</summary>
-        public static TypeDef CreateEnum(EnumDef Value) { return new TypeDef { _Tag = TypeDefTag.Enum, _v_Enum = Value }; }
+        public static TypeDef CreateEnum(EnumDef Value) { return new TypeDef { _Tag = TypeDefTag.Enum, Enum = Value }; }
 
         /// <summary>基元</summary>
         public Boolean OnPrimitive { get { return _Tag == TypeDefTag.Primitive; } }
@@ -94,6 +94,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Primitive = value;
+            }
         }
         /// <summary>别名</summary>
         public AliasDef Alias
@@ -108,6 +112,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Alias = value;
             }
         }
         /// <summary>记录</summary>
@@ -124,6 +132,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Record = value;
+            }
         }
         /// <summary>标签联合</summary>
         public TaggedUnionDef TaggedUnion
@@ -139,6 +151,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_TaggedUnion = value;
+            }
         }
         /// <summary>枚举</summary>
         public EnumDef Enum
@@ -153,6 +169,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Enum = value;
             }
         }
     }
@@ -200,17 +220,17 @@ namespace Nivea.Template.Semantics
         private TypeMemberSpec? _v_Member;
 
         /// <summary>类型引用</summary>
-        public static TypeSpec CreateTypeRef(TypeRef Value) { return new TypeSpec { _Tag = TypeSpecTag.TypeRef, _v_TypeRef = Value }; }
+        public static TypeSpec CreateTypeRef(TypeRef Value) { return new TypeSpec { _Tag = TypeSpecTag.TypeRef, TypeRef = Value }; }
         /// <summary>泛型参数引用</summary>
-        public static TypeSpec CreateGenericParameterRef(String Value) { return new TypeSpec { _Tag = TypeSpecTag.GenericParameterRef, _v_GenericParameterRef = Value }; }
+        public static TypeSpec CreateGenericParameterRef(String Value) { return new TypeSpec { _Tag = TypeSpecTag.GenericParameterRef, GenericParameterRef = Value }; }
         /// <summary>元组规格</summary>
-        public static TypeSpec CreateTuple(List<TypeSpec> Value) { return new TypeSpec { _Tag = TypeSpecTag.Tuple, _v_Tuple = Value }; }
+        public static TypeSpec CreateTuple(List<TypeSpec> Value) { return new TypeSpec { _Tag = TypeSpecTag.Tuple, Tuple = Value }; }
         /// <summary>泛型特化规格</summary>
-        public static TypeSpec CreateGenericTypeSpec(GenericTypeSpec Value) { return new TypeSpec { _Tag = TypeSpecTag.GenericTypeSpec, _v_GenericTypeSpec = Value }; }
+        public static TypeSpec CreateGenericTypeSpec(GenericTypeSpec Value) { return new TypeSpec { _Tag = TypeSpecTag.GenericTypeSpec, GenericTypeSpec = Value }; }
         /// <summary>数组规格</summary>
-        public static TypeSpec CreateArray(TypeSpec Value) { return new TypeSpec { _Tag = TypeSpecTag.Array, _v_Array = Value }; }
+        public static TypeSpec CreateArray(TypeSpec Value) { return new TypeSpec { _Tag = TypeSpecTag.Array, Array = Value }; }
         /// <summary>成员类型规格</summary>
-        public static TypeSpec CreateMember(TypeMemberSpec Value) { return new TypeSpec { _Tag = TypeSpecTag.Member, _v_Member = Value }; }
+        public static TypeSpec CreateMember(TypeMemberSpec Value) { return new TypeSpec { _Tag = TypeSpecTag.Member, Member = Value }; }
 
         /// <summary>类型引用</summary>
         public Boolean OnTypeRef { get { return _Tag == TypeSpecTag.TypeRef; } }
@@ -239,6 +259,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_TypeRef = value;
+            }
         }
         /// <summary>泛型参数引用</summary>
         public String GenericParameterRef
@@ -253,6 +277,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_GenericParameterRef = value;
             }
         }
         /// <summary>元组规格</summary>
@@ -269,6 +297,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Tuple = value;
+            }
         }
         /// <summary>泛型特化规格</summary>
         public GenericTypeSpec GenericTypeSpec
@@ -283,6 +315,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_GenericTypeSpec = value;
             }
         }
         /// <summary>数组规格</summary>
@@ -299,6 +335,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Array = value;
+            }
         }
         /// <summary>成员类型规格</summary>
         public TypeMemberSpec Member
@@ -313,6 +353,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Member = value;
             }
         }
     }

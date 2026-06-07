@@ -55,13 +55,13 @@ namespace Niveum.RelationSchema
         private QueryListDef? _v_QueryList;
 
         /// <summary>基元</summary>
-        public static TypeDef CreatePrimitive(PrimitiveDef Value) { return new TypeDef { _Tag = TypeDefTag.Primitive, _v_Primitive = Value }; }
+        public static TypeDef CreatePrimitive(PrimitiveDef Value) { return new TypeDef { _Tag = TypeDefTag.Primitive, Primitive = Value }; }
         /// <summary>实体</summary>
-        public static TypeDef CreateEntity(EntityDef Value) { return new TypeDef { _Tag = TypeDefTag.Entity, _v_Entity = Value }; }
+        public static TypeDef CreateEntity(EntityDef Value) { return new TypeDef { _Tag = TypeDefTag.Entity, Entity = Value }; }
         /// <summary>枚举</summary>
-        public static TypeDef CreateEnum(EnumDef Value) { return new TypeDef { _Tag = TypeDefTag.Enum, _v_Enum = Value }; }
+        public static TypeDef CreateEnum(EnumDef Value) { return new TypeDef { _Tag = TypeDefTag.Enum, Enum = Value }; }
         /// <summary>查询列表</summary>
-        public static TypeDef CreateQueryList(QueryListDef Value) { return new TypeDef { _Tag = TypeDefTag.QueryList, _v_QueryList = Value }; }
+        public static TypeDef CreateQueryList(QueryListDef Value) { return new TypeDef { _Tag = TypeDefTag.QueryList, QueryList = Value }; }
 
         /// <summary>基元</summary>
         public Boolean OnPrimitive { get { return _Tag == TypeDefTag.Primitive; } }
@@ -86,6 +86,10 @@ namespace Niveum.RelationSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Primitive = value;
+            }
         }
         /// <summary>实体</summary>
         public EntityDef Entity
@@ -100,6 +104,10 @@ namespace Niveum.RelationSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Entity = value;
             }
         }
         /// <summary>枚举</summary>
@@ -116,6 +124,10 @@ namespace Niveum.RelationSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Enum = value;
+            }
         }
         /// <summary>查询列表</summary>
         public QueryListDef QueryList
@@ -130,6 +142,10 @@ namespace Niveum.RelationSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_QueryList = value;
             }
         }
     }
@@ -171,11 +187,11 @@ namespace Niveum.RelationSchema
         private TypeRef? _v_Optional;
 
         /// <summary>类型引用</summary>
-        public static TypeSpec CreateTypeRef(TypeRef Value) { return new TypeSpec { _Tag = TypeSpecTag.TypeRef, _v_TypeRef = Value }; }
+        public static TypeSpec CreateTypeRef(TypeRef Value) { return new TypeSpec { _Tag = TypeSpecTag.TypeRef, TypeRef = Value }; }
         /// <summary>列表</summary>
-        public static TypeSpec CreateList(TypeRef Value) { return new TypeSpec { _Tag = TypeSpecTag.List, _v_List = Value }; }
+        public static TypeSpec CreateList(TypeRef Value) { return new TypeSpec { _Tag = TypeSpecTag.List, List = Value }; }
         /// <summary>可选类型</summary>
-        public static TypeSpec CreateOptional(TypeRef Value) { return new TypeSpec { _Tag = TypeSpecTag.Optional, _v_Optional = Value }; }
+        public static TypeSpec CreateOptional(TypeRef Value) { return new TypeSpec { _Tag = TypeSpecTag.Optional, Optional = Value }; }
 
         /// <summary>类型引用</summary>
         public Boolean OnTypeRef { get { return _Tag == TypeSpecTag.TypeRef; } }
@@ -198,6 +214,10 @@ namespace Niveum.RelationSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_TypeRef = value;
+            }
         }
         /// <summary>列表</summary>
         public TypeRef List
@@ -213,6 +233,10 @@ namespace Niveum.RelationSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_List = value;
+            }
         }
         /// <summary>可选类型</summary>
         public TypeRef Optional
@@ -227,6 +251,10 @@ namespace Niveum.RelationSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Optional = value;
             }
         }
     }
@@ -275,9 +303,9 @@ namespace Niveum.RelationSchema
         private NavigationAttribute? _v_Navigation;
 
         /// <summary>列特性</summary>
-        public static FieldAttribute CreateColumn(ColumnAttribute Value) { return new FieldAttribute { _Tag = FieldAttributeTag.Column, _v_Column = Value }; }
+        public static FieldAttribute CreateColumn(ColumnAttribute Value) { return new FieldAttribute { _Tag = FieldAttributeTag.Column, Column = Value }; }
         /// <summary>导航特性</summary>
-        public static FieldAttribute CreateNavigation(NavigationAttribute Value) { return new FieldAttribute { _Tag = FieldAttributeTag.Navigation, _v_Navigation = Value }; }
+        public static FieldAttribute CreateNavigation(NavigationAttribute Value) { return new FieldAttribute { _Tag = FieldAttributeTag.Navigation, Navigation = Value }; }
 
         /// <summary>列特性</summary>
         public Boolean OnColumn { get { return _Tag == FieldAttributeTag.Column; } }
@@ -298,6 +326,10 @@ namespace Niveum.RelationSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Column = value;
+            }
         }
         /// <summary>导航特性</summary>
         public NavigationAttribute Navigation
@@ -312,6 +344,10 @@ namespace Niveum.RelationSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Navigation = value;
             }
         }
     }
@@ -439,17 +475,17 @@ namespace Niveum.RelationSchema
         private Unit? _v_Delete;
 
         /// <summary>映射</summary>
-        public static Verb CreateSelect() { return new Verb { _Tag = VerbTag.Select, _v_Select = default(Unit) }; }
+        public static Verb CreateSelect() { return new Verb { _Tag = VerbTag.Select, Select = default(Unit) }; }
         /// <summary>锁定</summary>
-        public static Verb CreateLock() { return new Verb { _Tag = VerbTag.Lock, _v_Lock = default(Unit) }; }
+        public static Verb CreateLock() { return new Verb { _Tag = VerbTag.Lock, Lock = default(Unit) }; }
         /// <summary>插入</summary>
-        public static Verb CreateInsert() { return new Verb { _Tag = VerbTag.Insert, _v_Insert = default(Unit) }; }
+        public static Verb CreateInsert() { return new Verb { _Tag = VerbTag.Insert, Insert = default(Unit) }; }
         /// <summary>更新</summary>
-        public static Verb CreateUpdate() { return new Verb { _Tag = VerbTag.Update, _v_Update = default(Unit) }; }
+        public static Verb CreateUpdate() { return new Verb { _Tag = VerbTag.Update, Update = default(Unit) }; }
         /// <summary>覆盖</summary>
-        public static Verb CreateUpsert() { return new Verb { _Tag = VerbTag.Upsert, _v_Upsert = default(Unit) }; }
+        public static Verb CreateUpsert() { return new Verb { _Tag = VerbTag.Upsert, Upsert = default(Unit) }; }
         /// <summary>删除</summary>
-        public static Verb CreateDelete() { return new Verb { _Tag = VerbTag.Delete, _v_Delete = default(Unit) }; }
+        public static Verb CreateDelete() { return new Verb { _Tag = VerbTag.Delete, Delete = default(Unit) }; }
 
         /// <summary>映射</summary>
         public Boolean OnSelect { get { return _Tag == VerbTag.Select; } }
@@ -478,6 +514,10 @@ namespace Niveum.RelationSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Select = value;
+            }
         }
         /// <summary>锁定</summary>
         public Unit Lock
@@ -492,6 +532,10 @@ namespace Niveum.RelationSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Lock = value;
             }
         }
         /// <summary>插入</summary>
@@ -508,6 +552,10 @@ namespace Niveum.RelationSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Insert = value;
+            }
         }
         /// <summary>更新</summary>
         public Unit Update
@@ -522,6 +570,10 @@ namespace Niveum.RelationSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Update = value;
             }
         }
         /// <summary>覆盖</summary>
@@ -538,6 +590,10 @@ namespace Niveum.RelationSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Upsert = value;
+            }
         }
         /// <summary>删除</summary>
         public Unit Delete
@@ -552,6 +608,10 @@ namespace Niveum.RelationSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Delete = value;
             }
         }
     }
@@ -590,17 +650,17 @@ namespace Niveum.RelationSchema
         private Unit? _v_Count;
 
         /// <summary>0..1</summary>
-        public static Numeral CreateOptional() { return new Numeral { _Tag = NumeralTag.Optional, _v_Optional = default(Unit) }; }
+        public static Numeral CreateOptional() { return new Numeral { _Tag = NumeralTag.Optional, Optional = default(Unit) }; }
         /// <summary>1</summary>
-        public static Numeral CreateOne() { return new Numeral { _Tag = NumeralTag.One, _v_One = default(Unit) }; }
+        public static Numeral CreateOne() { return new Numeral { _Tag = NumeralTag.One, One = default(Unit) }; }
         /// <summary>*</summary>
-        public static Numeral CreateMany() { return new Numeral { _Tag = NumeralTag.Many, _v_Many = default(Unit) }; }
+        public static Numeral CreateMany() { return new Numeral { _Tag = NumeralTag.Many, Many = default(Unit) }; }
         /// <summary>全部</summary>
-        public static Numeral CreateAll() { return new Numeral { _Tag = NumeralTag.All, _v_All = default(Unit) }; }
+        public static Numeral CreateAll() { return new Numeral { _Tag = NumeralTag.All, All = default(Unit) }; }
         /// <summary>区间</summary>
-        public static Numeral CreateRange() { return new Numeral { _Tag = NumeralTag.Range, _v_Range = default(Unit) }; }
+        public static Numeral CreateRange() { return new Numeral { _Tag = NumeralTag.Range, Range = default(Unit) }; }
         /// <summary>数量</summary>
-        public static Numeral CreateCount() { return new Numeral { _Tag = NumeralTag.Count, _v_Count = default(Unit) }; }
+        public static Numeral CreateCount() { return new Numeral { _Tag = NumeralTag.Count, Count = default(Unit) }; }
 
         /// <summary>0..1</summary>
         public Boolean OnOptional { get { return _Tag == NumeralTag.Optional; } }
@@ -629,6 +689,10 @@ namespace Niveum.RelationSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Optional = value;
+            }
         }
         /// <summary>1</summary>
         public Unit One
@@ -643,6 +707,10 @@ namespace Niveum.RelationSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_One = value;
             }
         }
         /// <summary>*</summary>
@@ -659,6 +727,10 @@ namespace Niveum.RelationSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Many = value;
+            }
         }
         /// <summary>全部</summary>
         public Unit All
@@ -673,6 +745,10 @@ namespace Niveum.RelationSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_All = value;
             }
         }
         /// <summary>区间</summary>
@@ -689,6 +765,10 @@ namespace Niveum.RelationSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Range = value;
+            }
         }
         /// <summary>数量</summary>
         public Unit Count
@@ -703,6 +783,10 @@ namespace Niveum.RelationSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Count = value;
             }
         }
     }

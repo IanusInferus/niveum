@@ -123,7 +123,7 @@ namespace Niveum.ObjectSchema.CSharp
             yield return "[TaggedUnion]";
             yield return "public struct Optional<T>";
             yield return "{";
-            yield return "    [Tag] public OptionalTag _Tag;";
+            yield return "    [Tag] public OptionalTag _Tag { get; set; }";
             yield return "";
             yield return "    private Unit _v_None;";
             yield return "    private T _v_Some;";
@@ -147,6 +147,10 @@ namespace Niveum.ObjectSchema.CSharp
             yield return "                throw new InvalidOperationException();";
             yield return "            }";
             yield return "        }";
+            yield return "        set";
+            yield return "        {";
+            yield return "            _v_None = value;";
+            yield return "        }";
             yield return "    }";
             yield return "";
             yield return "    public T Some";
@@ -161,6 +165,10 @@ namespace Niveum.ObjectSchema.CSharp
             yield return "            {";
             yield return "                throw new InvalidOperationException();";
             yield return "            }";
+            yield return "        }";
+            yield return "        set";
+            yield return "        {";
+            yield return "            _v_Some = value;";
             yield return "        }";
             yield return "    }";
             yield return "";
@@ -388,7 +396,7 @@ namespace Niveum.ObjectSchema.CSharp
                 yield return _Line;
             }
             yield return "{";
-            foreach (var _Line in Combine(Combine(Combine(Begin(), "    [Tag] public "), TagName), " _Tag;"))
+            foreach (var _Line in Combine(Combine(Combine(Begin(), "    [Tag] public "), TagName), " _Tag { get; set; }"))
             {
                 yield return _Line;
             }
@@ -461,7 +469,7 @@ namespace Niveum.ObjectSchema.CSharp
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
                 yield return "    " + "        {";
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "            return ("), GetTypeString(a.Type, tu.NamespaceName())), ")"), GetEscapedIdentifier(Combine(Combine(Begin(), "_v_"), a.Name))), "!;"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "            return ("), GetTypeString(a.Type, tu.NamespaceName())), ")"), GetEscapedIdentifier(Combine(Combine(Begin(), "_v_"), a.Name))), ";"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
@@ -470,6 +478,13 @@ namespace Niveum.ObjectSchema.CSharp
                 yield return "    " + "        {";
                 yield return "    " + "            throw new InvalidOperationException();";
                 yield return "    " + "        }";
+                yield return "    " + "    }";
+                yield return "    " + "    set";
+                yield return "    " + "    {";
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "        "), GetEscapedIdentifier(Combine(Combine(Begin(), "_v_"), a.Name))), " = value;"))
+                {
+                    yield return _Line == "" ? "" : "    " + _Line;
+                }
                 yield return "    " + "    }";
                 yield return "    " + "}";
             }

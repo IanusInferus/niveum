@@ -136,17 +136,17 @@ namespace Niveum.ExpressionSchema
         private OrElseExpr? _v_OrElse;
 
         /// <summary>字面量表达式</summary>
-        public static Expr CreateLiteral(LiteralExpr Value) { return new Expr { _Tag = ExprTag.Literal, _v_Literal = Value }; }
+        public static Expr CreateLiteral(LiteralExpr Value) { return new Expr { _Tag = ExprTag.Literal, Literal = Value }; }
         /// <summary>变量表达式</summary>
-        public static Expr CreateVariable(VariableExpr Value) { return new Expr { _Tag = ExprTag.Variable, _v_Variable = Value }; }
+        public static Expr CreateVariable(VariableExpr Value) { return new Expr { _Tag = ExprTag.Variable, Variable = Value }; }
         /// <summary>函数表达式</summary>
-        public static Expr CreateFunction(FunctionExpr Value) { return new Expr { _Tag = ExprTag.Function, _v_Function = Value }; }
+        public static Expr CreateFunction(FunctionExpr Value) { return new Expr { _Tag = ExprTag.Function, Function = Value }; }
         /// <summary>if伪函数表达式</summary>
-        public static Expr CreateIf(IfExpr Value) { return new Expr { _Tag = ExprTag.If, _v_If = Value }; }
+        public static Expr CreateIf(IfExpr Value) { return new Expr { _Tag = ExprTag.If, If = Value }; }
         /// <summary>&amp;&amp;运算符表达式</summary>
-        public static Expr CreateAndAlso(AndAlsoExpr Value) { return new Expr { _Tag = ExprTag.AndAlso, _v_AndAlso = Value }; }
+        public static Expr CreateAndAlso(AndAlsoExpr Value) { return new Expr { _Tag = ExprTag.AndAlso, AndAlso = Value }; }
         /// <summary>||运算符表达式</summary>
-        public static Expr CreateOrElse(OrElseExpr Value) { return new Expr { _Tag = ExprTag.OrElse, _v_OrElse = Value }; }
+        public static Expr CreateOrElse(OrElseExpr Value) { return new Expr { _Tag = ExprTag.OrElse, OrElse = Value }; }
 
         /// <summary>字面量表达式</summary>
         public Boolean OnLiteral { get { return _Tag == ExprTag.Literal; } }
@@ -175,6 +175,10 @@ namespace Niveum.ExpressionSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Literal = value;
+            }
         }
         /// <summary>变量表达式</summary>
         public VariableExpr Variable
@@ -189,6 +193,10 @@ namespace Niveum.ExpressionSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Variable = value;
             }
         }
         /// <summary>函数表达式</summary>
@@ -205,6 +213,10 @@ namespace Niveum.ExpressionSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Function = value;
+            }
         }
         /// <summary>if伪函数表达式</summary>
         public IfExpr If
@@ -219,6 +231,10 @@ namespace Niveum.ExpressionSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_If = value;
             }
         }
         /// <summary>&amp;&amp;运算符表达式</summary>
@@ -235,6 +251,10 @@ namespace Niveum.ExpressionSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_AndAlso = value;
+            }
         }
         /// <summary>||运算符表达式</summary>
         public OrElseExpr OrElse
@@ -249,6 +269,10 @@ namespace Niveum.ExpressionSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_OrElse = value;
             }
         }
     }
@@ -275,11 +299,11 @@ namespace Niveum.ExpressionSchema
         private Real? _v_RealValue;
 
         /// <summary>布尔字面量</summary>
-        public static LiteralExpr CreateBooleanValue(Boolean Value) { return new LiteralExpr { _Tag = LiteralExprTag.BooleanValue, _v_BooleanValue = Value }; }
+        public static LiteralExpr CreateBooleanValue(Boolean Value) { return new LiteralExpr { _Tag = LiteralExprTag.BooleanValue, BooleanValue = Value }; }
         /// <summary>整数字面量</summary>
-        public static LiteralExpr CreateIntValue(Int Value) { return new LiteralExpr { _Tag = LiteralExprTag.IntValue, _v_IntValue = Value }; }
+        public static LiteralExpr CreateIntValue(Int Value) { return new LiteralExpr { _Tag = LiteralExprTag.IntValue, IntValue = Value }; }
         /// <summary>实数字面量</summary>
-        public static LiteralExpr CreateRealValue(Real Value) { return new LiteralExpr { _Tag = LiteralExprTag.RealValue, _v_RealValue = Value }; }
+        public static LiteralExpr CreateRealValue(Real Value) { return new LiteralExpr { _Tag = LiteralExprTag.RealValue, RealValue = Value }; }
 
         /// <summary>布尔字面量</summary>
         public Boolean OnBooleanValue { get { return _Tag == LiteralExprTag.BooleanValue; } }
@@ -302,6 +326,10 @@ namespace Niveum.ExpressionSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_BooleanValue = value;
+            }
         }
         /// <summary>整数字面量</summary>
         public Int IntValue
@@ -317,6 +345,10 @@ namespace Niveum.ExpressionSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_IntValue = value;
+            }
         }
         /// <summary>实数字面量</summary>
         public Real RealValue
@@ -331,6 +363,10 @@ namespace Niveum.ExpressionSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_RealValue = value;
             }
         }
     }

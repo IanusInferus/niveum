@@ -55,8 +55,8 @@
         private Unit? _v_None;
         private T? _v_Some;
 
-        public static Optional<T> CreateNone() { return new Optional<T> { _Tag = OptionalTag.None, _v_None = new Unit() }; }
-        public static Optional<T> CreateSome(T Value) { return new Optional<T> { _Tag = OptionalTag.Some, _v_Some = Value }; }
+        public static Optional<T> CreateNone() { return new Optional<T> { _Tag = OptionalTag.None, None = new Unit() }; }
+        public static Optional<T> CreateSome(T Value) { return new Optional<T> { _Tag = OptionalTag.Some, Some = Value }; }
 
         public Boolean OnNone { get { return _Tag == OptionalTag.None; } }
         public Boolean OnSome { get { return _Tag == OptionalTag.Some; } }
@@ -74,6 +74,10 @@
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_None = value;
+            }
         }
 
         public T Some
@@ -88,6 +92,10 @@
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Some = value;
             }
         }
 
@@ -190,17 +198,6 @@
                 return Default;
             }
         }
-        public T? ValueOrNull()
-        {
-            if (OnSome)
-            {
-                return Some;
-            }
-            else
-            {
-                return default(T);
-            }
-        }
 
         public override String ToString()
         {
@@ -297,13 +294,13 @@
                 {
                     ##
                         ${GetXmlComment(a.Description)}
-                        public static ${Name} [[Create${a.Name}]]() { return new ${Name} { _Tag = ${TagName}.[[${a.Name}]], [[_v_${a.Name}]] = default(Unit) }; }
+                        public static ${Name} [[Create${a.Name}]]() { return new ${Name} { _Tag = ${TagName}.[[${a.Name}]], [[${a.Name}]] = default(Unit) }; }
                 }
                 else
                 {
                     ##
                         ${GetXmlComment(a.Description)}
-                        public static ${Name} [[Create${a.Name}]](${GetTypeString(a.Type)} Value) { return new ${Name} { _Tag = ${TagName}.[[${a.Name}]], [[_v_${a.Name}]] = Value }; }
+                        public static ${Name} [[Create${a.Name}]](${GetTypeString(a.Type)} Value) { return new ${Name} { _Tag = ${TagName}.[[${a.Name}]], [[${a.Name}]] = Value }; }
                 }
             }
 
@@ -332,6 +329,10 @@
                             {
                                 throw new InvalidOperationException();
                             }
+                        }
+                        init
+                        {
+                            _v_${a.Name} = value;
                         }
                     }
             }

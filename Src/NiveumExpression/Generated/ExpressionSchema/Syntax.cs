@@ -51,11 +51,11 @@ namespace Niveum.ExpressionSchema
         private Real? _v_RealValue;
 
         /// <summary>布尔类型</summary>
-        public static TokenLiteral CreateBooleanValue(Boolean Value) { return new TokenLiteral { _Tag = TokenLiteralTag.BooleanValue, _v_BooleanValue = Value }; }
+        public static TokenLiteral CreateBooleanValue(Boolean Value) { return new TokenLiteral { _Tag = TokenLiteralTag.BooleanValue, BooleanValue = Value }; }
         /// <summary>整数类型</summary>
-        public static TokenLiteral CreateIntValue(Int Value) { return new TokenLiteral { _Tag = TokenLiteralTag.IntValue, _v_IntValue = Value }; }
+        public static TokenLiteral CreateIntValue(Int Value) { return new TokenLiteral { _Tag = TokenLiteralTag.IntValue, IntValue = Value }; }
         /// <summary>实数类型</summary>
-        public static TokenLiteral CreateRealValue(Real Value) { return new TokenLiteral { _Tag = TokenLiteralTag.RealValue, _v_RealValue = Value }; }
+        public static TokenLiteral CreateRealValue(Real Value) { return new TokenLiteral { _Tag = TokenLiteralTag.RealValue, RealValue = Value }; }
 
         /// <summary>布尔类型</summary>
         public Boolean OnBooleanValue { get { return _Tag == TokenLiteralTag.BooleanValue; } }
@@ -78,6 +78,10 @@ namespace Niveum.ExpressionSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_BooleanValue = value;
+            }
         }
         /// <summary>整数类型</summary>
         public Int IntValue
@@ -93,6 +97,10 @@ namespace Niveum.ExpressionSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_IntValue = value;
+            }
         }
         /// <summary>实数类型</summary>
         public Real RealValue
@@ -107,6 +115,10 @@ namespace Niveum.ExpressionSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_RealValue = value;
             }
         }
     }
@@ -181,17 +193,17 @@ namespace Niveum.ExpressionSchema
         private ProductionBinaryOperator? _v_BinaryOperator;
 
         /// <summary>字面量</summary>
-        public static SyntaxExpr CreateLiteral(ProductionLiteral Value) { return new SyntaxExpr { _Tag = SyntaxExprTag.Literal, _v_Literal = Value }; }
+        public static SyntaxExpr CreateLiteral(ProductionLiteral Value) { return new SyntaxExpr { _Tag = SyntaxExprTag.Literal, Literal = Value }; }
         /// <summary>函数</summary>
-        public static SyntaxExpr CreateFunction(ProductionFunction Value) { return new SyntaxExpr { _Tag = SyntaxExprTag.Function, _v_Function = Value }; }
+        public static SyntaxExpr CreateFunction(ProductionFunction Value) { return new SyntaxExpr { _Tag = SyntaxExprTag.Function, Function = Value }; }
         /// <summary>单个变量</summary>
-        public static SyntaxExpr CreateVariable(ProductionVariable Value) { return new SyntaxExpr { _Tag = SyntaxExprTag.Variable, _v_Variable = Value }; }
+        public static SyntaxExpr CreateVariable(ProductionVariable Value) { return new SyntaxExpr { _Tag = SyntaxExprTag.Variable, Variable = Value }; }
         /// <summary>括号</summary>
-        public static SyntaxExpr CreateParen(ProductionParen Value) { return new SyntaxExpr { _Tag = SyntaxExprTag.Paren, _v_Paren = Value }; }
+        public static SyntaxExpr CreateParen(ProductionParen Value) { return new SyntaxExpr { _Tag = SyntaxExprTag.Paren, Paren = Value }; }
         /// <summary>前缀单目运算</summary>
-        public static SyntaxExpr CreateUnaryOperator(ProductionUnaryOperator Value) { return new SyntaxExpr { _Tag = SyntaxExprTag.UnaryOperator, _v_UnaryOperator = Value }; }
+        public static SyntaxExpr CreateUnaryOperator(ProductionUnaryOperator Value) { return new SyntaxExpr { _Tag = SyntaxExprTag.UnaryOperator, UnaryOperator = Value }; }
         /// <summary>中缀二目运算</summary>
-        public static SyntaxExpr CreateBinaryOperator(ProductionBinaryOperator Value) { return new SyntaxExpr { _Tag = SyntaxExprTag.BinaryOperator, _v_BinaryOperator = Value }; }
+        public static SyntaxExpr CreateBinaryOperator(ProductionBinaryOperator Value) { return new SyntaxExpr { _Tag = SyntaxExprTag.BinaryOperator, BinaryOperator = Value }; }
 
         /// <summary>字面量</summary>
         public Boolean OnLiteral { get { return _Tag == SyntaxExprTag.Literal; } }
@@ -220,6 +232,10 @@ namespace Niveum.ExpressionSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Literal = value;
+            }
         }
         /// <summary>函数</summary>
         public ProductionFunction Function
@@ -234,6 +250,10 @@ namespace Niveum.ExpressionSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Function = value;
             }
         }
         /// <summary>单个变量</summary>
@@ -250,6 +270,10 @@ namespace Niveum.ExpressionSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Variable = value;
+            }
         }
         /// <summary>括号</summary>
         public ProductionParen Paren
@@ -264,6 +288,10 @@ namespace Niveum.ExpressionSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Paren = value;
             }
         }
         /// <summary>前缀单目运算</summary>
@@ -280,6 +308,10 @@ namespace Niveum.ExpressionSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_UnaryOperator = value;
+            }
         }
         /// <summary>中缀二目运算</summary>
         public ProductionBinaryOperator BinaryOperator
@@ -294,6 +326,10 @@ namespace Niveum.ExpressionSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_BinaryOperator = value;
             }
         }
     }
@@ -316,9 +352,9 @@ namespace Niveum.ExpressionSchema
         private ProductionNonnullParameterList? _v_Nonnull;
 
         /// <summary>空参数列表</summary>
-        public static SyntaxParameterList CreateNull(ProductionNullParameterList Value) { return new SyntaxParameterList { _Tag = SyntaxParameterListTag.Null, _v_Null = Value }; }
+        public static SyntaxParameterList CreateNull(ProductionNullParameterList Value) { return new SyntaxParameterList { _Tag = SyntaxParameterListTag.Null, Null = Value }; }
         /// <summary>非空参数列表</summary>
-        public static SyntaxParameterList CreateNonnull(ProductionNonnullParameterList Value) { return new SyntaxParameterList { _Tag = SyntaxParameterListTag.Nonnull, _v_Nonnull = Value }; }
+        public static SyntaxParameterList CreateNonnull(ProductionNonnullParameterList Value) { return new SyntaxParameterList { _Tag = SyntaxParameterListTag.Nonnull, Nonnull = Value }; }
 
         /// <summary>空参数列表</summary>
         public Boolean OnNull { get { return _Tag == SyntaxParameterListTag.Null; } }
@@ -339,6 +375,10 @@ namespace Niveum.ExpressionSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Null = value;
+            }
         }
         /// <summary>非空参数列表</summary>
         public ProductionNonnullParameterList Nonnull
@@ -353,6 +393,10 @@ namespace Niveum.ExpressionSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Nonnull = value;
             }
         }
     }
@@ -375,9 +419,9 @@ namespace Niveum.ExpressionSchema
         private ProductionMultipleParameterList? _v_Multiple;
 
         /// <summary>单个参数列表</summary>
-        public static SyntaxNonnullParameterList CreateSingle(ProductionSingleParameterList Value) { return new SyntaxNonnullParameterList { _Tag = SyntaxNonnullParameterListTag.Single, _v_Single = Value }; }
+        public static SyntaxNonnullParameterList CreateSingle(ProductionSingleParameterList Value) { return new SyntaxNonnullParameterList { _Tag = SyntaxNonnullParameterListTag.Single, Single = Value }; }
         /// <summary>多个参数列表</summary>
-        public static SyntaxNonnullParameterList CreateMultiple(ProductionMultipleParameterList Value) { return new SyntaxNonnullParameterList { _Tag = SyntaxNonnullParameterListTag.Multiple, _v_Multiple = Value }; }
+        public static SyntaxNonnullParameterList CreateMultiple(ProductionMultipleParameterList Value) { return new SyntaxNonnullParameterList { _Tag = SyntaxNonnullParameterListTag.Multiple, Multiple = Value }; }
 
         /// <summary>单个参数列表</summary>
         public Boolean OnSingle { get { return _Tag == SyntaxNonnullParameterListTag.Single; } }
@@ -398,6 +442,10 @@ namespace Niveum.ExpressionSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Single = value;
+            }
         }
         /// <summary>多个参数列表</summary>
         public ProductionMultipleParameterList Multiple
@@ -412,6 +460,10 @@ namespace Niveum.ExpressionSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Multiple = value;
             }
         }
     }
@@ -544,25 +596,25 @@ namespace Niveum.ExpressionSchema
         private SyntaxNonnullParameterList? _v_NonnullParameterList;
 
         /// <summary>字面量</summary>
-        public static SyntaxRule CreateLiteral(TokenLiteral Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.Literal, _v_Literal = Value }; }
+        public static SyntaxRule CreateLiteral(TokenLiteral Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.Literal, Literal = Value }; }
         /// <summary>标识符</summary>
-        public static SyntaxRule CreateIdentifier(TokenIdentifier Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.Identifier, _v_Identifier = Value }; }
+        public static SyntaxRule CreateIdentifier(TokenIdentifier Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.Identifier, Identifier = Value }; }
         /// <summary>二目运算符</summary>
-        public static SyntaxRule CreateBinaryOperator(TokenBinaryOperator Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.BinaryOperator, _v_BinaryOperator = Value }; }
+        public static SyntaxRule CreateBinaryOperator(TokenBinaryOperator Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.BinaryOperator, BinaryOperator = Value }; }
         /// <summary>单目运算符</summary>
-        public static SyntaxRule CreateUnaryOperator(TokenUnaryOperator Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.UnaryOperator, _v_UnaryOperator = Value }; }
+        public static SyntaxRule CreateUnaryOperator(TokenUnaryOperator Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.UnaryOperator, UnaryOperator = Value }; }
         /// <summary>左小括号</summary>
-        public static SyntaxRule CreateLeftParen(TokenLeftParen Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.LeftParen, _v_LeftParen = Value }; }
+        public static SyntaxRule CreateLeftParen(TokenLeftParen Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.LeftParen, LeftParen = Value }; }
         /// <summary>右小括号</summary>
-        public static SyntaxRule CreateRightParen(TokenRightParen Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.RightParen, _v_RightParen = Value }; }
+        public static SyntaxRule CreateRightParen(TokenRightParen Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.RightParen, RightParen = Value }; }
         /// <summary>逗号</summary>
-        public static SyntaxRule CreateComma(TokenComma Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.Comma, _v_Comma = Value }; }
+        public static SyntaxRule CreateComma(TokenComma Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.Comma, Comma = Value }; }
         /// <summary>表达式</summary>
-        public static SyntaxRule CreateExpr(SyntaxExpr Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.Expr, _v_Expr = Value }; }
+        public static SyntaxRule CreateExpr(SyntaxExpr Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.Expr, Expr = Value }; }
         /// <summary>参数列表</summary>
-        public static SyntaxRule CreateParameterList(SyntaxParameterList Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.ParameterList, _v_ParameterList = Value }; }
+        public static SyntaxRule CreateParameterList(SyntaxParameterList Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.ParameterList, ParameterList = Value }; }
         /// <summary>非空参数列表</summary>
-        public static SyntaxRule CreateNonnullParameterList(SyntaxNonnullParameterList Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.NonnullParameterList, _v_NonnullParameterList = Value }; }
+        public static SyntaxRule CreateNonnullParameterList(SyntaxNonnullParameterList Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.NonnullParameterList, NonnullParameterList = Value }; }
 
         /// <summary>字面量</summary>
         public Boolean OnLiteral { get { return _Tag == SyntaxRuleTag.Literal; } }
@@ -599,6 +651,10 @@ namespace Niveum.ExpressionSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Literal = value;
+            }
         }
         /// <summary>标识符</summary>
         public TokenIdentifier Identifier
@@ -613,6 +669,10 @@ namespace Niveum.ExpressionSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Identifier = value;
             }
         }
         /// <summary>二目运算符</summary>
@@ -629,6 +689,10 @@ namespace Niveum.ExpressionSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_BinaryOperator = value;
+            }
         }
         /// <summary>单目运算符</summary>
         public TokenUnaryOperator UnaryOperator
@@ -643,6 +707,10 @@ namespace Niveum.ExpressionSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_UnaryOperator = value;
             }
         }
         /// <summary>左小括号</summary>
@@ -659,6 +727,10 @@ namespace Niveum.ExpressionSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_LeftParen = value;
+            }
         }
         /// <summary>右小括号</summary>
         public TokenRightParen RightParen
@@ -673,6 +745,10 @@ namespace Niveum.ExpressionSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_RightParen = value;
             }
         }
         /// <summary>逗号</summary>
@@ -689,6 +765,10 @@ namespace Niveum.ExpressionSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Comma = value;
+            }
         }
         /// <summary>表达式</summary>
         public SyntaxExpr Expr
@@ -703,6 +783,10 @@ namespace Niveum.ExpressionSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Expr = value;
             }
         }
         /// <summary>参数列表</summary>
@@ -719,6 +803,10 @@ namespace Niveum.ExpressionSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_ParameterList = value;
+            }
         }
         /// <summary>非空参数列表</summary>
         public SyntaxNonnullParameterList NonnullParameterList
@@ -733,6 +821,10 @@ namespace Niveum.ExpressionSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_NonnullParameterList = value;
             }
         }
     }

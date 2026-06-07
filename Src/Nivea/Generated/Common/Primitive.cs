@@ -47,8 +47,8 @@ public struct Optional<T>
     private Unit? _v_None;
     private T? _v_Some;
 
-    public static Optional<T> CreateNone() { return new Optional<T> { _Tag = OptionalTag.None, _v_None = new Unit() }; }
-    public static Optional<T> CreateSome(T Value) { return new Optional<T> { _Tag = OptionalTag.Some, _v_Some = Value }; }
+    public static Optional<T> CreateNone() { return new Optional<T> { _Tag = OptionalTag.None, None = new Unit() }; }
+    public static Optional<T> CreateSome(T Value) { return new Optional<T> { _Tag = OptionalTag.Some, Some = Value }; }
 
     public Boolean OnNone { get { return _Tag == OptionalTag.None; } }
     public Boolean OnSome { get { return _Tag == OptionalTag.Some; } }
@@ -66,6 +66,10 @@ public struct Optional<T>
                 throw new InvalidOperationException();
             }
         }
+        init
+        {
+            _v_None = value;
+        }
     }
 
     public T Some
@@ -80,6 +84,10 @@ public struct Optional<T>
             {
                 throw new InvalidOperationException();
             }
+        }
+        init
+        {
+            _v_Some = value;
         }
     }
 
@@ -180,17 +188,6 @@ public struct Optional<T>
         else
         {
             return Default;
-        }
-    }
-    public T? ValueOrNull()
-    {
-        if (OnSome)
-        {
-            return Some;
-        }
-        else
-        {
-            return default(T);
         }
     }
 

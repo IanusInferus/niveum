@@ -89,11 +89,11 @@ namespace Niveum.ObjectSchema
         private QuerySelect? _v_Select;
 
         /// <summary>返回空</summary>
-        public static QueryFunction CreateNone() { return new QueryFunction { _Tag = QueryFunctionTag.None, _v_None = default(Unit) }; }
+        public static QueryFunction CreateNone() { return new QueryFunction { _Tag = QueryFunctionTag.None, None = default(Unit) }; }
         /// <summary>获取长度</summary>
-        public static QueryFunction CreateCount() { return new QueryFunction { _Tag = QueryFunctionTag.Count, _v_Count = default(Unit) }; }
+        public static QueryFunction CreateCount() { return new QueryFunction { _Tag = QueryFunctionTag.Count, Count = default(Unit) }; }
         /// <summary>选择器</summary>
-        public static QueryFunction CreateSelect(QuerySelect Value) { return new QueryFunction { _Tag = QueryFunctionTag.Select, _v_Select = Value }; }
+        public static QueryFunction CreateSelect(QuerySelect Value) { return new QueryFunction { _Tag = QueryFunctionTag.Select, Select = Value }; }
 
         /// <summary>返回空</summary>
         public Boolean OnNone { get { return _Tag == QueryFunctionTag.None; } }
@@ -116,6 +116,10 @@ namespace Niveum.ObjectSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_None = value;
+            }
         }
         /// <summary>获取长度</summary>
         public Unit Count
@@ -131,6 +135,10 @@ namespace Niveum.ObjectSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Count = value;
+            }
         }
         /// <summary>选择器</summary>
         public QuerySelect Select
@@ -145,6 +153,10 @@ namespace Niveum.ObjectSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Select = value;
             }
         }
     }
@@ -196,17 +208,17 @@ namespace Niveum.ObjectSchema
         private Unit? _v_Count;
 
         /// <summary>0..1</summary>
-        public static Numeral CreateOptional() { return new Numeral { _Tag = NumeralTag.Optional, _v_Optional = default(Unit) }; }
+        public static Numeral CreateOptional() { return new Numeral { _Tag = NumeralTag.Optional, Optional = default(Unit) }; }
         /// <summary>1</summary>
-        public static Numeral CreateOne() { return new Numeral { _Tag = NumeralTag.One, _v_One = default(Unit) }; }
+        public static Numeral CreateOne() { return new Numeral { _Tag = NumeralTag.One, One = default(Unit) }; }
         /// <summary>*</summary>
-        public static Numeral CreateMany() { return new Numeral { _Tag = NumeralTag.Many, _v_Many = default(Unit) }; }
+        public static Numeral CreateMany() { return new Numeral { _Tag = NumeralTag.Many, Many = default(Unit) }; }
         /// <summary>全部</summary>
-        public static Numeral CreateAll() { return new Numeral { _Tag = NumeralTag.All, _v_All = default(Unit) }; }
+        public static Numeral CreateAll() { return new Numeral { _Tag = NumeralTag.All, All = default(Unit) }; }
         /// <summary>区间</summary>
-        public static Numeral CreateRange() { return new Numeral { _Tag = NumeralTag.Range, _v_Range = default(Unit) }; }
+        public static Numeral CreateRange() { return new Numeral { _Tag = NumeralTag.Range, Range = default(Unit) }; }
         /// <summary>数量</summary>
-        public static Numeral CreateCount() { return new Numeral { _Tag = NumeralTag.Count, _v_Count = default(Unit) }; }
+        public static Numeral CreateCount() { return new Numeral { _Tag = NumeralTag.Count, Count = default(Unit) }; }
 
         /// <summary>0..1</summary>
         public Boolean OnOptional { get { return _Tag == NumeralTag.Optional; } }
@@ -235,6 +247,10 @@ namespace Niveum.ObjectSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Optional = value;
+            }
         }
         /// <summary>1</summary>
         public Unit One
@@ -249,6 +265,10 @@ namespace Niveum.ObjectSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_One = value;
             }
         }
         /// <summary>*</summary>
@@ -265,6 +285,10 @@ namespace Niveum.ObjectSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Many = value;
+            }
         }
         /// <summary>全部</summary>
         public Unit All
@@ -279,6 +303,10 @@ namespace Niveum.ObjectSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_All = value;
             }
         }
         /// <summary>区间</summary>
@@ -295,6 +323,10 @@ namespace Niveum.ObjectSchema
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Range = value;
+            }
         }
         /// <summary>数量</summary>
         public Unit Count
@@ -309,6 +341,10 @@ namespace Niveum.ObjectSchema
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Count = value;
             }
         }
     }

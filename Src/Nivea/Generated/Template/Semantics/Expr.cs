@@ -47,9 +47,9 @@ namespace Nivea.Template.Semantics
         private IndentedExpr? _v_IndentedExpr;
 
         /// <summary>模板行</summary>
-        public static TemplateExpr CreateLine(List<TemplateSpan> Value) { return new TemplateExpr { _Tag = TemplateExprTag.Line, _v_Line = Value }; }
+        public static TemplateExpr CreateLine(List<TemplateSpan> Value) { return new TemplateExpr { _Tag = TemplateExprTag.Line, Line = Value }; }
         /// <summary>缩进的表达式</summary>
-        public static TemplateExpr CreateIndentedExpr(IndentedExpr Value) { return new TemplateExpr { _Tag = TemplateExprTag.IndentedExpr, _v_IndentedExpr = Value }; }
+        public static TemplateExpr CreateIndentedExpr(IndentedExpr Value) { return new TemplateExpr { _Tag = TemplateExprTag.IndentedExpr, IndentedExpr = Value }; }
 
         /// <summary>模板行</summary>
         public Boolean OnLine { get { return _Tag == TemplateExprTag.Line; } }
@@ -70,6 +70,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Line = value;
+            }
         }
         /// <summary>缩进的表达式</summary>
         public IndentedExpr IndentedExpr
@@ -84,6 +88,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_IndentedExpr = value;
             }
         }
     }
@@ -110,11 +118,11 @@ namespace Nivea.Template.Semantics
         private Expr? _v_Expr;
 
         /// <summary>字面量</summary>
-        public static TemplateSpan CreateLiteral(String Value) { return new TemplateSpan { _Tag = TemplateSpanTag.Literal, _v_Literal = Value }; }
+        public static TemplateSpan CreateLiteral(String Value) { return new TemplateSpan { _Tag = TemplateSpanTag.Literal, Literal = Value }; }
         /// <summary>过滤器</summary>
-        public static TemplateSpan CreateFilter(FilterExpr Value) { return new TemplateSpan { _Tag = TemplateSpanTag.Filter, _v_Filter = Value }; }
+        public static TemplateSpan CreateFilter(FilterExpr Value) { return new TemplateSpan { _Tag = TemplateSpanTag.Filter, Filter = Value }; }
         /// <summary>表达式</summary>
-        public static TemplateSpan CreateExpr(Expr Value) { return new TemplateSpan { _Tag = TemplateSpanTag.Expr, _v_Expr = Value }; }
+        public static TemplateSpan CreateExpr(Expr Value) { return new TemplateSpan { _Tag = TemplateSpanTag.Expr, Expr = Value }; }
 
         /// <summary>字面量</summary>
         public Boolean OnLiteral { get { return _Tag == TemplateSpanTag.Literal; } }
@@ -137,6 +145,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Literal = value;
+            }
         }
         /// <summary>过滤器</summary>
         public FilterExpr Filter
@@ -152,6 +164,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Filter = value;
+            }
         }
         /// <summary>表达式</summary>
         public Expr Expr
@@ -166,6 +182,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Expr = value;
             }
         }
     }
@@ -210,11 +230,11 @@ namespace Nivea.Template.Semantics
         private IndentedExpr? _v_IndentedExpr;
 
         /// <summary>嵌入块</summary>
-        public static EmbeddedExpr CreateSpan(String Value) { return new EmbeddedExpr { _Tag = EmbeddedExprTag.Span, _v_Span = Value }; }
+        public static EmbeddedExpr CreateSpan(String Value) { return new EmbeddedExpr { _Tag = EmbeddedExprTag.Span, Span = Value }; }
         /// <summary>嵌入行</summary>
-        public static EmbeddedExpr CreateLine(String Value) { return new EmbeddedExpr { _Tag = EmbeddedExprTag.Line, _v_Line = Value }; }
+        public static EmbeddedExpr CreateLine(String Value) { return new EmbeddedExpr { _Tag = EmbeddedExprTag.Line, Line = Value }; }
         /// <summary>缩进的表达式</summary>
-        public static EmbeddedExpr CreateIndentedExpr(IndentedExpr Value) { return new EmbeddedExpr { _Tag = EmbeddedExprTag.IndentedExpr, _v_IndentedExpr = Value }; }
+        public static EmbeddedExpr CreateIndentedExpr(IndentedExpr Value) { return new EmbeddedExpr { _Tag = EmbeddedExprTag.IndentedExpr, IndentedExpr = Value }; }
 
         /// <summary>嵌入块</summary>
         public Boolean OnSpan { get { return _Tag == EmbeddedExprTag.Span; } }
@@ -237,6 +257,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Span = value;
+            }
         }
         /// <summary>嵌入行</summary>
         public String Line
@@ -252,6 +276,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Line = value;
+            }
         }
         /// <summary>缩进的表达式</summary>
         public IndentedExpr IndentedExpr
@@ -266,6 +294,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_IndentedExpr = value;
             }
         }
     }
@@ -412,71 +444,71 @@ namespace Nivea.Template.Semantics
         private CastExpr? _v_Cast;
 
         /// <summary>错误</summary>
-        public static Expr CreateError() { return new Expr { _Tag = ExprTag.Error, _v_Error = default(Unit) }; }
+        public static Expr CreateError() { return new Expr { _Tag = ExprTag.Error, Error = default(Unit) }; }
         /// <summary>歧义</summary>
-        public static Expr CreateAmbiguous(List<Expr> Value) { return new Expr { _Tag = ExprTag.Ambiguous, _v_Ambiguous = Value }; }
+        public static Expr CreateAmbiguous(List<Expr> Value) { return new Expr { _Tag = ExprTag.Ambiguous, Ambiguous = Value }; }
         /// <summary>序列</summary>
-        public static Expr CreateSequence(List<Expr> Value) { return new Expr { _Tag = ExprTag.Sequence, _v_Sequence = Value }; }
+        public static Expr CreateSequence(List<Expr> Value) { return new Expr { _Tag = ExprTag.Sequence, Sequence = Value }; }
         /// <summary>生成</summary>
-        public static Expr CreateYield(Expr Value) { return new Expr { _Tag = ExprTag.Yield, _v_Yield = Value }; }
+        public static Expr CreateYield(Expr Value) { return new Expr { _Tag = ExprTag.Yield, Yield = Value }; }
         /// <summary>多行生成</summary>
-        public static Expr CreateYieldMany(Expr Value) { return new Expr { _Tag = ExprTag.YieldMany, _v_YieldMany = Value }; }
+        public static Expr CreateYieldMany(Expr Value) { return new Expr { _Tag = ExprTag.YieldMany, YieldMany = Value }; }
         /// <summary>嵌入表达式</summary>
-        public static Expr CreateEmbedded(List<EmbeddedExpr> Value) { return new Expr { _Tag = ExprTag.Embedded, _v_Embedded = Value }; }
+        public static Expr CreateEmbedded(List<EmbeddedExpr> Value) { return new Expr { _Tag = ExprTag.Embedded, Embedded = Value }; }
         /// <summary>内嵌模板生成</summary>
-        public static Expr CreateYieldTemplate(List<TemplateExpr> Value) { return new Expr { _Tag = ExprTag.YieldTemplate, _v_YieldTemplate = Value }; }
+        public static Expr CreateYieldTemplate(List<TemplateExpr> Value) { return new Expr { _Tag = ExprTag.YieldTemplate, YieldTemplate = Value }; }
         /// <summary>抛出异常</summary>
-        public static Expr CreateThrow(Optional<Expr> Value) { return new Expr { _Tag = ExprTag.Throw, _v_Throw = Value }; }
+        public static Expr CreateThrow(Optional<Expr> Value) { return new Expr { _Tag = ExprTag.Throw, Throw = Value }; }
         /// <summary>不变量定义</summary>
-        public static Expr CreateLet(LetExpr Value) { return new Expr { _Tag = ExprTag.Let, _v_Let = Value }; }
+        public static Expr CreateLet(LetExpr Value) { return new Expr { _Tag = ExprTag.Let, Let = Value }; }
         /// <summary>变量定义</summary>
-        public static Expr CreateVar(VarExpr Value) { return new Expr { _Tag = ExprTag.Var, _v_Var = Value }; }
+        public static Expr CreateVar(VarExpr Value) { return new Expr { _Tag = ExprTag.Var, Var = Value }; }
         /// <summary>条件</summary>
-        public static Expr CreateIf(IfExpr Value) { return new Expr { _Tag = ExprTag.If, _v_If = Value }; }
+        public static Expr CreateIf(IfExpr Value) { return new Expr { _Tag = ExprTag.If, If = Value }; }
         /// <summary>匹配</summary>
-        public static Expr CreateMatch(MatchExpr Value) { return new Expr { _Tag = ExprTag.Match, _v_Match = Value }; }
+        public static Expr CreateMatch(MatchExpr Value) { return new Expr { _Tag = ExprTag.Match, Match = Value }; }
         /// <summary>枚举循环</summary>
-        public static Expr CreateFor(ForExpr Value) { return new Expr { _Tag = ExprTag.For, _v_For = Value }; }
+        public static Expr CreateFor(ForExpr Value) { return new Expr { _Tag = ExprTag.For, For = Value }; }
         /// <summary>条件循环</summary>
-        public static Expr CreateWhile(WhileExpr Value) { return new Expr { _Tag = ExprTag.While, _v_While = Value }; }
+        public static Expr CreateWhile(WhileExpr Value) { return new Expr { _Tag = ExprTag.While, While = Value }; }
         /// <summary>下一次循环</summary>
-        public static Expr CreateContinue(Optional<Int> Value) { return new Expr { _Tag = ExprTag.Continue, _v_Continue = Value }; }
+        public static Expr CreateContinue(Optional<Int> Value) { return new Expr { _Tag = ExprTag.Continue, Continue = Value }; }
         /// <summary>终止循环</summary>
-        public static Expr CreateBreak(Optional<Int> Value) { return new Expr { _Tag = ExprTag.Break, _v_Break = Value }; }
+        public static Expr CreateBreak(Optional<Int> Value) { return new Expr { _Tag = ExprTag.Break, Break = Value }; }
         /// <summary>返回</summary>
-        public static Expr CreateReturn(Optional<Expr> Value) { return new Expr { _Tag = ExprTag.Return, _v_Return = Value }; }
+        public static Expr CreateReturn(Optional<Expr> Value) { return new Expr { _Tag = ExprTag.Return, Return = Value }; }
         /// <summary>赋值</summary>
-        public static Expr CreateAssign(AssignExpr Value) { return new Expr { _Tag = ExprTag.Assign, _v_Assign = Value }; }
+        public static Expr CreateAssign(AssignExpr Value) { return new Expr { _Tag = ExprTag.Assign, Assign = Value }; }
         /// <summary>递增</summary>
-        public static Expr CreateIncrease(IncreaseExpr Value) { return new Expr { _Tag = ExprTag.Increase, _v_Increase = Value }; }
+        public static Expr CreateIncrease(IncreaseExpr Value) { return new Expr { _Tag = ExprTag.Increase, Increase = Value }; }
         /// <summary>递减</summary>
-        public static Expr CreateDecrease(DecreaseExpr Value) { return new Expr { _Tag = ExprTag.Decrease, _v_Decrease = Value }; }
+        public static Expr CreateDecrease(DecreaseExpr Value) { return new Expr { _Tag = ExprTag.Decrease, Decrease = Value }; }
         /// <summary>Lambda表达式</summary>
-        public static Expr CreateLambda(LambdaExpr Value) { return new Expr { _Tag = ExprTag.Lambda, _v_Lambda = Value }; }
+        public static Expr CreateLambda(LambdaExpr Value) { return new Expr { _Tag = ExprTag.Lambda, Lambda = Value }; }
         /// <summary>空字面量</summary>
-        public static Expr CreateNull() { return new Expr { _Tag = ExprTag.Null, _v_Null = default(Unit) }; }
+        public static Expr CreateNull() { return new Expr { _Tag = ExprTag.Null, Null = default(Unit) }; }
         /// <summary>默认值字面量</summary>
-        public static Expr CreateDefault() { return new Expr { _Tag = ExprTag.Default, _v_Default = default(Unit) }; }
+        public static Expr CreateDefault() { return new Expr { _Tag = ExprTag.Default, Default = default(Unit) }; }
         /// <summary>基元字面量</summary>
-        public static Expr CreatePrimitiveLiteral(PrimitiveLiteralExpr Value) { return new Expr { _Tag = ExprTag.PrimitiveLiteral, _v_PrimitiveLiteral = Value }; }
+        public static Expr CreatePrimitiveLiteral(PrimitiveLiteralExpr Value) { return new Expr { _Tag = ExprTag.PrimitiveLiteral, PrimitiveLiteral = Value }; }
         /// <summary>记录字面量</summary>
-        public static Expr CreateRecordLiteral(RecordLiteralExpr Value) { return new Expr { _Tag = ExprTag.RecordLiteral, _v_RecordLiteral = Value }; }
+        public static Expr CreateRecordLiteral(RecordLiteralExpr Value) { return new Expr { _Tag = ExprTag.RecordLiteral, RecordLiteral = Value }; }
         /// <summary>标签联合字面量</summary>
-        public static Expr CreateTaggedUnionLiteral(TaggedUnionLiteralExpr Value) { return new Expr { _Tag = ExprTag.TaggedUnionLiteral, _v_TaggedUnionLiteral = Value }; }
+        public static Expr CreateTaggedUnionLiteral(TaggedUnionLiteralExpr Value) { return new Expr { _Tag = ExprTag.TaggedUnionLiteral, TaggedUnionLiteral = Value }; }
         /// <summary>枚举字面量</summary>
-        public static Expr CreateEnumLiteral(EnumLiteralExpr Value) { return new Expr { _Tag = ExprTag.EnumLiteral, _v_EnumLiteral = Value }; }
+        public static Expr CreateEnumLiteral(EnumLiteralExpr Value) { return new Expr { _Tag = ExprTag.EnumLiteral, EnumLiteral = Value }; }
         /// <summary>元组字面量</summary>
-        public static Expr CreateTupleLiteral(TupleLiteralExpr Value) { return new Expr { _Tag = ExprTag.TupleLiteral, _v_TupleLiteral = Value }; }
+        public static Expr CreateTupleLiteral(TupleLiteralExpr Value) { return new Expr { _Tag = ExprTag.TupleLiteral, TupleLiteral = Value }; }
         /// <summary>列表字面量</summary>
-        public static Expr CreateListLiteral(ListLiteralExpr Value) { return new Expr { _Tag = ExprTag.ListLiteral, _v_ListLiteral = Value }; }
+        public static Expr CreateListLiteral(ListLiteralExpr Value) { return new Expr { _Tag = ExprTag.ListLiteral, ListLiteral = Value }; }
         /// <summary>类型字面量</summary>
-        public static Expr CreateTypeLiteral(TypeSpec Value) { return new Expr { _Tag = ExprTag.TypeLiteral, _v_TypeLiteral = Value }; }
+        public static Expr CreateTypeLiteral(TypeSpec Value) { return new Expr { _Tag = ExprTag.TypeLiteral, TypeLiteral = Value }; }
         /// <summary>变量引用</summary>
-        public static Expr CreateVariableRef(VariableRef Value) { return new Expr { _Tag = ExprTag.VariableRef, _v_VariableRef = Value }; }
+        public static Expr CreateVariableRef(VariableRef Value) { return new Expr { _Tag = ExprTag.VariableRef, VariableRef = Value }; }
         /// <summary>函数调用</summary>
-        public static Expr CreateFunctionCall(FunctionCallExpr Value) { return new Expr { _Tag = ExprTag.FunctionCall, _v_FunctionCall = Value }; }
+        public static Expr CreateFunctionCall(FunctionCallExpr Value) { return new Expr { _Tag = ExprTag.FunctionCall, FunctionCall = Value }; }
         /// <summary>转换</summary>
-        public static Expr CreateCast(CastExpr Value) { return new Expr { _Tag = ExprTag.Cast, _v_Cast = Value }; }
+        public static Expr CreateCast(CastExpr Value) { return new Expr { _Tag = ExprTag.Cast, Cast = Value }; }
 
         /// <summary>错误</summary>
         public Boolean OnError { get { return _Tag == ExprTag.Error; } }
@@ -559,6 +591,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Error = value;
+            }
         }
         /// <summary>歧义</summary>
         public List<Expr> Ambiguous
@@ -573,6 +609,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Ambiguous = value;
             }
         }
         /// <summary>序列</summary>
@@ -589,6 +629,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Sequence = value;
+            }
         }
         /// <summary>生成</summary>
         public Expr Yield
@@ -603,6 +647,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Yield = value;
             }
         }
         /// <summary>多行生成</summary>
@@ -619,6 +667,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_YieldMany = value;
+            }
         }
         /// <summary>嵌入表达式</summary>
         public List<EmbeddedExpr> Embedded
@@ -633,6 +685,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Embedded = value;
             }
         }
         /// <summary>内嵌模板生成</summary>
@@ -649,6 +705,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_YieldTemplate = value;
+            }
         }
         /// <summary>抛出异常</summary>
         public Optional<Expr> Throw
@@ -663,6 +723,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Throw = value;
             }
         }
         /// <summary>不变量定义</summary>
@@ -679,6 +743,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Let = value;
+            }
         }
         /// <summary>变量定义</summary>
         public VarExpr Var
@@ -693,6 +761,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Var = value;
             }
         }
         /// <summary>条件</summary>
@@ -709,6 +781,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_If = value;
+            }
         }
         /// <summary>匹配</summary>
         public MatchExpr Match
@@ -723,6 +799,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Match = value;
             }
         }
         /// <summary>枚举循环</summary>
@@ -739,6 +819,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_For = value;
+            }
         }
         /// <summary>条件循环</summary>
         public WhileExpr While
@@ -753,6 +837,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_While = value;
             }
         }
         /// <summary>下一次循环</summary>
@@ -769,6 +857,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Continue = value;
+            }
         }
         /// <summary>终止循环</summary>
         public Optional<Int> Break
@@ -783,6 +875,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Break = value;
             }
         }
         /// <summary>返回</summary>
@@ -799,6 +895,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Return = value;
+            }
         }
         /// <summary>赋值</summary>
         public AssignExpr Assign
@@ -813,6 +913,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Assign = value;
             }
         }
         /// <summary>递增</summary>
@@ -829,6 +933,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Increase = value;
+            }
         }
         /// <summary>递减</summary>
         public DecreaseExpr Decrease
@@ -843,6 +951,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Decrease = value;
             }
         }
         /// <summary>Lambda表达式</summary>
@@ -859,6 +971,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Lambda = value;
+            }
         }
         /// <summary>空字面量</summary>
         public Unit Null
@@ -873,6 +989,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Null = value;
             }
         }
         /// <summary>默认值字面量</summary>
@@ -889,6 +1009,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Default = value;
+            }
         }
         /// <summary>基元字面量</summary>
         public PrimitiveLiteralExpr PrimitiveLiteral
@@ -903,6 +1027,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_PrimitiveLiteral = value;
             }
         }
         /// <summary>记录字面量</summary>
@@ -919,6 +1047,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_RecordLiteral = value;
+            }
         }
         /// <summary>标签联合字面量</summary>
         public TaggedUnionLiteralExpr TaggedUnionLiteral
@@ -933,6 +1065,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_TaggedUnionLiteral = value;
             }
         }
         /// <summary>枚举字面量</summary>
@@ -949,6 +1085,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_EnumLiteral = value;
+            }
         }
         /// <summary>元组字面量</summary>
         public TupleLiteralExpr TupleLiteral
@@ -963,6 +1103,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_TupleLiteral = value;
             }
         }
         /// <summary>列表字面量</summary>
@@ -979,6 +1123,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_ListLiteral = value;
+            }
         }
         /// <summary>类型字面量</summary>
         public TypeSpec TypeLiteral
@@ -993,6 +1141,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_TypeLiteral = value;
             }
         }
         /// <summary>变量引用</summary>
@@ -1009,6 +1161,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_VariableRef = value;
+            }
         }
         /// <summary>函数调用</summary>
         public FunctionCallExpr FunctionCall
@@ -1024,6 +1180,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_FunctionCall = value;
+            }
         }
         /// <summary>转换</summary>
         public CastExpr Cast
@@ -1038,6 +1198,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Cast = value;
             }
         }
     }
@@ -1218,15 +1382,15 @@ namespace Nivea.Template.Semantics
         private GenericFunctionSpec? _v_GenericFunctionSpec;
 
         /// <summary>名称</summary>
-        public static VariableRef CreateName(String Value) { return new VariableRef { _Tag = VariableRefTag.Name, _v_Name = Value }; }
+        public static VariableRef CreateName(String Value) { return new VariableRef { _Tag = VariableRefTag.Name, Name = Value }; }
         /// <summary>当前对象</summary>
-        public static VariableRef CreateThis() { return new VariableRef { _Tag = VariableRefTag.This, _v_This = default(Unit) }; }
+        public static VariableRef CreateThis() { return new VariableRef { _Tag = VariableRefTag.This, This = default(Unit) }; }
         /// <summary>成员访问（静态和动态）</summary>
-        public static VariableRef CreateMemberAccess(MemberAccess Value) { return new VariableRef { _Tag = VariableRefTag.MemberAccess, _v_MemberAccess = Value }; }
+        public static VariableRef CreateMemberAccess(MemberAccess Value) { return new VariableRef { _Tag = VariableRefTag.MemberAccess, MemberAccess = Value }; }
         /// <summary>索引器访问</summary>
-        public static VariableRef CreateIndexerAccess(IndexerAccess Value) { return new VariableRef { _Tag = VariableRefTag.IndexerAccess, _v_IndexerAccess = Value }; }
+        public static VariableRef CreateIndexerAccess(IndexerAccess Value) { return new VariableRef { _Tag = VariableRefTag.IndexerAccess, IndexerAccess = Value }; }
         /// <summary>泛型函数特化</summary>
-        public static VariableRef CreateGenericFunctionSpec(GenericFunctionSpec Value) { return new VariableRef { _Tag = VariableRefTag.GenericFunctionSpec, _v_GenericFunctionSpec = Value }; }
+        public static VariableRef CreateGenericFunctionSpec(GenericFunctionSpec Value) { return new VariableRef { _Tag = VariableRefTag.GenericFunctionSpec, GenericFunctionSpec = Value }; }
 
         /// <summary>名称</summary>
         public Boolean OnName { get { return _Tag == VariableRefTag.Name; } }
@@ -1253,6 +1417,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Name = value;
+            }
         }
         /// <summary>当前对象</summary>
         public Unit This
@@ -1267,6 +1435,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_This = value;
             }
         }
         /// <summary>成员访问（静态和动态）</summary>
@@ -1283,6 +1455,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_MemberAccess = value;
+            }
         }
         /// <summary>索引器访问</summary>
         public IndexerAccess IndexerAccess
@@ -1298,6 +1474,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_IndexerAccess = value;
+            }
         }
         /// <summary>泛型函数特化</summary>
         public GenericFunctionSpec GenericFunctionSpec
@@ -1312,6 +1492,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_GenericFunctionSpec = value;
             }
         }
     }
@@ -1352,9 +1536,9 @@ namespace Nivea.Template.Semantics
         private Optional<TypeSpec>? _v_Ignore;
 
         /// <summary>变量</summary>
-        public static LeftValueDef CreateVariable(LocalVariableDef Value) { return new LeftValueDef { _Tag = LeftValueDefTag.Variable, _v_Variable = Value }; }
+        public static LeftValueDef CreateVariable(LocalVariableDef Value) { return new LeftValueDef { _Tag = LeftValueDefTag.Variable, Variable = Value }; }
         /// <summary>忽略</summary>
-        public static LeftValueDef CreateIgnore(Optional<TypeSpec> Value) { return new LeftValueDef { _Tag = LeftValueDefTag.Ignore, _v_Ignore = Value }; }
+        public static LeftValueDef CreateIgnore(Optional<TypeSpec> Value) { return new LeftValueDef { _Tag = LeftValueDefTag.Ignore, Ignore = Value }; }
 
         /// <summary>变量</summary>
         public Boolean OnVariable { get { return _Tag == LeftValueDefTag.Variable; } }
@@ -1375,6 +1559,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Variable = value;
+            }
         }
         /// <summary>忽略</summary>
         public Optional<TypeSpec> Ignore
@@ -1389,6 +1577,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Ignore = value;
             }
         }
     }
@@ -1431,9 +1623,9 @@ namespace Nivea.Template.Semantics
         private Unit? _v_Ignore;
 
         /// <summary>变量</summary>
-        public static LeftValueRef CreateVariable(VariableRef Value) { return new LeftValueRef { _Tag = LeftValueRefTag.Variable, _v_Variable = Value }; }
+        public static LeftValueRef CreateVariable(VariableRef Value) { return new LeftValueRef { _Tag = LeftValueRefTag.Variable, Variable = Value }; }
         /// <summary>忽略</summary>
-        public static LeftValueRef CreateIgnore() { return new LeftValueRef { _Tag = LeftValueRefTag.Ignore, _v_Ignore = default(Unit) }; }
+        public static LeftValueRef CreateIgnore() { return new LeftValueRef { _Tag = LeftValueRefTag.Ignore, Ignore = default(Unit) }; }
 
         /// <summary>变量</summary>
         public Boolean OnVariable { get { return _Tag == LeftValueRefTag.Variable; } }
@@ -1454,6 +1646,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Variable = value;
+            }
         }
         /// <summary>忽略</summary>
         public Unit Ignore
@@ -1468,6 +1664,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Ignore = value;
             }
         }
     }
@@ -1571,27 +1771,27 @@ namespace Nivea.Template.Semantics
         private VariableRef? _v_VariableRef;
 
         /// <summary>错误</summary>
-        public static MatchPattern CreateError() { return new MatchPattern { _Tag = MatchPatternTag.Error, _v_Error = default(Unit) }; }
+        public static MatchPattern CreateError() { return new MatchPattern { _Tag = MatchPatternTag.Error, Error = default(Unit) }; }
         /// <summary>歧义</summary>
-        public static MatchPattern CreateAmbiguous(List<MatchPattern> Value) { return new MatchPattern { _Tag = MatchPatternTag.Ambiguous, _v_Ambiguous = Value }; }
+        public static MatchPattern CreateAmbiguous(List<MatchPattern> Value) { return new MatchPattern { _Tag = MatchPatternTag.Ambiguous, Ambiguous = Value }; }
         /// <summary>不变量定义</summary>
-        public static MatchPattern CreateLet(LeftValueDef Value) { return new MatchPattern { _Tag = MatchPatternTag.Let, _v_Let = Value }; }
+        public static MatchPattern CreateLet(LeftValueDef Value) { return new MatchPattern { _Tag = MatchPatternTag.Let, Let = Value }; }
         /// <summary>忽略</summary>
-        public static MatchPattern CreateIgnore() { return new MatchPattern { _Tag = MatchPatternTag.Ignore, _v_Ignore = default(Unit) }; }
+        public static MatchPattern CreateIgnore() { return new MatchPattern { _Tag = MatchPatternTag.Ignore, Ignore = default(Unit) }; }
         /// <summary>基元字面量</summary>
-        public static MatchPattern CreatePrimitiveLiteral(PrimitiveLiteralExpr Value) { return new MatchPattern { _Tag = MatchPatternTag.PrimitiveLiteral, _v_PrimitiveLiteral = Value }; }
+        public static MatchPattern CreatePrimitiveLiteral(PrimitiveLiteralExpr Value) { return new MatchPattern { _Tag = MatchPatternTag.PrimitiveLiteral, PrimitiveLiteral = Value }; }
         /// <summary>记录模式</summary>
-        public static MatchPattern CreateRecordLiteral(RecordLiteralPattern Value) { return new MatchPattern { _Tag = MatchPatternTag.RecordLiteral, _v_RecordLiteral = Value }; }
+        public static MatchPattern CreateRecordLiteral(RecordLiteralPattern Value) { return new MatchPattern { _Tag = MatchPatternTag.RecordLiteral, RecordLiteral = Value }; }
         /// <summary>标签联合模式</summary>
-        public static MatchPattern CreateTaggedUnionLiteral(TaggedUnionLiteralPattern Value) { return new MatchPattern { _Tag = MatchPatternTag.TaggedUnionLiteral, _v_TaggedUnionLiteral = Value }; }
+        public static MatchPattern CreateTaggedUnionLiteral(TaggedUnionLiteralPattern Value) { return new MatchPattern { _Tag = MatchPatternTag.TaggedUnionLiteral, TaggedUnionLiteral = Value }; }
         /// <summary>枚举字面量</summary>
-        public static MatchPattern CreateEnumLiteral(EnumLiteralExpr Value) { return new MatchPattern { _Tag = MatchPatternTag.EnumLiteral, _v_EnumLiteral = Value }; }
+        public static MatchPattern CreateEnumLiteral(EnumLiteralExpr Value) { return new MatchPattern { _Tag = MatchPatternTag.EnumLiteral, EnumLiteral = Value }; }
         /// <summary>元组模式</summary>
-        public static MatchPattern CreateTupleLiteral(TupleLiteralPattern Value) { return new MatchPattern { _Tag = MatchPatternTag.TupleLiteral, _v_TupleLiteral = Value }; }
+        public static MatchPattern CreateTupleLiteral(TupleLiteralPattern Value) { return new MatchPattern { _Tag = MatchPatternTag.TupleLiteral, TupleLiteral = Value }; }
         /// <summary>列表模式</summary>
-        public static MatchPattern CreateListLiteral(ListLiteralPattern Value) { return new MatchPattern { _Tag = MatchPatternTag.ListLiteral, _v_ListLiteral = Value }; }
+        public static MatchPattern CreateListLiteral(ListLiteralPattern Value) { return new MatchPattern { _Tag = MatchPatternTag.ListLiteral, ListLiteral = Value }; }
         /// <summary>变量引用</summary>
-        public static MatchPattern CreateVariableRef(VariableRef Value) { return new MatchPattern { _Tag = MatchPatternTag.VariableRef, _v_VariableRef = Value }; }
+        public static MatchPattern CreateVariableRef(VariableRef Value) { return new MatchPattern { _Tag = MatchPatternTag.VariableRef, VariableRef = Value }; }
 
         /// <summary>错误</summary>
         public Boolean OnError { get { return _Tag == MatchPatternTag.Error; } }
@@ -1630,6 +1830,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Error = value;
+            }
         }
         /// <summary>歧义</summary>
         public List<MatchPattern> Ambiguous
@@ -1644,6 +1848,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Ambiguous = value;
             }
         }
         /// <summary>不变量定义</summary>
@@ -1660,6 +1868,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Let = value;
+            }
         }
         /// <summary>忽略</summary>
         public Unit Ignore
@@ -1674,6 +1886,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Ignore = value;
             }
         }
         /// <summary>基元字面量</summary>
@@ -1690,6 +1906,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_PrimitiveLiteral = value;
+            }
         }
         /// <summary>记录模式</summary>
         public RecordLiteralPattern RecordLiteral
@@ -1704,6 +1924,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_RecordLiteral = value;
             }
         }
         /// <summary>标签联合模式</summary>
@@ -1720,6 +1944,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_TaggedUnionLiteral = value;
+            }
         }
         /// <summary>枚举字面量</summary>
         public EnumLiteralExpr EnumLiteral
@@ -1734,6 +1962,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_EnumLiteral = value;
             }
         }
         /// <summary>元组模式</summary>
@@ -1750,6 +1982,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_TupleLiteral = value;
+            }
         }
         /// <summary>列表模式</summary>
         public ListLiteralPattern ListLiteral
@@ -1765,6 +2001,10 @@ namespace Nivea.Template.Semantics
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_ListLiteral = value;
+            }
         }
         /// <summary>变量引用</summary>
         public VariableRef VariableRef
@@ -1779,6 +2019,10 @@ namespace Nivea.Template.Semantics
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_VariableRef = value;
             }
         }
     }

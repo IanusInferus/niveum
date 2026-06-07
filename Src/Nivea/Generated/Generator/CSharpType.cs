@@ -126,8 +126,8 @@ namespace Nivea.Generator.CSharpType
             yield return "    private Unit? _v_None;";
             yield return "    private T? _v_Some;";
             yield return "";
-            yield return "    public static Optional<T> CreateNone() { return new Optional<T> { _Tag = OptionalTag.None, _v_None = new Unit() }; }";
-            yield return "    public static Optional<T> CreateSome(T Value) { return new Optional<T> { _Tag = OptionalTag.Some, _v_Some = Value }; }";
+            yield return "    public static Optional<T> CreateNone() { return new Optional<T> { _Tag = OptionalTag.None, None = new Unit() }; }";
+            yield return "    public static Optional<T> CreateSome(T Value) { return new Optional<T> { _Tag = OptionalTag.Some, Some = Value }; }";
             yield return "";
             yield return "    public Boolean OnNone { get { return _Tag == OptionalTag.None; } }";
             yield return "    public Boolean OnSome { get { return _Tag == OptionalTag.Some; } }";
@@ -145,6 +145,10 @@ namespace Nivea.Generator.CSharpType
             yield return "                throw new InvalidOperationException();";
             yield return "            }";
             yield return "        }";
+            yield return "        init";
+            yield return "        {";
+            yield return "            _v_None = value;";
+            yield return "        }";
             yield return "    }";
             yield return "";
             yield return "    public T Some";
@@ -159,6 +163,10 @@ namespace Nivea.Generator.CSharpType
             yield return "            {";
             yield return "                throw new InvalidOperationException();";
             yield return "            }";
+            yield return "        }";
+            yield return "        init";
+            yield return "        {";
+            yield return "            _v_Some = value;";
             yield return "        }";
             yield return "    }";
             yield return "";
@@ -259,17 +267,6 @@ namespace Nivea.Generator.CSharpType
             yield return "        else";
             yield return "        {";
             yield return "            return Default;";
-            yield return "        }";
-            yield return "    }";
-            yield return "    public T? ValueOrNull()";
-            yield return "    {";
-            yield return "        if (OnSome)";
-            yield return "        {";
-            yield return "            return Some;";
-            yield return "        }";
-            yield return "        else";
-            yield return "        {";
-            yield return "            return default(T);";
             yield return "        }";
             yield return "    }";
             yield return "";
@@ -422,7 +419,7 @@ namespace Nivea.Generator.CSharpType
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), Name), " "), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "() { return new "), Name), " { _Tag = "), TagName), "."), GetEscapedIdentifier(a.Name)), ", "), GetEscapedIdentifier(Combine(Combine(Begin(), "_v_"), a.Name))), " = default(Unit) }; }"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), Name), " "), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "() { return new "), Name), " { _Tag = "), TagName), "."), GetEscapedIdentifier(a.Name)), ", "), GetEscapedIdentifier(a.Name)), " = default(Unit) }; }"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -433,7 +430,7 @@ namespace Nivea.Generator.CSharpType
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
-                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), Name), " "), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "("), GetTypeString(a.Type)), " Value) { return new "), Name), " { _Tag = "), TagName), "."), GetEscapedIdentifier(a.Name)), ", "), GetEscapedIdentifier(Combine(Combine(Begin(), "_v_"), a.Name))), " = Value }; }"))
+                    foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Combine(Begin(), "public static "), Name), " "), GetEscapedIdentifier(Combine(Combine(Begin(), "Create"), a.Name))), "("), GetTypeString(a.Type)), " Value) { return new "), Name), " { _Tag = "), TagName), "."), GetEscapedIdentifier(a.Name)), ", "), GetEscapedIdentifier(a.Name)), " = Value }; }"))
                     {
                         yield return _Line == "" ? "" : "    " + _Line;
                     }
@@ -479,6 +476,13 @@ namespace Nivea.Generator.CSharpType
                 yield return "    " + "        {";
                 yield return "    " + "            throw new InvalidOperationException();";
                 yield return "    " + "        }";
+                yield return "    " + "    }";
+                yield return "    " + "    init";
+                yield return "    " + "    {";
+                foreach (var _Line in Combine(Combine(Combine(Begin(), "        _v_"), a.Name), " = value;"))
+                {
+                    yield return _Line == "" ? "" : "    " + _Line;
+                }
                 yield return "    " + "    }";
                 yield return "    " + "}";
             }

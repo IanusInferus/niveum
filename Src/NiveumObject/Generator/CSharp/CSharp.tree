@@ -172,7 +172,7 @@
     [TaggedUnion]
     public struct Optional<T>
     {
-        [Tag] public OptionalTag _Tag;
+        [Tag] public OptionalTag _Tag { get; set; }
 
         private Unit _v_None;
         private T _v_Some;
@@ -196,6 +196,10 @@
                     throw new InvalidOperationException();
                 }
             }
+            set
+            {
+                _v_None = value;
+            }
         }
 
         public T Some
@@ -210,6 +214,10 @@
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            set
+            {
+                _v_Some = value;
             }
         }
 
@@ -391,7 +399,7 @@
     [TaggedUnion]
     public sealed class ${Name}
     {
-        [Tag] public ${TagName} _Tag;
+        [Tag] public ${TagName} _Tag { get; set; }
 
         $$
             foreach (var a in tu.Alternatives)
@@ -437,12 +445,16 @@
                         {
                             if ([[On${a.Name}]])
                             {
-                                return (${GetTypeString(a.Type, tu.NamespaceName())})[[_v_${a.Name}]]!;
+                                return (${GetTypeString(a.Type, tu.NamespaceName())})[[_v_${a.Name}]];
                             }
                             else
                             {
                                 throw new InvalidOperationException();
                             }
+                        }
+                        set
+                        {
+                            [[_v_${a.Name}]] = value;
                         }
                     }
             }

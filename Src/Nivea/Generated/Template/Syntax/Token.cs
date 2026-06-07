@@ -88,23 +88,23 @@ namespace Nivea.Template.Syntax
         private String? _v_SingleLineComment;
 
         /// <summary>直接</summary>
-        public static TokenType CreateDirect(String Value) { return new TokenType { _Tag = TokenTypeTag.Direct, _v_Direct = Value }; }
+        public static TokenType CreateDirect(String Value) { return new TokenType { _Tag = TokenTypeTag.Direct, Direct = Value }; }
         /// <summary>双引号引用</summary>
-        public static TokenType CreateQuoted(String Value) { return new TokenType { _Tag = TokenTypeTag.Quoted, _v_Quoted = Value }; }
+        public static TokenType CreateQuoted(String Value) { return new TokenType { _Tag = TokenTypeTag.Quoted, Quoted = Value }; }
         /// <summary>双双引号引用</summary>
-        public static TokenType CreateEscaped(String Value) { return new TokenType { _Tag = TokenTypeTag.Escaped, _v_Escaped = Value }; }
+        public static TokenType CreateEscaped(String Value) { return new TokenType { _Tag = TokenTypeTag.Escaped, Escaped = Value }; }
         /// <summary>左括号</summary>
-        public static TokenType CreateLeftParenthesis() { return new TokenType { _Tag = TokenTypeTag.LeftParenthesis, _v_LeftParenthesis = default(Unit) }; }
+        public static TokenType CreateLeftParenthesis() { return new TokenType { _Tag = TokenTypeTag.LeftParenthesis, LeftParenthesis = default(Unit) }; }
         /// <summary>右括号</summary>
-        public static TokenType CreateRightParenthesis() { return new TokenType { _Tag = TokenTypeTag.RightParenthesis, _v_RightParenthesis = default(Unit) }; }
+        public static TokenType CreateRightParenthesis() { return new TokenType { _Tag = TokenTypeTag.RightParenthesis, RightParenthesis = default(Unit) }; }
         /// <summary>逗号</summary>
-        public static TokenType CreateComma() { return new TokenType { _Tag = TokenTypeTag.Comma, _v_Comma = default(Unit) }; }
+        public static TokenType CreateComma() { return new TokenType { _Tag = TokenTypeTag.Comma, Comma = default(Unit) }; }
         /// <summary>预处理指令</summary>
-        public static TokenType CreatePreprocessDirective(String Value) { return new TokenType { _Tag = TokenTypeTag.PreprocessDirective, _v_PreprocessDirective = Value }; }
+        public static TokenType CreatePreprocessDirective(String Value) { return new TokenType { _Tag = TokenTypeTag.PreprocessDirective, PreprocessDirective = Value }; }
         /// <summary>运算符</summary>
-        public static TokenType CreateOperator(String Value) { return new TokenType { _Tag = TokenTypeTag.Operator, _v_Operator = Value }; }
+        public static TokenType CreateOperator(String Value) { return new TokenType { _Tag = TokenTypeTag.Operator, Operator = Value }; }
         /// <summary>单行注释</summary>
-        public static TokenType CreateSingleLineComment(String Value) { return new TokenType { _Tag = TokenTypeTag.SingleLineComment, _v_SingleLineComment = Value }; }
+        public static TokenType CreateSingleLineComment(String Value) { return new TokenType { _Tag = TokenTypeTag.SingleLineComment, SingleLineComment = Value }; }
 
         /// <summary>直接</summary>
         public Boolean OnDirect { get { return _Tag == TokenTypeTag.Direct; } }
@@ -139,6 +139,10 @@ namespace Nivea.Template.Syntax
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Direct = value;
+            }
         }
         /// <summary>双引号引用</summary>
         public String Quoted
@@ -153,6 +157,10 @@ namespace Nivea.Template.Syntax
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Quoted = value;
             }
         }
         /// <summary>双双引号引用</summary>
@@ -169,6 +177,10 @@ namespace Nivea.Template.Syntax
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Escaped = value;
+            }
         }
         /// <summary>左括号</summary>
         public Unit LeftParenthesis
@@ -183,6 +195,10 @@ namespace Nivea.Template.Syntax
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_LeftParenthesis = value;
             }
         }
         /// <summary>右括号</summary>
@@ -199,6 +215,10 @@ namespace Nivea.Template.Syntax
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_RightParenthesis = value;
+            }
         }
         /// <summary>逗号</summary>
         public Unit Comma
@@ -213,6 +233,10 @@ namespace Nivea.Template.Syntax
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Comma = value;
             }
         }
         /// <summary>预处理指令</summary>
@@ -229,6 +253,10 @@ namespace Nivea.Template.Syntax
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_PreprocessDirective = value;
+            }
         }
         /// <summary>运算符</summary>
         public String Operator
@@ -244,6 +272,10 @@ namespace Nivea.Template.Syntax
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Operator = value;
+            }
         }
         /// <summary>单行注释</summary>
         public String SingleLineComment
@@ -258,6 +290,10 @@ namespace Nivea.Template.Syntax
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_SingleLineComment = value;
             }
         }
     }

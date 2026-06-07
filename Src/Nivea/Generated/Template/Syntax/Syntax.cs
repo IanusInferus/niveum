@@ -71,21 +71,21 @@ namespace Nivea.Template.Syntax
         private ExprNodeMember? _v_Member;
 
         /// <summary>直接</summary>
-        public static ExprNode CreateDirect(String Value) { return new ExprNode { _Tag = ExprNodeTag.Direct, _v_Direct = Value }; }
+        public static ExprNode CreateDirect(String Value) { return new ExprNode { _Tag = ExprNodeTag.Direct, Direct = Value }; }
         /// <summary>字面量</summary>
-        public static ExprNode CreateLiteral(String Value) { return new ExprNode { _Tag = ExprNodeTag.Literal, _v_Literal = Value }; }
+        public static ExprNode CreateLiteral(String Value) { return new ExprNode { _Tag = ExprNodeTag.Literal, Literal = Value }; }
         /// <summary>运算符</summary>
-        public static ExprNode CreateOperator(String Value) { return new ExprNode { _Tag = ExprNodeTag.Operator, _v_Operator = Value }; }
+        public static ExprNode CreateOperator(String Value) { return new ExprNode { _Tag = ExprNodeTag.Operator, Operator = Value }; }
         /// <summary>内嵌模板</summary>
-        public static ExprNode CreateTemplate(List<Semantics.TemplateExpr> Value) { return new ExprNode { _Tag = ExprNodeTag.Template, _v_Template = Value }; }
+        public static ExprNode CreateTemplate(List<Semantics.TemplateExpr> Value) { return new ExprNode { _Tag = ExprNodeTag.Template, Template = Value }; }
         /// <summary>内嵌模板生成</summary>
-        public static ExprNode CreateYieldTemplate(List<Semantics.TemplateExpr> Value) { return new ExprNode { _Tag = ExprNodeTag.YieldTemplate, _v_YieldTemplate = Value }; }
+        public static ExprNode CreateYieldTemplate(List<Semantics.TemplateExpr> Value) { return new ExprNode { _Tag = ExprNodeTag.YieldTemplate, YieldTemplate = Value }; }
         /// <summary>茎</summary>
-        public static ExprNode CreateStem(ExprNodeStem Value) { return new ExprNode { _Tag = ExprNodeTag.Stem, _v_Stem = Value }; }
+        public static ExprNode CreateStem(ExprNodeStem Value) { return new ExprNode { _Tag = ExprNodeTag.Stem, Stem = Value }; }
         /// <summary>待定序列</summary>
-        public static ExprNode CreateUndetermined(ExprNodeUndetermined Value) { return new ExprNode { _Tag = ExprNodeTag.Undetermined, _v_Undetermined = Value }; }
+        public static ExprNode CreateUndetermined(ExprNodeUndetermined Value) { return new ExprNode { _Tag = ExprNodeTag.Undetermined, Undetermined = Value }; }
         /// <summary>成员</summary>
-        public static ExprNode CreateMember(ExprNodeMember Value) { return new ExprNode { _Tag = ExprNodeTag.Member, _v_Member = Value }; }
+        public static ExprNode CreateMember(ExprNodeMember Value) { return new ExprNode { _Tag = ExprNodeTag.Member, Member = Value }; }
 
         /// <summary>直接</summary>
         public Boolean OnDirect { get { return _Tag == ExprNodeTag.Direct; } }
@@ -118,6 +118,10 @@ namespace Nivea.Template.Syntax
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Direct = value;
+            }
         }
         /// <summary>字面量</summary>
         public String Literal
@@ -132,6 +136,10 @@ namespace Nivea.Template.Syntax
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Literal = value;
             }
         }
         /// <summary>运算符</summary>
@@ -148,6 +156,10 @@ namespace Nivea.Template.Syntax
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Operator = value;
+            }
         }
         /// <summary>内嵌模板</summary>
         public List<Semantics.TemplateExpr> Template
@@ -162,6 +174,10 @@ namespace Nivea.Template.Syntax
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Template = value;
             }
         }
         /// <summary>内嵌模板生成</summary>
@@ -178,6 +194,10 @@ namespace Nivea.Template.Syntax
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_YieldTemplate = value;
+            }
         }
         /// <summary>茎</summary>
         public ExprNodeStem Stem
@@ -192,6 +212,10 @@ namespace Nivea.Template.Syntax
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Stem = value;
             }
         }
         /// <summary>待定序列</summary>
@@ -208,6 +232,10 @@ namespace Nivea.Template.Syntax
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Undetermined = value;
+            }
         }
         /// <summary>成员</summary>
         public ExprNodeMember Member
@@ -222,6 +250,10 @@ namespace Nivea.Template.Syntax
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Member = value;
             }
         }
     }
@@ -271,9 +303,9 @@ namespace Nivea.Template.Syntax
         private Token? _v_Token;
 
         /// <summary>结点</summary>
-        public static StackNode CreateNode(ExprNode Value) { return new StackNode { _Tag = StackNodeTag.Node, _v_Node = Value }; }
+        public static StackNode CreateNode(ExprNode Value) { return new StackNode { _Tag = StackNodeTag.Node, Node = Value }; }
         /// <summary>词</summary>
-        public static StackNode CreateToken(Token Value) { return new StackNode { _Tag = StackNodeTag.Token, _v_Token = Value }; }
+        public static StackNode CreateToken(Token Value) { return new StackNode { _Tag = StackNodeTag.Token, Token = Value }; }
 
         /// <summary>结点</summary>
         public Boolean OnNode { get { return _Tag == StackNodeTag.Node; } }
@@ -294,6 +326,10 @@ namespace Nivea.Template.Syntax
                     throw new InvalidOperationException();
                 }
             }
+            init
+            {
+                _v_Node = value;
+            }
         }
         /// <summary>词</summary>
         public Token Token
@@ -308,6 +344,10 @@ namespace Nivea.Template.Syntax
                 {
                     throw new InvalidOperationException();
                 }
+            }
+            init
+            {
+                _v_Token = value;
             }
         }
     }
