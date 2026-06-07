@@ -1,0 +1,206 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        Rust.tree
+      Location:    Niveum.Object <Tree>
+      Description: 对象类型结构Rust模板
+      Version:     2026.06.07.
+      Copyright(C) F.R.C.
+
+    ==========================================================================
+
+#Option
+    EnableEmbeddedExpr True
+
+#Namespace Niveum.ObjectSchema.Rust
+
+#Import
+    System
+    System.Collections.Generic
+    System.Linq
+
+#Constant Keywords:List<String>
+    $List String
+        _
+        as
+        async
+        await
+        break
+        const
+        continue
+        crate
+        dyn
+        else
+        enum
+        extern
+        false
+        fn
+        for
+        if
+        impl
+        in
+        let
+        loop
+        match
+        mod
+        move
+        mut
+        pub
+        ref
+        return
+        self
+        Self
+        static
+        struct
+        super
+        trait
+        true
+        type
+        unsafe
+        use
+        where
+        while
+        abstract
+        become
+        box
+        do
+        final
+        gen
+        macro
+        override
+        priv
+        try
+        typeof
+        unsized
+        virtual
+        yield
+
+#Constant PrimitiveMapping:Map<String, String>
+    $Table KeyValuePairOfStringAndString Key Value
+        Unit                "()"
+        Boolean             bool
+        String              String
+        Int                 i32
+        Real                f64
+        Byte                u8
+        UInt8               u8
+        UInt16              u16
+        UInt32              u32
+        UInt64              u64
+        Int8                i8
+        Int16               i16
+        Int32               i32
+        Int64               i64
+        Float32             f32
+        Float64             f64
+        Type                String
+        Optional            Option
+        List                Vec
+        Set                 HashSet
+        Map                 HashMap
+
+#Template Alias a:AliasDef
+    $$
+        var Name = GetEscapedIdentifier(a.DefinitionName());
+        var GenericParams = GetGenericParameters(a.GenericParameters);
+        var TypeParamLine = GetGenericParameterLine(a.GenericParameters);
+        var Type = GetTypeString(a.Type, a.NamespaceName());
+    ${GetDocComment(a.Description)}
+    /* Alias */
+    #[derive(Debug, Clone, PartialEq)]
+    ${TypeParamLine}
+    pub struct [[${a.DefinitionName()}]]${GenericParams}(pub ${Type});
+#Template Record r:RecordDef
+    $$
+        var Name = GetEscapedIdentifier(r.DefinitionName());
+        var GenericParams = GetGenericParameters(r.GenericParameters);
+        var TypeParamLine = GetGenericParameterLine(r.GenericParameters);
+    ${GetDocComment(r.Description)}
+    /* Record */
+    #[derive(Debug, Clone, PartialEq)]
+    ${TypeParamLine}
+    pub struct [[${r.DefinitionName()}]]${GenericParams} {
+        $$
+            foreach (var f in r.Fields)
+            {
+                ##
+                    ${GetDocComment(f.Description)}
+                    pub [[${f.Name}]]: ${GetTypeString(f.Type, r.NamespaceName())},
+            }
+    }
+
+#Template TaggedUnion tu:TaggedUnionDef
+    $$
+        var Name = GetEscapedIdentifier(tu.DefinitionName());
+        var GenericParams = GetGenericParameters(tu.GenericParameters);
+        var TypeParamLine = GetGenericParameterLine(tu.GenericParameters);
+    ${GetDocComment(tu.Description)}
+    /* TaggedUnion */
+    #[derive(Debug, Clone, PartialEq)]
+    #[repr(i32)]
+    ${TypeParamLine}
+    pub enum [[${tu.DefinitionName()}]]${GenericParams} {
+        $$
+            {
+                var k = 0;
+                foreach (var a in tu.Alternatives)
+                {
+                    if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
+                    {
+                        ##
+                            ${GetDocComment(a.Description)}
+                            [[${a.Name}]] = ${k},
+                    }
+                    else
+                    {
+                        ##
+                            ${GetDocComment(a.Description)}
+                            [[${a.Name}]](${GetBoxedTypeString(a.Type, tu.NamespaceName(), tu.VersionedName())}) = ${k},
+                    }
+                    k += 1;
+                }
+            }
+    }
+
+#Template Enum e:EnumDef
+    $$
+        var Name = GetEscapedIdentifier(e.DefinitionName());
+        var UnderlyingType = GetEnumTypeString(e.UnderlyingType, e.NamespaceName());
+    ${GetDocComment(e.Description)}
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    #[repr(${UnderlyingType})]
+    pub enum [[${e.DefinitionName()}]] {
+        $$
+            foreach (var l in e.Literals)
+            {
+                ##
+                    ${GetDocComment(l.Description)}
+                    [[${l.Name}]] = ${l.Value},
+            }
+    }
+
+#Template WrapNamespacePart NamespacePart:String Contents:IEnumerable<String>
+    pub mod [[${NamespacePart}]] {
+        use std::collections::{HashMap, HashSet};
+        ${Contents}
+    }
+
+#Template Main Schema:Schema NamespaceName:String
+    //==========================================================================
+    //
+    //  Notice:      This file is automatically generated.
+    //               Please don't modify this file.
+    //
+    //==========================================================================
+
+    #![allow(dead_code)]
+    #![allow(non_camel_case_types)]
+    #![allow(non_snake_case)]
+    #![allow(non_upper_case_globals)]
+    #![allow(unused_imports)]
+
+    use std::collections::{HashMap, HashSet};
+
+    ${GetTypes(Schema, NamespaceName)}
+
+$End

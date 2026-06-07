@@ -54,6 +54,9 @@ __pycache__
 /Serialization/Python/src/World.py
 /Serialization/Python/src/WorldBinary.py
 /Serialization/Python/src/WorldJson.py
+/Serialization/Rust/Data
+/Serialization/Rust/src/generated
+/Serialization/Rust/target
 /Serialization/SchemaManipulator/Data
 /Serialization/VB/Data
 /Serialization/VB/Src/World.vb

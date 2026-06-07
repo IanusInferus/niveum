@@ -8,6 +8,8 @@ Nivea, Niveum.Object, *:
 更新对Visual Studio 2026的支持。
 DatabaseRegenerator, Examples:
 升级Sqlite并增加使用说明和示例。
+Niveum.Object, Examples:
+增加Rust对象类型和二进制序列化代码生成，并增加示例。
 
 2026.06.06
 Niveum.Relation, Yuki.Relation:

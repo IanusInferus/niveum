@@ -42,13 +42,22 @@ if exist CSharp\Bin\DataConv.exe (
 if exist Java\bin\Program.class (
   @pushd Java\bin\
   java Program ..\..\SchemaManipulator\Data\WorldData.bin ..\Data\WorldData.bin
+  java Program ..\Data\WorldData.bin ..\Data\WorldData2.bin
   @popd
 )
 
-:: C++2011
+:: C++17
 @if not exist CPP\Data @md CPP\Data
 if exist CPP\Bin\DataCopy.exe (
   CPP\Bin\DataCopy.exe SchemaManipulator\Data\WorldData.bin CPP\Data\WorldData.bin
+  CPP\Bin\DataCopy.exe CPP\Data\WorldData.bin CPP\Data\WorldData2.bin
+)
+
+:: Rust
+@if not exist Rust\Data @md Rust\Data
+if exist Rust\target\release\data-copy.exe (
+  Rust\target\release\data-copy.exe SchemaManipulator\Data\WorldData.bin Rust\Data\WorldData.bin
+  Rust\target\release\data-copy.exe Rust\Data\WorldData.bin Rust\Data\WorldData2.bin
 )
 
 :: Haxe

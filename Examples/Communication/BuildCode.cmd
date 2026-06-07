@@ -38,7 +38,7 @@ SchemaManipulator.exe /loadtype:Schema\Common /nullable /t2cs:CSharpBrowserBlazo
 SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /loadtype:Schema\CommunicationTestDuplication /nullable /t2cs:CSharpBrowserBlazor\Src\Client\Generated\Communication.cs,Communication,false
 SchemaManipulator.exe /loadtyperef:Schema\Common /loadtype:Schema\Communication /loadtype:Schema\CommunicationTestDuplication /nullable /t2csj:CSharpBrowserBlazor\Src\Client\Generated\CommunicationJson.cs,Communication.Json
 
-:: C++2011
+:: C++17
 @if not exist CPP\Src\Server\Generated @md CPP\Src\Server\Generated
 @if not exist CPP\Src\Client\Generated @md CPP\Src\Client\Generated
 SchemaManipulator.exe /loadtype:Schema\Common /loadtype:Schema\Communication /loadtype:Schema\CommunicationTestDuplication /loadtype:Schema\Compatibility.tree /async:CPP\Src\CommunicationAsync.lst /t2cpp:CPP\Src\Server\Generated\Communication.h,Communication

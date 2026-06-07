@@ -51,7 +51,7 @@ RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2cskrs:TestCSharp\Src\Krustallos\KrustallosDataAccess.cs,Database.Database,Database.Krustallos
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2cscw:TestCSharp\Src\CountedDataAccessWrapper.cs,Database.Database,Database.Database
 
-:: C++2011
+:: C++17
 @if not exist TestCPP\Src @md TestCPP\Src
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /t2cppdp:TestCPP\Src\Database.h,Database.Database
 RelationSchemaManipulator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /import:"""Database.h""" /t2cppm:TestCPP\Src\Memory\MemoryDataAccess.h,Database.Database,Database.Memory

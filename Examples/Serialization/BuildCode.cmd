@@ -37,11 +37,16 @@ SchemaManipulator.exe /loadtype:Schema /t2csv:CSharp\Src\WorldVersions.cs,World,
 SchemaManipulator.exe /loadtype:Schema /t2jv:Java\generated,World
 SchemaManipulator.exe /loadtype:Schema /t2jvb:Java\generated,World.Binary
 
-:: C++2011
+:: C++17
 @if not exist CPP\Src @md CPP\Src
 SchemaManipulator.exe /loadtype:Schema /t2cpp:CPP\Src\World.h,World
 SchemaManipulator.exe /loadtype:Schema /t2cppb:CPP\Src\WorldBinary.h,World
 SchemaManipulator.exe /loadtype:Schema /t2cppv:CPP\Src\WorldVersions.h,World,World.World
+
+:: Rust
+@if not exist Rust\src\generated @md Rust\src\generated
+SchemaManipulator.exe /loadtype:Schema /t2rs:Rust\src\generated\world.rs,World
+SchemaManipulator.exe /loadtype:Schema /t2rsb:Rust\src\generated\world_binary.rs,World
 
 :: Haxe
 SchemaManipulator.exe /loadtype:Schema /t2hx:Haxe\generated,World

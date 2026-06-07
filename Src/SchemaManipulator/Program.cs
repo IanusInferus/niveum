@@ -32,6 +32,8 @@ using Niveum.ObjectSchema.Cpp;
 using Niveum.ObjectSchema.CppBinary;
 using Niveum.ObjectSchema.CppCompatible;
 using Niveum.ObjectSchema.CppVersion;
+using Niveum.ObjectSchema.Rust;
+using Niveum.ObjectSchema.RustBinary;
 using Niveum.ObjectSchema.Haxe;
 using Niveum.ObjectSchema.HaxeJson;
 using Niveum.ObjectSchema.Java;
@@ -441,6 +443,40 @@ namespace Niveum.SchemaManipulator
                         return -1;
                     }
                 }
+                else if (optNameLower == "t2rs")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 1)
+                    {
+                        ObjectSchemaToRustCode(args[0], "");
+                    }
+                    else if (args.Length == 2)
+                    {
+                        ObjectSchemaToRustCode(args[0], args[1]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
+                else if (optNameLower == "t2rsb")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 1)
+                    {
+                        ObjectSchemaToRustBinaryCode(args[0], "");
+                    }
+                    else if (args.Length == 2)
+                    {
+                        ObjectSchemaToRustBinaryCode(args[0], args[1]);
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else if (optNameLower == "t2hx")
                 {
                     var args = opt.Arguments;
@@ -625,6 +661,10 @@ namespace Niveum.SchemaManipulator
             Console.WriteLine(@"/t2cppc:<CppCodePath>,<NamespaceName>,<ImplementationNamespaceName>,<ImplementationClassName>");
             Console.WriteLine(@"生成C++版本类型");
             Console.WriteLine(@"/t2cppv:<CppCodePath>,<NamespaceName>,<FullTypeName>*");
+            Console.WriteLine(@"生成Rust类型");
+            Console.WriteLine(@"/t2rs:<RsCodePath>[,<NamespaceName>]");
+            Console.WriteLine(@"生成Rust二进制类型");
+            Console.WriteLine(@"/t2rsb:<RsCodePath>[,<NamespaceName>]");
             Console.WriteLine(@"生成Haxe类型");
             Console.WriteLine(@"/t2hx:<HaxeCodeDirPath>,<PackageName>");
             Console.WriteLine(@"生成Haxe JSON通讯类型");
@@ -1007,6 +1047,40 @@ namespace Niveum.SchemaManipulator
             var Dir = FileNameHandling.GetFileDirectory(CppCodePath);
             if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
             Txt.WriteFile(CppCodePath, Compiled);
+        }
+
+        public static void ObjectSchemaToRustCode(String RsCodePath, String NamespaceName)
+        {
+            var ObjectSchema = GetObjectSchema();
+            var Compiled = ObjectSchema.CompileToRust(NamespaceName);
+            if (File.Exists(RsCodePath))
+            {
+                var Original = Txt.ReadFile(RsCodePath, TextEncoding.UTF8);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(RsCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(RsCodePath, TextEncoding.UTF8, Compiled, false);
+        }
+
+        public static void ObjectSchemaToRustBinaryCode(String RsCodePath, String NamespaceName)
+        {
+            var ObjectSchema = GetObjectSchema();
+            var Compiled = ObjectSchema.CompileToRustBinary(NamespaceName);
+            if (File.Exists(RsCodePath))
+            {
+                var Original = Txt.ReadFile(RsCodePath, TextEncoding.UTF8);
+                if (String.Equals(Compiled, Original, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+            var Dir = FileNameHandling.GetFileDirectory(RsCodePath);
+            if (Dir != "" && !Directory.Exists(Dir)) { Directory.CreateDirectory(Dir); }
+            Txt.WriteFile(RsCodePath, TextEncoding.UTF8, Compiled, false);
         }
 
         public static void ObjectSchemaToHaxeCode(String HaxeCodeDirPath, String PackageName)

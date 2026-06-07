@@ -1,0 +1,9 @@
+[package]
+name = "data-copy"
+version = "0.1.0"
+edition = "2024"
+description = "Niveum binary serialization example — data copy tool"
+license = "Unlicense"
+authors = ["F.R.C."]
+
+[dependencies]

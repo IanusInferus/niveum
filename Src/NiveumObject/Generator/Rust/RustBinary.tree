@@ -1,0 +1,698 @@
+﻿$Comment
+    ==========================================================================
+
+      File:        RustBinary.tree
+      Location:    Niveum.Object <Tree>
+      Description: 对象类型结构Rust二进制通讯模板
+      Version:     2026.06.07.
+      Copyright(C) F.R.C.
+
+    ==========================================================================
+
+#Option
+    EnableEmbeddedExpr True
+
+#Namespace Niveum.ObjectSchema.RustBinary
+
+#Import
+    System
+    System.Collections.Generic
+    System.Linq
+
+#Template Streams
+    #[derive(Debug, Clone, PartialEq)]
+    pub struct BinaryError(pub String);
+
+    impl std::fmt::Display for BinaryError {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "{}", self.0)
+        }
+    }
+    impl std::error::Error for BinaryError {}
+
+    pub trait ReadableStream {
+        fn read_byte(&mut self) -> Result<u8, BinaryError>;
+        fn read_bytes(&mut self, size: usize) -> Result<Vec<u8>, BinaryError>;
+
+        fn read_unit(&mut self) -> Result<(), BinaryError> {
+            Ok(())
+        }
+        fn read_boolean(&mut self) -> Result<bool, BinaryError> {
+            Ok(self.read_byte()? != 0)
+        }
+
+        fn read_u8(&mut self) -> Result<u8, BinaryError> {
+            self.read_byte()
+        }
+        fn read_u16(&mut self) -> Result<u16, BinaryError> {
+            let b0 = self.read_byte()? as u16;
+            let b1 = self.read_byte()? as u16;
+            Ok(b0 | (b1 << 8))
+        }
+        fn read_u32(&mut self) -> Result<u32, BinaryError> {
+            let b0 = self.read_byte()? as u32;
+            let b1 = self.read_byte()? as u32;
+            let b2 = self.read_byte()? as u32;
+            let b3 = self.read_byte()? as u32;
+            Ok(b0 | (b1 << 8) | (b2 << 16) | (b3 << 24))
+        }
+        fn read_u64(&mut self) -> Result<u64, BinaryError> {
+            let b0 = self.read_byte()? as u64;
+            let b1 = self.read_byte()? as u64;
+            let b2 = self.read_byte()? as u64;
+            let b3 = self.read_byte()? as u64;
+            let b4 = self.read_byte()? as u64;
+            let b5 = self.read_byte()? as u64;
+            let b6 = self.read_byte()? as u64;
+            let b7 = self.read_byte()? as u64;
+            Ok(b0 | (b1 << 8) | (b2 << 16) | (b3 << 24) | (b4 << 32) | (b5 << 40) | (b6 << 48) | (b7 << 56))
+        }
+
+        fn read_i8(&mut self) -> Result<i8, BinaryError> {
+            Ok(self.read_byte()? as i8)
+        }
+        fn read_i16(&mut self) -> Result<i16, BinaryError> {
+            Ok(self.read_u16()? as i16)
+        }
+        fn read_i32(&mut self) -> Result<i32, BinaryError> {
+            Ok(self.read_u32()? as i32)
+        }
+        fn read_i64(&mut self) -> Result<i64, BinaryError> {
+            Ok(self.read_u64()? as i64)
+        }
+
+        fn read_f32(&mut self) -> Result<f32, BinaryError> {
+            let i = self.read_i32()?;
+            Ok(f32::from_bits(i as u32))
+        }
+        fn read_f64(&mut self) -> Result<f64, BinaryError> {
+            let i = self.read_i64()?;
+            Ok(f64::from_bits(i as u64))
+        }
+
+        fn read_size(&mut self) -> Result<usize, BinaryError> {
+            let lower = self.read_u32()?;
+            if (lower & 0x80000000) == 0 {
+                return Ok(lower as usize);
+            }
+            let upper = self.read_u32()?;
+            if (upper & 0x80000000) != 0 {
+                return Err(BinaryError("out_of_range".to_string()));
+            }
+            Ok(((upper as usize) << 31) | (lower as usize))
+        }
+
+        fn read_string(&mut self) -> Result<String, BinaryError> {
+            let length = self.read_size()?;
+            let n = length / 2;
+            let mut v = String::with_capacity(n);
+            for _ in 0..n {
+                let c = self.read_u16()?;
+                v.push(char::from_u32(c as u32).unwrap_or('\u{FFFD}'));
+            }
+            Ok(v)
+        }
+    }
+
+    pub trait WritableStream {
+        fn write_byte(&mut self, b: u8) -> Result<(), BinaryError>;
+        fn write_bytes(&mut self, l: &[u8]) -> Result<(), BinaryError>;
+
+        fn write_unit(&mut self, _v: ()) -> Result<(), BinaryError> {
+            Ok(())
+        }
+        fn write_boolean(&mut self, v: bool) -> Result<(), BinaryError> {
+            if v { self.write_byte(0xFF) } else { self.write_byte(0) }
+        }
+
+        fn write_u8(&mut self, v: u8) -> Result<(), BinaryError> {
+            self.write_byte(v)
+        }
+        fn write_u16(&mut self, v: u16) -> Result<(), BinaryError> {
+            self.write_byte((v & 0xFF) as u8)?;
+            self.write_byte(((v >> 8) & 0xFF) as u8)
+        }
+        fn write_u32(&mut self, v: u32) -> Result<(), BinaryError> {
+            self.write_byte((v & 0xFF) as u8)?;
+            self.write_byte(((v >> 8) & 0xFF) as u8)?;
+            self.write_byte(((v >> 16) & 0xFF) as u8)?;
+            self.write_byte(((v >> 24) & 0xFF) as u8)
+        }
+        fn write_u64(&mut self, v: u64) -> Result<(), BinaryError> {
+            self.write_byte((v & 0xFF) as u8)?;
+            self.write_byte(((v >> 8) & 0xFF) as u8)?;
+            self.write_byte(((v >> 16) & 0xFF) as u8)?;
+            self.write_byte(((v >> 24) & 0xFF) as u8)?;
+            self.write_byte(((v >> 32) & 0xFF) as u8)?;
+            self.write_byte(((v >> 40) & 0xFF) as u8)?;
+            self.write_byte(((v >> 48) & 0xFF) as u8)?;
+            self.write_byte(((v >> 56) & 0xFF) as u8)
+        }
+
+        fn write_i8(&mut self, v: i8) -> Result<(), BinaryError> {
+            self.write_byte(v as u8)
+        }
+        fn write_i16(&mut self, v: i16) -> Result<(), BinaryError> {
+            self.write_u16(v as u16)
+        }
+        fn write_i32(&mut self, v: i32) -> Result<(), BinaryError> {
+            self.write_u32(v as u32)
+        }
+        fn write_i64(&mut self, v: i64) -> Result<(), BinaryError> {
+            self.write_u64(v as u64)
+        }
+
+        fn write_f32(&mut self, v: f32) -> Result<(), BinaryError> {
+            self.write_i32(v.to_bits() as i32)
+        }
+        fn write_f64(&mut self, v: f64) -> Result<(), BinaryError> {
+            self.write_i64(v.to_bits() as i64)
+        }
+
+        fn write_size(&mut self, v: i64) -> Result<(), BinaryError> {
+            if (v < 0) || (v > 0x3FFFFFFFFFFFFFFF) {
+                return Err(BinaryError("out_of_range".to_string()));
+            }
+            let lower = ((v as u64) & 0x7FFFFFFF) as u32;
+            let upper = (((v as u64) >> 31) & 0x7FFFFFFF) as u32;
+            if upper != 0 {
+                self.write_u32(lower | 0x80000000)?;
+                self.write_u32(upper)
+            }
+            else {
+                self.write_u32(lower)
+            }
+        }
+
+        fn write_string(&mut self, v: &str) -> Result<(), BinaryError> {
+            self.write_size((v.chars().count() * 2) as i64)?;
+            for c in v.chars() {
+                self.write_u16(c as u16)?;
+            }
+            Ok(())
+        }
+    }
+
+    pub struct ByteArrayStream {
+        buffer: Vec<u8>,
+        position: usize,
+    }
+
+    impl ByteArrayStream {
+        pub fn new() -> Self {
+            ByteArrayStream { buffer: Vec::new(), position: 0 }
+        }
+
+        pub fn get_position(&self) -> usize {
+            self.position
+        }
+
+        pub fn set_position(&mut self, position: usize) {
+            self.position = position;
+        }
+
+        pub fn get_length(&self) -> usize {
+            self.buffer.len()
+        }
+
+        pub fn set_length(&mut self, length: usize) {
+            self.buffer.resize(length, 0);
+        }
+
+        pub fn into_vec(self) -> Vec<u8> {
+            self.buffer
+        }
+    }
+
+    impl ReadableStream for ByteArrayStream {
+        fn read_byte(&mut self) -> Result<u8, BinaryError> {
+            if self.position + 1 > self.buffer.len() {
+                return Err(BinaryError("out_of_range".to_string()));
+            }
+            let b = self.buffer[self.position];
+            self.position += 1;
+            Ok(b)
+        }
+
+        fn read_bytes(&mut self, size: usize) -> Result<Vec<u8>, BinaryError> {
+            if self.position + size > self.buffer.len() {
+                return Err(BinaryError("out_of_range".to_string()));
+            }
+            let l = self.buffer[self.position..self.position + size].to_vec();
+            self.position += size;
+            Ok(l)
+        }
+    }
+
+    impl WritableStream for ByteArrayStream {
+        fn write_byte(&mut self, b: u8) -> Result<(), BinaryError> {
+            if self.position + 1 > self.buffer.len() {
+                self.buffer.resize(self.position + 1, 0);
+            }
+            self.buffer[self.position] = b;
+            self.position += 1;
+            Ok(())
+        }
+
+        fn write_bytes(&mut self, l: &[u8]) -> Result<(), BinaryError> {
+            let size = l.len();
+            if size == 0 { return Ok(()); }
+            if self.position + size > self.buffer.len() {
+                self.buffer.resize(self.position + size, 0);
+            }
+            self.buffer[self.position..self.position + size].copy_from_slice(l);
+            self.position += size;
+            Ok(())
+        }
+    }
+
+#Template BinaryTranslator Schema:Schema NamespaceName:String
+    /// Binary serialization translator
+    /// All functions use little-endian encoding compatible with Niveum binary protocol
+    pub struct BinaryTranslator;
+
+    impl BinaryTranslator {
+        ${GetBinaryTranslatorSerializers(Schema, NamespaceName)}
+    }
+
+#Template BinaryTranslator_Primitive_Unit
+    pub fn Unit_from_binary(s: &mut dyn ReadableStream) -> Result<(), BinaryError> {
+        s.read_unit()?;
+        Ok(())
+    }
+    pub fn Unit_to_binary(s: &mut dyn WritableStream, _v: &()) -> Result<(), BinaryError> {
+        s.write_unit(())
+    }
+
+#Template BinaryTranslator_Primitive_Boolean
+    pub fn Boolean_from_binary(s: &mut dyn ReadableStream) -> Result<bool, BinaryError> {
+        s.read_boolean()
+    }
+    pub fn Boolean_to_binary(s: &mut dyn WritableStream, v: &bool) -> Result<(), BinaryError> {
+        s.write_boolean(*v)
+    }
+
+#Template BinaryTranslator_Primitive_String
+    pub fn String_from_binary(s: &mut dyn ReadableStream) -> Result<String, BinaryError> {
+        s.read_string()
+    }
+    pub fn String_to_binary(s: &mut dyn WritableStream, v: &str) -> Result<(), BinaryError> {
+        s.write_string(v)
+    }
+
+#Template BinaryTranslator_Primitive_Int
+    pub fn Int_from_binary(s: &mut dyn ReadableStream) -> Result<i32, BinaryError> {
+        s.read_i32()
+    }
+    pub fn Int_to_binary(s: &mut dyn WritableStream, v: &i32) -> Result<(), BinaryError> {
+        s.write_i32(*v)
+    }
+
+#Template BinaryTranslator_Primitive_Real
+    pub fn Real_from_binary(s: &mut dyn ReadableStream) -> Result<f64, BinaryError> {
+        s.read_f64()
+    }
+    pub fn Real_to_binary(s: &mut dyn WritableStream, v: &f64) -> Result<(), BinaryError> {
+        s.write_f64(*v)
+    }
+
+#Template BinaryTranslator_Primitive_Byte
+    pub fn Byte_from_binary(s: &mut dyn ReadableStream) -> Result<u8, BinaryError> {
+        s.read_byte()
+    }
+    pub fn Byte_to_binary(s: &mut dyn WritableStream, v: &u8) -> Result<(), BinaryError> {
+        s.write_byte(*v)
+    }
+
+#Template BinaryTranslator_Primitive_UInt8
+    pub fn UInt8_from_binary(s: &mut dyn ReadableStream) -> Result<u8, BinaryError> {
+        s.read_u8()
+    }
+    pub fn UInt8_to_binary(s: &mut dyn WritableStream, v: &u8) -> Result<(), BinaryError> {
+        s.write_u8(*v)
+    }
+
+#Template BinaryTranslator_Primitive_UInt16
+    pub fn UInt16_from_binary(s: &mut dyn ReadableStream) -> Result<u16, BinaryError> {
+        s.read_u16()
+    }
+    pub fn UInt16_to_binary(s: &mut dyn WritableStream, v: &u16) -> Result<(), BinaryError> {
+        s.write_u16(*v)
+    }
+
+#Template BinaryTranslator_Primitive_UInt32
+    pub fn UInt32_from_binary(s: &mut dyn ReadableStream) -> Result<u32, BinaryError> {
+        s.read_u32()
+    }
+    pub fn UInt32_to_binary(s: &mut dyn WritableStream, v: &u32) -> Result<(), BinaryError> {
+        s.write_u32(*v)
+    }
+
+#Template BinaryTranslator_Primitive_UInt64
+    pub fn UInt64_from_binary(s: &mut dyn ReadableStream) -> Result<u64, BinaryError> {
+        s.read_u64()
+    }
+    pub fn UInt64_to_binary(s: &mut dyn WritableStream, v: &u64) -> Result<(), BinaryError> {
+        s.write_u64(*v)
+    }
+
+#Template BinaryTranslator_Primitive_Int8
+    pub fn Int8_from_binary(s: &mut dyn ReadableStream) -> Result<i8, BinaryError> {
+        s.read_i8()
+    }
+    pub fn Int8_to_binary(s: &mut dyn WritableStream, v: &i8) -> Result<(), BinaryError> {
+        s.write_i8(*v)
+    }
+
+#Template BinaryTranslator_Primitive_Int16
+    pub fn Int16_from_binary(s: &mut dyn ReadableStream) -> Result<i16, BinaryError> {
+        s.read_i16()
+    }
+    pub fn Int16_to_binary(s: &mut dyn WritableStream, v: &i16) -> Result<(), BinaryError> {
+        s.write_i16(*v)
+    }
+
+#Template BinaryTranslator_Primitive_Int32
+    pub fn Int32_from_binary(s: &mut dyn ReadableStream) -> Result<i32, BinaryError> {
+        s.read_i32()
+    }
+    pub fn Int32_to_binary(s: &mut dyn WritableStream, v: &i32) -> Result<(), BinaryError> {
+        s.write_i32(*v)
+    }
+
+#Template BinaryTranslator_Primitive_Int64
+    pub fn Int64_from_binary(s: &mut dyn ReadableStream) -> Result<i64, BinaryError> {
+        s.read_i64()
+    }
+    pub fn Int64_to_binary(s: &mut dyn WritableStream, v: &i64) -> Result<(), BinaryError> {
+        s.write_i64(*v)
+    }
+
+#Template BinaryTranslator_Primitive_Float32
+    pub fn Float32_from_binary(s: &mut dyn ReadableStream) -> Result<f32, BinaryError> {
+        s.read_f32()
+    }
+    pub fn Float32_to_binary(s: &mut dyn WritableStream, v: &f32) -> Result<(), BinaryError> {
+        s.write_f32(*v)
+    }
+
+#Template BinaryTranslator_Primitive_Float64
+    pub fn Float64_from_binary(s: &mut dyn ReadableStream) -> Result<f64, BinaryError> {
+        s.read_f64()
+    }
+    pub fn Float64_to_binary(s: &mut dyn WritableStream, v: &f64) -> Result<(), BinaryError> {
+        s.write_f64(*v)
+    }
+
+#Template BinaryTranslator_Primitive_Type
+    pub fn Type_from_binary(_s: &mut dyn ReadableStream) -> Result<String, BinaryError> {
+        Err(BinaryError("NotSupported".to_string()))
+    }
+    pub fn Type_to_binary(_s: &mut dyn WritableStream, _v: &str) -> Result<(), BinaryError> {
+        Err(BinaryError("NotSupported".to_string()))
+    }
+
+#Template BinaryTranslator_Alias a:AliasDef NamespaceName:String
+    ${BinaryTranslator_Alias(a.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(a.GetTypeSpec(), NamespaceName), a.Type, NamespaceName)}
+
+#Template BinaryTranslator_Alias Name:String TypeString:String ValueType:TypeSpec NamespaceName:String
+    $$
+        var ValueSimpleName = ValueType.SimpleName(NamespaceName);
+    pub fn [[${Name}_from_binary]](s: &mut dyn ReadableStream) -> Result<${TypeString}, BinaryError> {
+        let v = Self::[[${ValueSimpleName}_from_binary]](s)?;
+        Ok(${TypeString}(v))
+    }
+    pub fn [[${Name}_to_binary]](s: &mut dyn WritableStream, o: &${TypeString}) -> Result<(), BinaryError> {
+        Self::[[${ValueSimpleName}_to_binary]](s, &o.0)
+    }
+
+#Template BinaryTranslator_Record r:RecordDef NamespaceName:String
+    ${BinaryTranslator_Record(r.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(r.GetTypeSpec(), NamespaceName), r.Fields, NamespaceName)}
+
+#Template BinaryTranslator_Record Name:String TypeString:String Fields:List<VariableDef> NamespaceName:String
+    pub fn [[${Name}_from_binary]](s: &mut dyn ReadableStream) -> Result<${TypeString}, BinaryError> {
+        Ok(${TypeString} {
+            $$
+                foreach (var f in Fields)
+                {
+                    ##
+                        [[${f.Name}]]: Self::[[${f.Type.SimpleName(NamespaceName)}_from_binary]](s)?,
+                }
+        })
+    }
+    pub fn [[${Name}_to_binary]](s: &mut dyn WritableStream, o: &${TypeString}) -> Result<(), BinaryError> {
+        $$
+            foreach (var f in Fields)
+            {
+                ##
+                    Self::[[${f.Type.SimpleName(NamespaceName)}_to_binary]](s, &o.[[${f.Name}]])?;
+            }
+        Ok(())
+    }
+
+#Template BinaryTranslator_TaggedUnion tu:TaggedUnionDef NamespaceName:String
+    ${BinaryTranslator_TaggedUnion(tu.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(tu.GetTypeSpec(), NamespaceName), tu.Alternatives, NamespaceName, tu.VersionedName())}
+
+#Template BinaryTranslator_TaggedUnion Name:String TypeString:String Alternatives:List<VariableDef> NamespaceName:String EnclosingVersionedName:String
+    pub fn [[${Name}_from_binary]](s: &mut dyn ReadableStream) -> Result<${TypeString}, BinaryError> {
+        let tag = Self::Int_from_binary(s)?;
+        match tag {
+            $$
+                {
+                    var k = 0;
+                    foreach (var a in Alternatives)
+                    {
+                        if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
+                        {
+                            ##
+                                ${k} => Ok(${TypeString}::[[${a.Name}]])
+                        }
+                        else
+                        {
+                            ##
+                                ${k} => {
+                                    let v = Self::[[${a.Type.SimpleName(NamespaceName)}_from_binary]](s)?;
+                                    Ok(${TypeString}::[[${a.Name}]](${WrapVariant("v", a.Type, EnclosingVersionedName, NamespaceName)}))
+                                }
+                        }
+                        k += 1;
+                    }
+                }
+            _ => Err(BinaryError("InvalidOperation".to_string()))
+        }
+    }
+    pub fn [[${Name}_to_binary]](s: &mut dyn WritableStream, o: &${TypeString}) -> Result<(), BinaryError> {
+        match o {
+            $$
+                {
+                    var k = 0;
+                    foreach (var a in Alternatives)
+                    {
+                        if (a.Type.OnTypeRef && a.Type.TypeRef.NameMatches("Unit"))
+                        {
+                            ##
+                                ${TypeString}::[[${a.Name}]] => {
+                                    Self::Int_to_binary(s, &${k})?;
+                                    Ok(())
+                                }
+                        }
+                        else
+                        {
+                            ##
+                                ${TypeString}::[[${a.Name}]](v) => {
+                                    Self::Int_to_binary(s, &${k})?;
+                                    Self::[[${a.Type.SimpleName(NamespaceName)}_to_binary]](s, ${DerefVariant("v", a.Type, EnclosingVersionedName, NamespaceName)})?;
+                                    Ok(())
+                                }
+                        }
+                        k += 1;
+                    }
+                }
+        }
+    }
+#Template BinaryTranslator_Enum e:EnumDef NamespaceName:String
+    ${BinaryTranslator_Enum(e.GetTypeSpec().SimpleName(NamespaceName), GetTypeString(e.GetTypeSpec(), NamespaceName), e.UnderlyingType.SimpleName(NamespaceName), GetTypeString(e.UnderlyingType, NamespaceName), NamespaceName)}
+
+#Template BinaryTranslator_Enum Name:String TypeString:String UnderlyingSimpleName:String UnderlyingType:String NamespaceName:String
+    pub fn [[${Name}_from_binary]](s: &mut dyn ReadableStream) -> Result<${TypeString}, BinaryError> {
+        let v = Self::[[${UnderlyingSimpleName}_from_binary]](s)?;
+        Ok(unsafe { std::mem::transmute::<${UnderlyingType}, ${TypeString}>(v) })
+    }
+    pub fn [[${Name}_to_binary]](s: &mut dyn WritableStream, o: &${TypeString}) -> Result<(), BinaryError> {
+        let v: ${UnderlyingType} = unsafe { std::mem::transmute::<${TypeString}, ${UnderlyingType}>(*o) };
+        Self::[[${UnderlyingSimpleName}_to_binary]](s, &v)
+    }
+
+#Template BinaryTranslator_Tuple tp:TypeSpec NamespaceName:String
+    $$
+        var SimpleName = tp.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(tp, NamespaceName);
+    pub fn [[${SimpleName}_from_binary]](s: &mut dyn ReadableStream) -> Result<${TypeString}, BinaryError> {
+        $$
+            var ItemNames = new List<String>{};
+            {
+                int k = 0;
+                foreach (var t in tp.Tuple) {
+                    ##
+                        let item${k} = Self::[[${t.SimpleName(NamespaceName)}_from_binary]](s)?;
+                    ItemNames.Add("item" + (k).ToString(System.Globalization.CultureInfo.InvariantCulture));
+                    k += 1;
+                }
+            }
+        Ok((${String.Join(", ", ItemNames)}))
+    }
+    pub fn [[${SimpleName}_to_binary]](s: &mut dyn WritableStream, t: &${TypeString}) -> Result<(), BinaryError> {
+        $$
+            {
+                int k = 0;
+                foreach (var t in tp.Tuple) {
+                    ##
+                        Self::[[${t.SimpleName(NamespaceName)}_to_binary]](s, &t.${k})?;
+                    k += 1;
+                }
+            }
+        Ok(())
+    }
+
+#Template BinaryTranslator_Optional o:TypeSpec NamespaceName:String
+    $$
+        var ElementType = o.GenericTypeSpec.ParameterValues.Single();
+        var SimpleName = o.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(o, NamespaceName);
+    pub fn [[${SimpleName}_from_binary]](s: &mut dyn ReadableStream) -> Result<${TypeString}, BinaryError> {
+        let tag = Self::Int_from_binary(s)?;
+        if tag == 0 {
+            Ok(None)
+        } else {
+            Ok(Some(Self::[[${ElementType.SimpleName(NamespaceName)}_from_binary]](s)?))
+        }
+    }
+    pub fn [[${SimpleName}_to_binary]](s: &mut dyn WritableStream, o: &${TypeString}) -> Result<(), BinaryError> {
+        match o
+        {
+            None => {
+                Self::Int_to_binary(s, &0)?;
+            }
+            Some(v) => {
+                Self::Int_to_binary(s, &1)?;
+                Self::[[${ElementType.SimpleName(NamespaceName)}_to_binary]](s, &*v)?;
+            }
+        }
+        Ok(())
+    }
+
+#Template BinaryTranslator_List l:TypeSpec NamespaceName:String
+    $$
+        var SimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
+        var ElementType = l.GenericTypeSpec.ParameterValues.Single();
+        var ElementSimpleName = ElementType.SimpleName(NamespaceName);
+    pub fn [[${SimpleName}_from_binary]](s: &mut dyn ReadableStream) -> Result<${TypeString}, BinaryError> {
+        let length = s.read_size()?;
+        $$
+            if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8")) {
+                ##
+                    s.read_bytes(length)
+            }
+            else
+            {
+                ##
+                    let mut l = ${GetGenericNew(TypeString)};
+                    for _ in 0..length
+                    {
+                        l.push(Self::[[${ElementSimpleName}_from_binary]](s)?);
+                    }
+                    Ok(l)
+            }
+    }
+    pub fn [[${SimpleName}_to_binary]](s: &mut dyn WritableStream, l: &${TypeString}) -> Result<(), BinaryError> {
+        s.write_size(l.len() as i64)?;
+        $$
+            if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8")) {
+                ##
+                    s.write_bytes(l)?;
+            }
+            else
+            {
+                ##
+                    for e in l.iter() {
+                        Self::[[${ElementSimpleName}_to_binary]](s, e)?;
+                    }
+            }
+        Ok(())
+    }
+
+#Template BinaryTranslator_Set l:TypeSpec NamespaceName:String
+    $$
+        var SimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
+        var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
+    pub fn [[${SimpleName}_from_binary]](s: &mut dyn ReadableStream) -> Result<${TypeString}, BinaryError> {
+        let length = s.read_size()?;
+        let mut l = ${GetGenericNew(TypeString)};
+        for _ in 0..length
+        {
+            l.insert(Self::[[${ElementSimpleName}_from_binary]](s)?);
+        }
+        Ok(l)
+    }
+    pub fn [[${SimpleName}_to_binary]](s: &mut dyn WritableStream, l: &${TypeString}) -> Result<(), BinaryError> {
+        s.write_size(l.len() as i64)?;
+        for e in l.iter() {
+            Self::[[${ElementSimpleName}_to_binary]](s, e)?;
+        }
+        Ok(())
+    }
+
+#Template BinaryTranslator_Map l:TypeSpec NamespaceName:String
+    $$
+        var gp = l.GenericTypeSpec.ParameterValues;
+        if (gp.Count != 2) {
+            throw new ArgumentException();
+        }
+        var SimpleName = l.SimpleName(NamespaceName);
+        var TypeString = GetTypeString(l, NamespaceName);
+        var KeySimpleName = gp[0].SimpleName(NamespaceName);
+        var ValueSimpleName = gp[1].SimpleName(NamespaceName);
+    pub fn [[${SimpleName}_from_binary]](s: &mut dyn ReadableStream) -> Result<${TypeString}, BinaryError> {
+        let length = s.read_size()?;
+        let mut l = ${GetGenericNew(TypeString)};
+        for _ in 0..length
+        {
+            let key = Self::[[${KeySimpleName}_from_binary]](s)?;
+            let value = Self::[[${ValueSimpleName}_from_binary]](s)?;
+            l.insert(key, value);
+        }
+        Ok(l)
+    }
+    pub fn [[${SimpleName}_to_binary]](s: &mut dyn WritableStream, l: &${TypeString}) -> Result<(), BinaryError> {
+        s.write_size(l.len() as i64)?;
+        for (key, value) in l.iter() {
+            Self::[[${KeySimpleName}_to_binary]](s, key)?;
+            Self::[[${ValueSimpleName}_to_binary]](s, value)?;
+        }
+        Ok(())
+    }
+
+#Template Main Schema:Schema NamespaceName:String
+    //==========================================================================
+    //
+    //  Notice:      This file is automatically generated.
+    //               Please don't modify this file.
+    //
+    //==========================================================================
+
+    #![allow(dead_code)]
+    #![allow(non_camel_case_types)]
+    #![allow(non_snake_case)]
+    #![allow(non_upper_case_globals)]
+    #![allow(unused_imports)]
+
+    use std::collections::HashMap;
+    use std::collections::HashSet;
+    #[allow(unused_imports)]
+    use crate::world_types::World::*;
+
+    ${GetTypes(Schema, NamespaceName)}
+
+$End
