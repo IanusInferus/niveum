@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2026.06.06.
+//  Version:     2026.06.07.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -400,15 +400,17 @@ namespace Yuki.DatabaseRegenerator
             Console.WriteLine(@"MemoryDatabaseFileOutput 输出数据文件(包含Schema)路径。");
             Console.WriteLine(@"");
             Console.WriteLine(@"示例:");
-            Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:Data.kd /genm:Data,TestData");
+            Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:Data.kd /database:Example /genkrs:Data,TestData");
             Console.WriteLine(@"DatabaseRegenerator /connect:Data.kd /exportcoll:TestData");
             Console.WriteLine(@"DatabaseRegenerator /connect:Data.kd /importcoll:TestData");
+            Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""Data Source=Data.sqlite"" /database:Example /regensqlite:Data,TestData");
             Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""Data Source=.;Integrated Security=True"" /database:Example /regenmssql:Data,TestData");
             Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""Server=localhost;User ID=postgres;Password=postgres;"" /database:Example /regenpgsql:Data,TestData");
-            Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""server=localhost;uid=root"" /database:Example /regenmysql:Data,TestData");
+            Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""server=localhost;uid=root;pwd=mysql;"" /database:Example /regenmysql:Data,TestData");
+            Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""Data Source=Data.sqlite"" /database:Example /exportsqlite:Data.kd");
             Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""Data Source=.;Integrated Security=True"" /database:Example /exportmssql:Data.kd");
             Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""Server=localhost;User ID=postgres;Password=postgres;"" /database:Example /exportpgsql:Data.kd");
-            Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""server=localhost;uid=root"" /database:Example /exportmysql:Data.kd");
+            Console.WriteLine(@"DatabaseRegenerator /loadtype:DatabaseSchema /connect:""server=localhost;uid=root;pwd=mysql;"" /database:Example /exportmysql:Data.kd");
         }
 
         public static RelationVal LoadData(Schema s, String[] DataDirOrMemoryDatabaseFiles)

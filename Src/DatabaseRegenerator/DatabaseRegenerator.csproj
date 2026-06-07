@@ -9,7 +9,7 @@
     <Product>Yuki.DatabaseRegenerator</Product>
     <Copyright>Copyright(C) F.R.C., under BSD license</Copyright>
     <AssemblyName>DatabaseRegenerator</AssemblyName>
-    <AssemblyVersion>2026.06.06.0</AssemblyVersion>
+    <AssemblyVersion>2026.06.07.0</AssemblyVersion>
     <BaseIntermediateOutputPath>..\..\Obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
     <OutputType>Exe</OutputType>
     <OutputPath>..\..\Bin\</OutputPath>
@@ -40,8 +40,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="7.0.1" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.8" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.9.1" />
   </ItemGroup>
 
   <ItemGroup>

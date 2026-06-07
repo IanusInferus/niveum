@@ -6,6 +6,8 @@ Nivea, Niveum.Object, *:
 *:
 对批处理文件使用更好的explorer检测机制。
 更新对Visual Studio 2026的支持。
+DatabaseRegenerator, Examples:
+升级Sqlite并增加使用说明和示例。
 
 2026.06.06
 Niveum.Relation, Yuki.Relation:
