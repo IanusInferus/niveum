@@ -54,11 +54,11 @@ namespace Niveum.RelationSchemaDiff
         [Tag] public required EntityMappingMethodTag _Tag { get; init; }
 
         /// <summary>创建实体</summary>
-        public Unit? _v_New { get; init; }
+        private Unit? _v_New;
         /// <summary>复制实体，源实体名</summary>
-        public String? _v_Copy { get; init; }
+        private String? _v_Copy;
         /// <summary>字段映射</summary>
-        public FieldMapping? _v_Field { get; init; }
+        private FieldMapping? _v_Field;
 
         /// <summary>创建实体</summary>
         public static EntityMappingMethod CreateNew() { return new EntityMappingMethod { _Tag = EntityMappingMethodTag.New, _v_New = default(Unit) }; }
@@ -143,9 +143,9 @@ namespace Niveum.RelationSchemaDiff
         [Tag] public required FieldMappingMethodTag _Tag { get; init; }
 
         /// <summary>创建字段</summary>
-        public Optional<PrimitiveVal>? _v_New { get; init; }
+        private Optional<PrimitiveVal>? _v_New;
         /// <summary>复制字段，源字段名</summary>
-        public String? _v_Copy { get; init; }
+        private String? _v_Copy;
 
         /// <summary>创建字段</summary>
         public static FieldMappingMethod CreateNew(Optional<PrimitiveVal> Value) { return new FieldMappingMethod { _Tag = FieldMappingMethodTag.New, _v_New = Value }; }

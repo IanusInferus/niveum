@@ -1,6 +1,8 @@
 ﻿2026.06.07
 Niveum.Object, Niveum.Relation, Niveum.SchemaManipulator, Niveum.RelationSchemaManipulator:
 C#代码生成均支持/nullable。
+Nivea, Niveum.Object, *:
+修改Optional和TaggedUnion。
 
 2026.06.06
 Niveum.Relation, Yuki.Relation:

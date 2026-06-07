@@ -42,9 +42,9 @@ namespace Nivea.Template.Semantics
         [Tag] public required TemplateExprTag _Tag { get; init; }
 
         /// <summary>模板行</summary>
-        public List<TemplateSpan>? _v_Line { get; init; }
+        private List<TemplateSpan>? _v_Line;
         /// <summary>缩进的表达式</summary>
-        public IndentedExpr? _v_IndentedExpr { get; init; }
+        private IndentedExpr? _v_IndentedExpr;
 
         /// <summary>模板行</summary>
         public static TemplateExpr CreateLine(List<TemplateSpan> Value) { return new TemplateExpr { _Tag = TemplateExprTag.Line, _v_Line = Value }; }
@@ -103,11 +103,11 @@ namespace Nivea.Template.Semantics
         [Tag] public required TemplateSpanTag _Tag { get; init; }
 
         /// <summary>字面量</summary>
-        public String? _v_Literal { get; init; }
+        private String? _v_Literal;
         /// <summary>过滤器</summary>
-        public FilterExpr? _v_Filter { get; init; }
+        private FilterExpr? _v_Filter;
         /// <summary>表达式</summary>
-        public Expr? _v_Expr { get; init; }
+        private Expr? _v_Expr;
 
         /// <summary>字面量</summary>
         public static TemplateSpan CreateLiteral(String Value) { return new TemplateSpan { _Tag = TemplateSpanTag.Literal, _v_Literal = Value }; }
@@ -203,11 +203,11 @@ namespace Nivea.Template.Semantics
         [Tag] public required EmbeddedExprTag _Tag { get; init; }
 
         /// <summary>嵌入块</summary>
-        public String? _v_Span { get; init; }
+        private String? _v_Span;
         /// <summary>嵌入行</summary>
-        public String? _v_Line { get; init; }
+        private String? _v_Line;
         /// <summary>缩进的表达式</summary>
-        public IndentedExpr? _v_IndentedExpr { get; init; }
+        private IndentedExpr? _v_IndentedExpr;
 
         /// <summary>嵌入块</summary>
         public static EmbeddedExpr CreateSpan(String Value) { return new EmbeddedExpr { _Tag = EmbeddedExprTag.Span, _v_Span = Value }; }
@@ -345,71 +345,71 @@ namespace Nivea.Template.Semantics
         [Tag] public required ExprTag _Tag { get; init; }
 
         /// <summary>错误</summary>
-        public Unit? _v_Error { get; init; }
+        private Unit? _v_Error;
         /// <summary>歧义</summary>
-        public List<Expr>? _v_Ambiguous { get; init; }
+        private List<Expr>? _v_Ambiguous;
         /// <summary>序列</summary>
-        public List<Expr>? _v_Sequence { get; init; }
+        private List<Expr>? _v_Sequence;
         /// <summary>生成</summary>
-        public Expr? _v_Yield { get; init; }
+        private Expr? _v_Yield;
         /// <summary>多行生成</summary>
-        public Expr? _v_YieldMany { get; init; }
+        private Expr? _v_YieldMany;
         /// <summary>嵌入表达式</summary>
-        public List<EmbeddedExpr>? _v_Embedded { get; init; }
+        private List<EmbeddedExpr>? _v_Embedded;
         /// <summary>内嵌模板生成</summary>
-        public List<TemplateExpr>? _v_YieldTemplate { get; init; }
+        private List<TemplateExpr>? _v_YieldTemplate;
         /// <summary>抛出异常</summary>
-        public Optional<Expr>? _v_Throw { get; init; }
+        private Optional<Expr>? _v_Throw;
         /// <summary>不变量定义</summary>
-        public LetExpr? _v_Let { get; init; }
+        private LetExpr? _v_Let;
         /// <summary>变量定义</summary>
-        public VarExpr? _v_Var { get; init; }
+        private VarExpr? _v_Var;
         /// <summary>条件</summary>
-        public IfExpr? _v_If { get; init; }
+        private IfExpr? _v_If;
         /// <summary>匹配</summary>
-        public MatchExpr? _v_Match { get; init; }
+        private MatchExpr? _v_Match;
         /// <summary>枚举循环</summary>
-        public ForExpr? _v_For { get; init; }
+        private ForExpr? _v_For;
         /// <summary>条件循环</summary>
-        public WhileExpr? _v_While { get; init; }
+        private WhileExpr? _v_While;
         /// <summary>下一次循环</summary>
-        public Optional<Int>? _v_Continue { get; init; }
+        private Optional<Int>? _v_Continue;
         /// <summary>终止循环</summary>
-        public Optional<Int>? _v_Break { get; init; }
+        private Optional<Int>? _v_Break;
         /// <summary>返回</summary>
-        public Optional<Expr>? _v_Return { get; init; }
+        private Optional<Expr>? _v_Return;
         /// <summary>赋值</summary>
-        public AssignExpr? _v_Assign { get; init; }
+        private AssignExpr? _v_Assign;
         /// <summary>递增</summary>
-        public IncreaseExpr? _v_Increase { get; init; }
+        private IncreaseExpr? _v_Increase;
         /// <summary>递减</summary>
-        public DecreaseExpr? _v_Decrease { get; init; }
+        private DecreaseExpr? _v_Decrease;
         /// <summary>Lambda表达式</summary>
-        public LambdaExpr? _v_Lambda { get; init; }
+        private LambdaExpr? _v_Lambda;
         /// <summary>空字面量</summary>
-        public Unit? _v_Null { get; init; }
+        private Unit? _v_Null;
         /// <summary>默认值字面量</summary>
-        public Unit? _v_Default { get; init; }
+        private Unit? _v_Default;
         /// <summary>基元字面量</summary>
-        public PrimitiveLiteralExpr? _v_PrimitiveLiteral { get; init; }
+        private PrimitiveLiteralExpr? _v_PrimitiveLiteral;
         /// <summary>记录字面量</summary>
-        public RecordLiteralExpr? _v_RecordLiteral { get; init; }
+        private RecordLiteralExpr? _v_RecordLiteral;
         /// <summary>标签联合字面量</summary>
-        public TaggedUnionLiteralExpr? _v_TaggedUnionLiteral { get; init; }
+        private TaggedUnionLiteralExpr? _v_TaggedUnionLiteral;
         /// <summary>枚举字面量</summary>
-        public EnumLiteralExpr? _v_EnumLiteral { get; init; }
+        private EnumLiteralExpr? _v_EnumLiteral;
         /// <summary>元组字面量</summary>
-        public TupleLiteralExpr? _v_TupleLiteral { get; init; }
+        private TupleLiteralExpr? _v_TupleLiteral;
         /// <summary>列表字面量</summary>
-        public ListLiteralExpr? _v_ListLiteral { get; init; }
+        private ListLiteralExpr? _v_ListLiteral;
         /// <summary>类型字面量</summary>
-        public TypeSpec? _v_TypeLiteral { get; init; }
+        private TypeSpec? _v_TypeLiteral;
         /// <summary>变量引用</summary>
-        public VariableRef? _v_VariableRef { get; init; }
+        private VariableRef? _v_VariableRef;
         /// <summary>函数调用</summary>
-        public FunctionCallExpr? _v_FunctionCall { get; init; }
+        private FunctionCallExpr? _v_FunctionCall;
         /// <summary>转换</summary>
-        public CastExpr? _v_Cast { get; init; }
+        private CastExpr? _v_Cast;
 
         /// <summary>错误</summary>
         public static Expr CreateError() { return new Expr { _Tag = ExprTag.Error, _v_Error = default(Unit) }; }
@@ -1207,15 +1207,15 @@ namespace Nivea.Template.Semantics
         [Tag] public required VariableRefTag _Tag { get; init; }
 
         /// <summary>名称</summary>
-        public String? _v_Name { get; init; }
+        private String? _v_Name;
         /// <summary>当前对象</summary>
-        public Unit? _v_This { get; init; }
+        private Unit? _v_This;
         /// <summary>成员访问（静态和动态）</summary>
-        public MemberAccess? _v_MemberAccess { get; init; }
+        private MemberAccess? _v_MemberAccess;
         /// <summary>索引器访问</summary>
-        public IndexerAccess? _v_IndexerAccess { get; init; }
+        private IndexerAccess? _v_IndexerAccess;
         /// <summary>泛型函数特化</summary>
-        public GenericFunctionSpec? _v_GenericFunctionSpec { get; init; }
+        private GenericFunctionSpec? _v_GenericFunctionSpec;
 
         /// <summary>名称</summary>
         public static VariableRef CreateName(String Value) { return new VariableRef { _Tag = VariableRefTag.Name, _v_Name = Value }; }
@@ -1347,9 +1347,9 @@ namespace Nivea.Template.Semantics
         [Tag] public required LeftValueDefTag _Tag { get; init; }
 
         /// <summary>变量</summary>
-        public LocalVariableDef? _v_Variable { get; init; }
+        private LocalVariableDef? _v_Variable;
         /// <summary>忽略</summary>
-        public Optional<TypeSpec>? _v_Ignore { get; init; }
+        private Optional<TypeSpec>? _v_Ignore;
 
         /// <summary>变量</summary>
         public static LeftValueDef CreateVariable(LocalVariableDef Value) { return new LeftValueDef { _Tag = LeftValueDefTag.Variable, _v_Variable = Value }; }
@@ -1426,9 +1426,9 @@ namespace Nivea.Template.Semantics
         [Tag] public required LeftValueRefTag _Tag { get; init; }
 
         /// <summary>变量</summary>
-        public VariableRef? _v_Variable { get; init; }
+        private VariableRef? _v_Variable;
         /// <summary>忽略</summary>
-        public Unit? _v_Ignore { get; init; }
+        private Unit? _v_Ignore;
 
         /// <summary>变量</summary>
         public static LeftValueRef CreateVariable(VariableRef Value) { return new LeftValueRef { _Tag = LeftValueRefTag.Variable, _v_Variable = Value }; }
@@ -1548,27 +1548,27 @@ namespace Nivea.Template.Semantics
         [Tag] public required MatchPatternTag _Tag { get; init; }
 
         /// <summary>错误</summary>
-        public Unit? _v_Error { get; init; }
+        private Unit? _v_Error;
         /// <summary>歧义</summary>
-        public List<MatchPattern>? _v_Ambiguous { get; init; }
+        private List<MatchPattern>? _v_Ambiguous;
         /// <summary>不变量定义</summary>
-        public LeftValueDef? _v_Let { get; init; }
+        private LeftValueDef? _v_Let;
         /// <summary>忽略</summary>
-        public Unit? _v_Ignore { get; init; }
+        private Unit? _v_Ignore;
         /// <summary>基元字面量</summary>
-        public PrimitiveLiteralExpr? _v_PrimitiveLiteral { get; init; }
+        private PrimitiveLiteralExpr? _v_PrimitiveLiteral;
         /// <summary>记录模式</summary>
-        public RecordLiteralPattern? _v_RecordLiteral { get; init; }
+        private RecordLiteralPattern? _v_RecordLiteral;
         /// <summary>标签联合模式</summary>
-        public TaggedUnionLiteralPattern? _v_TaggedUnionLiteral { get; init; }
+        private TaggedUnionLiteralPattern? _v_TaggedUnionLiteral;
         /// <summary>枚举字面量</summary>
-        public EnumLiteralExpr? _v_EnumLiteral { get; init; }
+        private EnumLiteralExpr? _v_EnumLiteral;
         /// <summary>元组模式</summary>
-        public TupleLiteralPattern? _v_TupleLiteral { get; init; }
+        private TupleLiteralPattern? _v_TupleLiteral;
         /// <summary>列表模式</summary>
-        public ListLiteralPattern? _v_ListLiteral { get; init; }
+        private ListLiteralPattern? _v_ListLiteral;
         /// <summary>变量引用</summary>
-        public VariableRef? _v_VariableRef { get; init; }
+        private VariableRef? _v_VariableRef;
 
         /// <summary>错误</summary>
         public static MatchPattern CreateError() { return new MatchPattern { _Tag = MatchPatternTag.Error, _v_Error = default(Unit) }; }

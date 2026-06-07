@@ -48,15 +48,15 @@ namespace Nivea.Template.Semantics
         [Tag] public required TypeDefTag _Tag { get; init; }
 
         /// <summary>基元</summary>
-        public PrimitiveDef? _v_Primitive { get; init; }
+        private PrimitiveDef? _v_Primitive;
         /// <summary>别名</summary>
-        public AliasDef? _v_Alias { get; init; }
+        private AliasDef? _v_Alias;
         /// <summary>记录</summary>
-        public RecordDef? _v_Record { get; init; }
+        private RecordDef? _v_Record;
         /// <summary>标签联合</summary>
-        public TaggedUnionDef? _v_TaggedUnion { get; init; }
+        private TaggedUnionDef? _v_TaggedUnion;
         /// <summary>枚举</summary>
-        public EnumDef? _v_Enum { get; init; }
+        private EnumDef? _v_Enum;
 
         /// <summary>基元</summary>
         public static TypeDef CreatePrimitive(PrimitiveDef Value) { return new TypeDef { _Tag = TypeDefTag.Primitive, _v_Primitive = Value }; }
@@ -187,17 +187,17 @@ namespace Nivea.Template.Semantics
         [Tag] public required TypeSpecTag _Tag { get; init; }
 
         /// <summary>类型引用</summary>
-        public TypeRef? _v_TypeRef { get; init; }
+        private TypeRef? _v_TypeRef;
         /// <summary>泛型参数引用</summary>
-        public String? _v_GenericParameterRef { get; init; }
+        private String? _v_GenericParameterRef;
         /// <summary>元组规格</summary>
-        public List<TypeSpec>? _v_Tuple { get; init; }
+        private List<TypeSpec>? _v_Tuple;
         /// <summary>泛型特化规格</summary>
-        public GenericTypeSpec? _v_GenericTypeSpec { get; init; }
+        private GenericTypeSpec? _v_GenericTypeSpec;
         /// <summary>数组规格</summary>
-        public TypeSpec? _v_Array { get; init; }
+        private TypeSpec? _v_Array;
         /// <summary>成员类型规格</summary>
-        public TypeMemberSpec? _v_Member { get; init; }
+        private TypeMemberSpec? _v_Member;
 
         /// <summary>类型引用</summary>
         public static TypeSpec CreateTypeRef(TypeRef Value) { return new TypeSpec { _Tag = TypeSpecTag.TypeRef, _v_TypeRef = Value }; }

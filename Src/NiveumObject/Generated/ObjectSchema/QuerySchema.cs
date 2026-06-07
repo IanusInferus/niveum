@@ -82,11 +82,11 @@ namespace Niveum.ObjectSchema
         [Tag] public required QueryFunctionTag _Tag { get; init; }
 
         /// <summary>返回空</summary>
-        public Unit? _v_None { get; init; }
+        private Unit? _v_None;
         /// <summary>获取长度</summary>
-        public Unit? _v_Count { get; init; }
+        private Unit? _v_Count;
         /// <summary>选择器</summary>
-        public QuerySelect? _v_Select { get; init; }
+        private QuerySelect? _v_Select;
 
         /// <summary>返回空</summary>
         public static QueryFunction CreateNone() { return new QueryFunction { _Tag = QueryFunctionTag.None, _v_None = default(Unit) }; }
@@ -183,17 +183,17 @@ namespace Niveum.ObjectSchema
         [Tag] public required NumeralTag _Tag { get; init; }
 
         /// <summary>0..1</summary>
-        public Unit? _v_Optional { get; init; }
+        private Unit? _v_Optional;
         /// <summary>1</summary>
-        public Unit? _v_One { get; init; }
+        private Unit? _v_One;
         /// <summary>*</summary>
-        public Unit? _v_Many { get; init; }
+        private Unit? _v_Many;
         /// <summary>全部</summary>
-        public Unit? _v_All { get; init; }
+        private Unit? _v_All;
         /// <summary>区间</summary>
-        public Unit? _v_Range { get; init; }
+        private Unit? _v_Range;
         /// <summary>数量</summary>
-        public Unit? _v_Count { get; init; }
+        private Unit? _v_Count;
 
         /// <summary>0..1</summary>
         public static Numeral CreateOptional() { return new Numeral { _Tag = NumeralTag.Optional, _v_Optional = default(Unit) }; }

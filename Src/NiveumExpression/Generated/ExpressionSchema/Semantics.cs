@@ -123,17 +123,17 @@ namespace Niveum.ExpressionSchema
         [Tag] public required ExprTag _Tag { get; init; }
 
         /// <summary>字面量表达式</summary>
-        public LiteralExpr? _v_Literal { get; init; }
+        private LiteralExpr? _v_Literal;
         /// <summary>变量表达式</summary>
-        public VariableExpr? _v_Variable { get; init; }
+        private VariableExpr? _v_Variable;
         /// <summary>函数表达式</summary>
-        public FunctionExpr? _v_Function { get; init; }
+        private FunctionExpr? _v_Function;
         /// <summary>if伪函数表达式</summary>
-        public IfExpr? _v_If { get; init; }
+        private IfExpr? _v_If;
         /// <summary>&amp;&amp;运算符表达式</summary>
-        public AndAlsoExpr? _v_AndAlso { get; init; }
+        private AndAlsoExpr? _v_AndAlso;
         /// <summary>||运算符表达式</summary>
-        public OrElseExpr? _v_OrElse { get; init; }
+        private OrElseExpr? _v_OrElse;
 
         /// <summary>字面量表达式</summary>
         public static Expr CreateLiteral(LiteralExpr Value) { return new Expr { _Tag = ExprTag.Literal, _v_Literal = Value }; }
@@ -268,11 +268,11 @@ namespace Niveum.ExpressionSchema
         [Tag] public required LiteralExprTag _Tag { get; init; }
 
         /// <summary>布尔字面量</summary>
-        public Boolean? _v_BooleanValue { get; init; }
+        private Boolean? _v_BooleanValue;
         /// <summary>整数字面量</summary>
-        public Int? _v_IntValue { get; init; }
+        private Int? _v_IntValue;
         /// <summary>实数字面量</summary>
-        public Real? _v_RealValue { get; init; }
+        private Real? _v_RealValue;
 
         /// <summary>布尔字面量</summary>
         public static LiteralExpr CreateBooleanValue(Boolean Value) { return new LiteralExpr { _Tag = LiteralExprTag.BooleanValue, _v_BooleanValue = Value }; }

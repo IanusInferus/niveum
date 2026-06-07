@@ -4,7 +4,7 @@
       File:        CSharp.tree
       Location:    Niveum.Object <Tree>
       Description: 对象类型结构C#模板
-      Version:     2022.11.01.
+      Version:     2026.06.07.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -174,14 +174,44 @@
     {
         [Tag] public OptionalTag _Tag;
 
-        public Unit None;
-        public T Some;
+        private Unit _v_None;
+        private T _v_Some;
 
-        public static Optional<T> CreateNone() { return new Optional<T> { _Tag = OptionalTag.None, None = new Unit() }; }
-        public static Optional<T> CreateSome(T Value) { return new Optional<T> { _Tag = OptionalTag.Some, Some = Value }; }
+        public static Optional<T> CreateNone() { return new Optional<T> { _Tag = OptionalTag.None, _v_None = new Unit() }; }
+        public static Optional<T> CreateSome(T Value) { return new Optional<T> { _Tag = OptionalTag.Some, _v_Some = Value }; }
 
         public Boolean OnNone { get { return _Tag == OptionalTag.None; } }
         public Boolean OnSome { get { return _Tag == OptionalTag.Some; } }
+
+        public Unit None
+        {
+            get
+            {
+                if (OnNone)
+                {
+                    return (Unit)_v_None;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
+
+        public T Some
+        {
+            get
+            {
+                if (OnSome)
+                {
+                    return (T)_v_Some;
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+            }
+        }
 
         public static Optional<T> Empty { get { return CreateNone(); } }
         public static implicit operator Optional<T>(T v)
@@ -368,7 +398,7 @@
             {
                 ##
                     ${GetXmlComment(a.Description)}
-                    public ${GetTypeString(a.Type, tu.NamespaceName())} [[${a.Name}]];
+                    private ${GetTypeString(a.Type, tu.NamespaceName())} [[_v_${a.Name}]];
             }
 
         $$
@@ -378,13 +408,13 @@
                 {
                     ##
                         ${GetXmlComment(a.Description)}
-                        public static ${Name} [[Create${a.Name}]]() { return new ${Name} { _Tag = ${TagName}.[[${a.Name}]], [[${a.Name}]] = default(Unit) }; }
+                        public static ${Name} [[Create${a.Name}]]() { return new ${Name} { _Tag = ${TagName}.[[${a.Name}]], [[_v_${a.Name}]] = default(Unit) }; }
                 }
                 else
                 {
                     ##
                         ${GetXmlComment(a.Description)}
-                        public static ${Name} [[Create${a.Name}]](${GetTypeString(a.Type, tu.NamespaceName())} Value) { return new ${Name} { _Tag = ${TagName}.[[${a.Name}]], [[${a.Name}]] = Value }; }
+                        public static ${Name} [[Create${a.Name}]](${GetTypeString(a.Type, tu.NamespaceName())} Value) { return new ${Name} { _Tag = ${TagName}.[[${a.Name}]], [[_v_${a.Name}]] = Value }; }
                 }
             }
 
@@ -394,6 +424,27 @@
                 ##
                     ${GetXmlComment(a.Description)}
                     public Boolean [[On${a.Name}]] { get { return _Tag == ${TagName}.[[${a.Name}]]; } }
+            }
+
+        $$
+            foreach (var a in tu.Alternatives)
+            {
+                ##
+                    ${GetXmlComment(a.Description)}
+                    public ${GetTypeString(a.Type, tu.NamespaceName())} [[${a.Name}]]
+                    {
+                        get
+                        {
+                            if ([[On${a.Name}]])
+                            {
+                                return (${GetTypeString(a.Type, tu.NamespaceName())})[[_v_${a.Name}]]!;
+                            }
+                            else
+                            {
+                                throw new InvalidOperationException();
+                            }
+                        }
+                    }
             }
     }
 

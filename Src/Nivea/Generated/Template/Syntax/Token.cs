@@ -69,23 +69,23 @@ namespace Nivea.Template.Syntax
         [Tag] public required TokenTypeTag _Tag { get; init; }
 
         /// <summary>直接</summary>
-        public String? _v_Direct { get; init; }
+        private String? _v_Direct;
         /// <summary>双引号引用</summary>
-        public String? _v_Quoted { get; init; }
+        private String? _v_Quoted;
         /// <summary>双双引号引用</summary>
-        public String? _v_Escaped { get; init; }
+        private String? _v_Escaped;
         /// <summary>左括号</summary>
-        public Unit? _v_LeftParenthesis { get; init; }
+        private Unit? _v_LeftParenthesis;
         /// <summary>右括号</summary>
-        public Unit? _v_RightParenthesis { get; init; }
+        private Unit? _v_RightParenthesis;
         /// <summary>逗号</summary>
-        public Unit? _v_Comma { get; init; }
+        private Unit? _v_Comma;
         /// <summary>预处理指令</summary>
-        public String? _v_PreprocessDirective { get; init; }
+        private String? _v_PreprocessDirective;
         /// <summary>运算符</summary>
-        public String? _v_Operator { get; init; }
+        private String? _v_Operator;
         /// <summary>单行注释</summary>
-        public String? _v_SingleLineComment { get; init; }
+        private String? _v_SingleLineComment;
 
         /// <summary>直接</summary>
         public static TokenType CreateDirect(String Value) { return new TokenType { _Tag = TokenTypeTag.Direct, _v_Direct = Value }; }

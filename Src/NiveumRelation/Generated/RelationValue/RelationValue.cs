@@ -63,9 +63,9 @@ namespace Niveum.RelationValue
         [Tag] public required ColumnValTag _Tag { get; init; }
 
         /// <summary>基元数据</summary>
-        public PrimitiveVal? _v_Primitive { get; init; }
+        private PrimitiveVal? _v_Primitive;
         /// <summary>可选数据</summary>
-        public Optional<PrimitiveVal>? _v_Optional { get; init; }
+        private Optional<PrimitiveVal>? _v_Optional;
 
         /// <summary>基元数据</summary>
         public static ColumnVal CreatePrimitive(PrimitiveVal Value) { return new ColumnVal { _Tag = ColumnValTag.Primitive, _v_Primitive = Value }; }
@@ -130,17 +130,17 @@ namespace Niveum.RelationValue
         [Tag] public required PrimitiveValTag _Tag { get; init; }
 
         /// <summary>布尔</summary>
-        public Boolean? _v_BooleanValue { get; init; }
+        private Boolean? _v_BooleanValue;
         /// <summary>字符串</summary>
-        public String? _v_StringValue { get; init; }
+        private String? _v_StringValue;
         /// <summary>整数</summary>
-        public Int? _v_IntValue { get; init; }
+        private Int? _v_IntValue;
         /// <summary>实数</summary>
-        public Real? _v_RealValue { get; init; }
+        private Real? _v_RealValue;
         /// <summary>二进制</summary>
-        public List<Byte>? _v_BinaryValue { get; init; }
+        private List<Byte>? _v_BinaryValue;
         /// <summary>64位有符号整数</summary>
-        public Int64? _v_Int64Value { get; init; }
+        private Int64? _v_Int64Value;
 
         /// <summary>布尔</summary>
         public static PrimitiveVal CreateBooleanValue(Boolean Value) { return new PrimitiveVal { _Tag = PrimitiveValTag.BooleanValue, _v_BooleanValue = Value }; }

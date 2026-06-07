@@ -68,17 +68,17 @@ namespace Nivea.Template.Semantics
         [Tag] public required SectionDefTag _Tag { get; init; }
 
         /// <summary>命名空间</summary>
-        public List<String>? _v_Namespace { get; init; }
+        private List<String>? _v_Namespace;
         /// <summary>程序集引用</summary>
-        public List<String>? _v_Assembly { get; init; }
+        private List<String>? _v_Assembly;
         /// <summary>命名空间和类空间导入</summary>
-        public List<List<String>>? _v_Import { get; init; }
+        private List<List<String>>? _v_Import;
         /// <summary>类型定义</summary>
-        public TypeDef? _v_Type { get; init; }
+        private TypeDef? _v_Type;
         /// <summary>常量值</summary>
-        public ConstantValue? _v_Constant { get; init; }
+        private ConstantValue? _v_Constant;
         /// <summary>模板定义</summary>
-        public TemplateDef? _v_Template { get; init; }
+        private TemplateDef? _v_Template;
 
         /// <summary>命名空间</summary>
         public static SectionDef CreateNamespace(List<String> Value) { return new SectionDef { _Tag = SectionDefTag.Namespace, _v_Namespace = Value }; }

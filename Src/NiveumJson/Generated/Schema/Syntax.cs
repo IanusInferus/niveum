@@ -46,13 +46,13 @@ namespace Niveum.Json.Syntax
         [Tag] public required TokenLiteralTag _Tag { get; init; }
 
         /// <summary>空</summary>
-        public Unit? _v_NullValue { get; init; }
+        private Unit? _v_NullValue;
         /// <summary>布尔</summary>
-        public Boolean? _v_BooleanValue { get; init; }
+        private Boolean? _v_BooleanValue;
         /// <summary>实数</summary>
-        public Real? _v_NumberValue { get; init; }
+        private Real? _v_NumberValue;
         /// <summary>字符串</summary>
-        public String? _v_StringValue { get; init; }
+        private String? _v_StringValue;
 
         /// <summary>空</summary>
         public static TokenLiteral CreateNullValue() { return new TokenLiteral { _Tag = TokenLiteralTag.NullValue, _v_NullValue = default(Unit) }; }
@@ -149,11 +149,11 @@ namespace Niveum.Json.Syntax
         [Tag] public required SyntaxValueTag _Tag { get; init; }
 
         /// <summary>字面量</summary>
-        public TokenLiteral? _v_Literal { get; init; }
+        private TokenLiteral? _v_Literal;
         /// <summary>对象字面量</summary>
-        public SyntaxObject? _v_Object { get; init; }
+        private SyntaxObject? _v_Object;
         /// <summary>数组字面量</summary>
-        public SyntaxArray? _v_Array { get; init; }
+        private SyntaxArray? _v_Array;
 
         /// <summary>字面量</summary>
         public static SyntaxValue CreateLiteral(TokenLiteral Value) { return new SyntaxValue { _Tag = SyntaxValueTag.Literal, _v_Literal = Value }; }
@@ -236,9 +236,9 @@ namespace Niveum.Json.Syntax
         [Tag] public required SyntaxMembersTag _Tag { get; init; }
 
         /// <summary>单个成员</summary>
-        public Tuple<TokenLiteral, SyntaxValue>? _v_Single { get; init; }
+        private Tuple<TokenLiteral, SyntaxValue>? _v_Single;
         /// <summary>多个成员</summary>
-        public Tuple<SyntaxMembers, TokenLiteral, SyntaxValue>? _v_Multiple { get; init; }
+        private Tuple<SyntaxMembers, TokenLiteral, SyntaxValue>? _v_Multiple;
 
         /// <summary>单个成员</summary>
         public static SyntaxMembers CreateSingle(Tuple<TokenLiteral, SyntaxValue> Value) { return new SyntaxMembers { _Tag = SyntaxMembersTag.Single, _v_Single = Value }; }
@@ -302,9 +302,9 @@ namespace Niveum.Json.Syntax
         [Tag] public required SyntaxElementsTag _Tag { get; init; }
 
         /// <summary>单个元素</summary>
-        public SyntaxValue? _v_Single { get; init; }
+        private SyntaxValue? _v_Single;
         /// <summary>多个元素</summary>
-        public Tuple<SyntaxElements, SyntaxValue>? _v_Multiple { get; init; }
+        private Tuple<SyntaxElements, SyntaxValue>? _v_Multiple;
 
         /// <summary>单个元素</summary>
         public static SyntaxElements CreateSingle(SyntaxValue Value) { return new SyntaxElements { _Tag = SyntaxElementsTag.Single, _v_Single = Value }; }
@@ -383,31 +383,31 @@ namespace Niveum.Json.Syntax
         [Tag] public required SyntaxRuleTag _Tag { get; init; }
 
         /// <summary>字面量</summary>
-        public TokenLiteral? _v_Literal { get; init; }
+        private TokenLiteral? _v_Literal;
         /// <summary>左方括号</summary>
-        public Unit? _v_LeftBracket { get; init; }
+        private Unit? _v_LeftBracket;
         /// <summary>右方括号</summary>
-        public Unit? _v_RightBracket { get; init; }
+        private Unit? _v_RightBracket;
         /// <summary>左花括号</summary>
-        public Unit? _v_LeftBrace { get; init; }
+        private Unit? _v_LeftBrace;
         /// <summary>右花括号</summary>
-        public Unit? _v_RightBrace { get; init; }
+        private Unit? _v_RightBrace;
         /// <summary>冒号</summary>
-        public Unit? _v_Colon { get; init; }
+        private Unit? _v_Colon;
         /// <summary>逗号</summary>
-        public Unit? _v_Comma { get; init; }
+        private Unit? _v_Comma;
         /// <summary>空白</summary>
-        public Unit? _v_Whitespace { get; init; }
+        private Unit? _v_Whitespace;
         /// <summary>值</summary>
-        public SyntaxValue? _v_Value { get; init; }
+        private SyntaxValue? _v_Value;
         /// <summary>对象</summary>
-        public SyntaxObject? _v_Object { get; init; }
+        private SyntaxObject? _v_Object;
         /// <summary>成员</summary>
-        public SyntaxMembers? _v_Members { get; init; }
+        private SyntaxMembers? _v_Members;
         /// <summary>数组</summary>
-        public SyntaxArray? _v_Array { get; init; }
+        private SyntaxArray? _v_Array;
         /// <summary>元素</summary>
-        public SyntaxElements? _v_Elements { get; init; }
+        private SyntaxElements? _v_Elements;
 
         /// <summary>字面量</summary>
         public static SyntaxRule CreateLiteral(TokenLiteral Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.Literal, _v_Literal = Value }; }

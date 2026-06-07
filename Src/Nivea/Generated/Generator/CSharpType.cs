@@ -408,7 +408,7 @@ namespace Nivea.Generator.CSharpType
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
-                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "public "), GetTypeString(a.Type)), "? "), GetEscapedIdentifier(Combine(Combine(Begin(), "_v_"), a.Name))), " { get; init; }"))
+                foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "private "), GetTypeString(a.Type)), "? "), GetEscapedIdentifier(Combine(Combine(Begin(), "_v_"), a.Name))), ";"))
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }

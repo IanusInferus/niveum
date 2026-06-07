@@ -54,21 +54,21 @@ namespace Nivea.Template.Syntax
         [Tag] public required ExprNodeTag _Tag { get; init; }
 
         /// <summary>直接</summary>
-        public String? _v_Direct { get; init; }
+        private String? _v_Direct;
         /// <summary>字面量</summary>
-        public String? _v_Literal { get; init; }
+        private String? _v_Literal;
         /// <summary>运算符</summary>
-        public String? _v_Operator { get; init; }
+        private String? _v_Operator;
         /// <summary>内嵌模板</summary>
-        public List<Semantics.TemplateExpr>? _v_Template { get; init; }
+        private List<Semantics.TemplateExpr>? _v_Template;
         /// <summary>内嵌模板生成</summary>
-        public List<Semantics.TemplateExpr>? _v_YieldTemplate { get; init; }
+        private List<Semantics.TemplateExpr>? _v_YieldTemplate;
         /// <summary>茎</summary>
-        public ExprNodeStem? _v_Stem { get; init; }
+        private ExprNodeStem? _v_Stem;
         /// <summary>待定序列</summary>
-        public ExprNodeUndetermined? _v_Undetermined { get; init; }
+        private ExprNodeUndetermined? _v_Undetermined;
         /// <summary>成员</summary>
-        public ExprNodeMember? _v_Member { get; init; }
+        private ExprNodeMember? _v_Member;
 
         /// <summary>直接</summary>
         public static ExprNode CreateDirect(String Value) { return new ExprNode { _Tag = ExprNodeTag.Direct, _v_Direct = Value }; }
@@ -266,9 +266,9 @@ namespace Nivea.Template.Syntax
         [Tag] public required StackNodeTag _Tag { get; init; }
 
         /// <summary>结点</summary>
-        public ExprNode? _v_Node { get; init; }
+        private ExprNode? _v_Node;
         /// <summary>词</summary>
-        public Token? _v_Token { get; init; }
+        private Token? _v_Token;
 
         /// <summary>结点</summary>
         public static StackNode CreateNode(ExprNode Value) { return new StackNode { _Tag = StackNodeTag.Node, _v_Node = Value }; }

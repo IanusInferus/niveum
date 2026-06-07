@@ -44,11 +44,11 @@ namespace Niveum.ExpressionSchema
         [Tag] public required TokenLiteralTag _Tag { get; init; }
 
         /// <summary>布尔类型</summary>
-        public Boolean? _v_BooleanValue { get; init; }
+        private Boolean? _v_BooleanValue;
         /// <summary>整数类型</summary>
-        public Int? _v_IntValue { get; init; }
+        private Int? _v_IntValue;
         /// <summary>实数类型</summary>
-        public Real? _v_RealValue { get; init; }
+        private Real? _v_RealValue;
 
         /// <summary>布尔类型</summary>
         public static TokenLiteral CreateBooleanValue(Boolean Value) { return new TokenLiteral { _Tag = TokenLiteralTag.BooleanValue, _v_BooleanValue = Value }; }
@@ -168,17 +168,17 @@ namespace Niveum.ExpressionSchema
         [Tag] public required SyntaxExprTag _Tag { get; init; }
 
         /// <summary>字面量</summary>
-        public ProductionLiteral? _v_Literal { get; init; }
+        private ProductionLiteral? _v_Literal;
         /// <summary>函数</summary>
-        public ProductionFunction? _v_Function { get; init; }
+        private ProductionFunction? _v_Function;
         /// <summary>单个变量</summary>
-        public ProductionVariable? _v_Variable { get; init; }
+        private ProductionVariable? _v_Variable;
         /// <summary>括号</summary>
-        public ProductionParen? _v_Paren { get; init; }
+        private ProductionParen? _v_Paren;
         /// <summary>前缀单目运算</summary>
-        public ProductionUnaryOperator? _v_UnaryOperator { get; init; }
+        private ProductionUnaryOperator? _v_UnaryOperator;
         /// <summary>中缀二目运算</summary>
-        public ProductionBinaryOperator? _v_BinaryOperator { get; init; }
+        private ProductionBinaryOperator? _v_BinaryOperator;
 
         /// <summary>字面量</summary>
         public static SyntaxExpr CreateLiteral(ProductionLiteral Value) { return new SyntaxExpr { _Tag = SyntaxExprTag.Literal, _v_Literal = Value }; }
@@ -311,9 +311,9 @@ namespace Niveum.ExpressionSchema
         [Tag] public required SyntaxParameterListTag _Tag { get; init; }
 
         /// <summary>空参数列表</summary>
-        public ProductionNullParameterList? _v_Null { get; init; }
+        private ProductionNullParameterList? _v_Null;
         /// <summary>非空参数列表</summary>
-        public ProductionNonnullParameterList? _v_Nonnull { get; init; }
+        private ProductionNonnullParameterList? _v_Nonnull;
 
         /// <summary>空参数列表</summary>
         public static SyntaxParameterList CreateNull(ProductionNullParameterList Value) { return new SyntaxParameterList { _Tag = SyntaxParameterListTag.Null, _v_Null = Value }; }
@@ -370,9 +370,9 @@ namespace Niveum.ExpressionSchema
         [Tag] public required SyntaxNonnullParameterListTag _Tag { get; init; }
 
         /// <summary>单个参数列表</summary>
-        public ProductionSingleParameterList? _v_Single { get; init; }
+        private ProductionSingleParameterList? _v_Single;
         /// <summary>多个参数列表</summary>
-        public ProductionMultipleParameterList? _v_Multiple { get; init; }
+        private ProductionMultipleParameterList? _v_Multiple;
 
         /// <summary>单个参数列表</summary>
         public static SyntaxNonnullParameterList CreateSingle(ProductionSingleParameterList Value) { return new SyntaxNonnullParameterList { _Tag = SyntaxNonnullParameterListTag.Single, _v_Single = Value }; }
@@ -523,25 +523,25 @@ namespace Niveum.ExpressionSchema
         [Tag] public required SyntaxRuleTag _Tag { get; init; }
 
         /// <summary>字面量</summary>
-        public TokenLiteral? _v_Literal { get; init; }
+        private TokenLiteral? _v_Literal;
         /// <summary>标识符</summary>
-        public TokenIdentifier? _v_Identifier { get; init; }
+        private TokenIdentifier? _v_Identifier;
         /// <summary>二目运算符</summary>
-        public TokenBinaryOperator? _v_BinaryOperator { get; init; }
+        private TokenBinaryOperator? _v_BinaryOperator;
         /// <summary>单目运算符</summary>
-        public TokenUnaryOperator? _v_UnaryOperator { get; init; }
+        private TokenUnaryOperator? _v_UnaryOperator;
         /// <summary>左小括号</summary>
-        public TokenLeftParen? _v_LeftParen { get; init; }
+        private TokenLeftParen? _v_LeftParen;
         /// <summary>右小括号</summary>
-        public TokenRightParen? _v_RightParen { get; init; }
+        private TokenRightParen? _v_RightParen;
         /// <summary>逗号</summary>
-        public TokenComma? _v_Comma { get; init; }
+        private TokenComma? _v_Comma;
         /// <summary>表达式</summary>
-        public SyntaxExpr? _v_Expr { get; init; }
+        private SyntaxExpr? _v_Expr;
         /// <summary>参数列表</summary>
-        public SyntaxParameterList? _v_ParameterList { get; init; }
+        private SyntaxParameterList? _v_ParameterList;
         /// <summary>非空参数列表</summary>
-        public SyntaxNonnullParameterList? _v_NonnullParameterList { get; init; }
+        private SyntaxNonnullParameterList? _v_NonnullParameterList;
 
         /// <summary>字面量</summary>
         public static SyntaxRule CreateLiteral(TokenLiteral Value) { return new SyntaxRule { _Tag = SyntaxRuleTag.Literal, _v_Literal = Value }; }

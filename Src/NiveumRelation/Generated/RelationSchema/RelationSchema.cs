@@ -46,13 +46,13 @@ namespace Niveum.RelationSchema
         [Tag] public required TypeDefTag _Tag { get; init; }
 
         /// <summary>基元</summary>
-        public PrimitiveDef? _v_Primitive { get; init; }
+        private PrimitiveDef? _v_Primitive;
         /// <summary>实体</summary>
-        public EntityDef? _v_Entity { get; init; }
+        private EntityDef? _v_Entity;
         /// <summary>枚举</summary>
-        public EnumDef? _v_Enum { get; init; }
+        private EnumDef? _v_Enum;
         /// <summary>查询列表</summary>
-        public QueryListDef? _v_QueryList { get; init; }
+        private QueryListDef? _v_QueryList;
 
         /// <summary>基元</summary>
         public static TypeDef CreatePrimitive(PrimitiveDef Value) { return new TypeDef { _Tag = TypeDefTag.Primitive, _v_Primitive = Value }; }
@@ -164,11 +164,11 @@ namespace Niveum.RelationSchema
         [Tag] public required TypeSpecTag _Tag { get; init; }
 
         /// <summary>类型引用</summary>
-        public TypeRef? _v_TypeRef { get; init; }
+        private TypeRef? _v_TypeRef;
         /// <summary>列表</summary>
-        public TypeRef? _v_List { get; init; }
+        private TypeRef? _v_List;
         /// <summary>可选类型</summary>
-        public TypeRef? _v_Optional { get; init; }
+        private TypeRef? _v_Optional;
 
         /// <summary>类型引用</summary>
         public static TypeSpec CreateTypeRef(TypeRef Value) { return new TypeSpec { _Tag = TypeSpecTag.TypeRef, _v_TypeRef = Value }; }
@@ -270,9 +270,9 @@ namespace Niveum.RelationSchema
         [Tag] public required FieldAttributeTag _Tag { get; init; }
 
         /// <summary>列特性</summary>
-        public ColumnAttribute? _v_Column { get; init; }
+        private ColumnAttribute? _v_Column;
         /// <summary>导航特性</summary>
-        public NavigationAttribute? _v_Navigation { get; init; }
+        private NavigationAttribute? _v_Navigation;
 
         /// <summary>列特性</summary>
         public static FieldAttribute CreateColumn(ColumnAttribute Value) { return new FieldAttribute { _Tag = FieldAttributeTag.Column, _v_Column = Value }; }
@@ -426,17 +426,17 @@ namespace Niveum.RelationSchema
         [Tag] public required VerbTag _Tag { get; init; }
 
         /// <summary>映射</summary>
-        public Unit? _v_Select { get; init; }
+        private Unit? _v_Select;
         /// <summary>锁定</summary>
-        public Unit? _v_Lock { get; init; }
+        private Unit? _v_Lock;
         /// <summary>插入</summary>
-        public Unit? _v_Insert { get; init; }
+        private Unit? _v_Insert;
         /// <summary>更新</summary>
-        public Unit? _v_Update { get; init; }
+        private Unit? _v_Update;
         /// <summary>覆盖</summary>
-        public Unit? _v_Upsert { get; init; }
+        private Unit? _v_Upsert;
         /// <summary>删除</summary>
-        public Unit? _v_Delete { get; init; }
+        private Unit? _v_Delete;
 
         /// <summary>映射</summary>
         public static Verb CreateSelect() { return new Verb { _Tag = VerbTag.Select, _v_Select = default(Unit) }; }
@@ -577,17 +577,17 @@ namespace Niveum.RelationSchema
         [Tag] public required NumeralTag _Tag { get; init; }
 
         /// <summary>0..1</summary>
-        public Unit? _v_Optional { get; init; }
+        private Unit? _v_Optional;
         /// <summary>1</summary>
-        public Unit? _v_One { get; init; }
+        private Unit? _v_One;
         /// <summary>*</summary>
-        public Unit? _v_Many { get; init; }
+        private Unit? _v_Many;
         /// <summary>全部</summary>
-        public Unit? _v_All { get; init; }
+        private Unit? _v_All;
         /// <summary>区间</summary>
-        public Unit? _v_Range { get; init; }
+        private Unit? _v_Range;
         /// <summary>数量</summary>
-        public Unit? _v_Count { get; init; }
+        private Unit? _v_Count;
 
         /// <summary>0..1</summary>
         public static Numeral CreateOptional() { return new Numeral { _Tag = NumeralTag.Optional, _v_Optional = default(Unit) }; }

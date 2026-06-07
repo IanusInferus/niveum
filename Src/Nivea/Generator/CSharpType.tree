@@ -4,7 +4,7 @@
       File:        CSharpType.tree
       Location:    Nivea <Tree>
       Description: C#类型代码生成
-      Version:     2026.06.06.
+      Version:     2026.06.07.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -287,7 +287,7 @@
             {
                 ##
                     ${GetXmlComment(a.Description)}
-                    public ${GetTypeString(a.Type)}? [[_v_${a.Name}]] { get; init; }
+                    private ${GetTypeString(a.Type)}? [[_v_${a.Name}]];
             }
 
         $$
