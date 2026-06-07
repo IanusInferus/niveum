@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Niveum.SchemaManipulator <Visual C#>
 //  Description: 对象类型结构处理工具
-//  Version:     2026.05.30.
+//  Version:     2026.06.07.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -343,7 +343,7 @@ namespace Niveum.SchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length >= 2)
                     {
-                        ObjectSchemaToCSharpVersionCode(args[0], args[1], args.Skip(2).ToList());
+                        ObjectSchemaToCSharpVersionCode(args[0], args[1], args.Skip(2).ToList(), EnableNullableDeclaration);
                     }
                     else
                     {
@@ -880,10 +880,10 @@ namespace Niveum.SchemaManipulator
             Txt.WriteFile(CsCodePath, Compiled);
         }
 
-        public static void ObjectSchemaToCSharpVersionCode(String CsCodePath, String NamespaceName, IEnumerable<String> TypeNames)
+        public static void ObjectSchemaToCSharpVersionCode(String CsCodePath, String NamespaceName, IEnumerable<String> TypeNames, Boolean EnableNullableDeclaration)
         {
             var ObjectSchema = GetObjectSchema();
-            var Compiled = ObjectSchema.CompileToCSharpVersion(NamespaceName, TypeNames);
+            var Compiled = ObjectSchema.CompileToCSharpVersion(NamespaceName, TypeNames, EnableNullableDeclaration);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);

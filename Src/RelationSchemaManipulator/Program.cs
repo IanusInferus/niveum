@@ -3,10 +3,12 @@
 //  File:        Program.cs
 //  Location:    Yuki.RelationSchemaManipulator <Visual C#>
 //  Description: 关系类型结构处理工具
-//  Version:     2026.06.06.
+//  Version:     2026.06.07.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -77,6 +79,7 @@ namespace Yuki.RelationSchemaManipulator
                 return 0;
             }
 
+            var EnableNullableDeclaration = false;
             var xs = new XmlSerializer();
             foreach (var opt in CmdLine.Options)
             {
@@ -182,6 +185,19 @@ namespace Yuki.RelationSchemaManipulator
                         return -1;
                     }
                 }
+                else if (optNameLower == "nullable")
+                {
+                    var args = opt.Arguments;
+                    if (args.Length == 0)
+                    {
+                        EnableNullableDeclaration = true;
+                    }
+                    else
+                    {
+                        DisplayInfo();
+                        return -1;
+                    }
+                }
                 else if (optNameLower == "t2sqlite")
                 {
                     var args = opt.Arguments;
@@ -239,7 +255,7 @@ namespace Yuki.RelationSchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 5)
                     {
-                        RelationSchemaToCSharpLinqToEntitiesCode(args[0], args[1], args[2], args[3], args[4]);
+                        RelationSchemaToCSharpLinqToEntitiesCode(args[0], args[1], args[2], args[3], args[4], EnableNullableDeclaration);
                     }
                     else
                     {
@@ -252,11 +268,11 @@ namespace Yuki.RelationSchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 2)
                     {
-                        RelationSchemaToCSharpDatabasePlainCode(args[0], args[1], true);
+                        RelationSchemaToCSharpDatabasePlainCode(args[0], args[1], true, EnableNullableDeclaration);
                     }
                     else if (args.Length == 3)
                     {
-                        RelationSchemaToCSharpDatabasePlainCode(args[0], args[1], Boolean.Parse(args[2]));
+                        RelationSchemaToCSharpDatabasePlainCode(args[0], args[1], Boolean.Parse(args[2]), EnableNullableDeclaration);
                     }
                     else
                     {
@@ -269,7 +285,7 @@ namespace Yuki.RelationSchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 3)
                     {
-                        RelationSchemaToCSharpMemoryCode(args[0], args[1], args[2]);
+                        RelationSchemaToCSharpMemoryCode(args[0], args[1], args[2], EnableNullableDeclaration);
                     }
                     else
                     {
@@ -282,7 +298,7 @@ namespace Yuki.RelationSchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 3)
                     {
-                        RelationSchemaToCSharpSqlServerCode(args[0], args[1], args[2]);
+                        RelationSchemaToCSharpSqlServerCode(args[0], args[1], args[2], EnableNullableDeclaration);
                     }
                     else
                     {
@@ -295,7 +311,7 @@ namespace Yuki.RelationSchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 3)
                     {
-                        RelationSchemaToCSharpMySqlCode(args[0], args[1], args[2]);
+                        RelationSchemaToCSharpMySqlCode(args[0], args[1], args[2], EnableNullableDeclaration);
                     }
                     else
                     {
@@ -308,7 +324,7 @@ namespace Yuki.RelationSchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 3)
                     {
-                        RelationSchemaToCSharpKrustallosCode(args[0], args[1], args[2]);
+                        RelationSchemaToCSharpKrustallosCode(args[0], args[1], args[2], EnableNullableDeclaration);
                     }
                     else
                     {
@@ -321,7 +337,7 @@ namespace Yuki.RelationSchemaManipulator
                     var args = opt.Arguments;
                     if (args.Length == 3)
                     {
-                        RelationSchemaToCSharpCountedCode(args[0], args[1], args[2]);
+                        RelationSchemaToCSharpCountedCode(args[0], args[1], args[2], EnableNullableDeclaration);
                     }
                     else
                     {
@@ -396,6 +412,8 @@ namespace Yuki.RelationSchemaManipulator
             Console.WriteLine(@"/loadtype:<RelationSchemaDir|RelationSchemaFile>");
             Console.WriteLine(@"增加命名空间引用");
             Console.WriteLine(@"/import:<NamespaceName>");
+            Console.WriteLine(@"指定生成C#代码中声明nullable");
+            Console.WriteLine(@"/nullable");
             Console.WriteLine(@"生成Sqlite数据库CREATE脚本");
             Console.WriteLine(@"/t2sqlite:<SqlCodePath>,<DatabaseName>");
             Console.WriteLine(@"生成T-SQL(SQL Server)数据库DROP和CREATE脚本");
@@ -439,7 +457,7 @@ namespace Yuki.RelationSchemaManipulator
         }
 
         private static RS.RelationSchemaLoader rsl = new RS.RelationSchemaLoader();
-        private static RS.RelationSchemaLoaderResult rslr = null;
+        private static RS.RelationSchemaLoaderResult? rslr = null;
         private static RS.RelationSchemaLoaderResult GetRelationSchemaLoaderResult()
         {
             if (rslr != null) { return rslr; }
@@ -524,10 +542,10 @@ namespace Yuki.RelationSchemaManipulator
             Txt.WriteFile(SqlCodePath, Compiled);
         }
 
-        public static void RelationSchemaToCSharpLinqToEntitiesCode(String CsCodePath, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
+        public static void RelationSchemaToCSharpLinqToEntitiesCode(String CsCodePath, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName, Boolean EnableNullableDeclaration)
         {
             var RelationSchema = GetRelationSchema();
-            var Compiled = RelationSchema.CompileToCSharpLinqToEntities(DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
+            var Compiled = RelationSchema.CompileToCSharpLinqToEntities(DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName, EnableNullableDeclaration);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
@@ -541,10 +559,10 @@ namespace Yuki.RelationSchemaManipulator
             Txt.WriteFile(CsCodePath, Compiled);
         }
 
-        public static void RelationSchemaToCSharpDatabasePlainCode(String CsCodePath, String EntityNamespaceName, Boolean WithFirefly)
+        public static void RelationSchemaToCSharpDatabasePlainCode(String CsCodePath, String EntityNamespaceName, Boolean WithFirefly, Boolean EnableNullableDeclaration)
         {
             var RelationSchema = GetRelationSchema();
-            var Compiled = RelationSchema.CompileToCSharpPlain(EntityNamespaceName, WithFirefly);
+            var Compiled = RelationSchema.CompileToCSharpPlain(EntityNamespaceName, WithFirefly, EnableNullableDeclaration);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
@@ -558,10 +576,10 @@ namespace Yuki.RelationSchemaManipulator
             Txt.WriteFile(CsCodePath, Compiled);
         }
 
-        public static void RelationSchemaToCSharpMemoryCode(String CsCodePath, String EntityNamespaceName, String ContextNamespaceName)
+        public static void RelationSchemaToCSharpMemoryCode(String CsCodePath, String EntityNamespaceName, String ContextNamespaceName, Boolean EnableNullableDeclaration)
         {
             var RelationSchema = GetRelationSchema();
-            var Compiled = RelationSchema.CompileToCSharpMemory(EntityNamespaceName, ContextNamespaceName);
+            var Compiled = RelationSchema.CompileToCSharpMemory(EntityNamespaceName, ContextNamespaceName, EnableNullableDeclaration);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
@@ -575,10 +593,10 @@ namespace Yuki.RelationSchemaManipulator
             Txt.WriteFile(CsCodePath, Compiled);
         }
 
-        public static void RelationSchemaToCSharpSqlServerCode(String CsCodePath, String EntityNamespaceName, String ContextNamespaceName)
+        public static void RelationSchemaToCSharpSqlServerCode(String CsCodePath, String EntityNamespaceName, String ContextNamespaceName, Boolean EnableNullableDeclaration)
         {
             var RelationSchema = GetRelationSchema();
-            var Compiled = RelationSchema.CompileToCSharpSqlServer(EntityNamespaceName, ContextNamespaceName);
+            var Compiled = RelationSchema.CompileToCSharpSqlServer(EntityNamespaceName, ContextNamespaceName, EnableNullableDeclaration);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
@@ -592,10 +610,10 @@ namespace Yuki.RelationSchemaManipulator
             Txt.WriteFile(CsCodePath, Compiled);
         }
 
-        public static void RelationSchemaToCSharpMySqlCode(String CsCodePath, String EntityNamespaceName, String ContextNamespaceName)
+        public static void RelationSchemaToCSharpMySqlCode(String CsCodePath, String EntityNamespaceName, String ContextNamespaceName, Boolean EnableNullableDeclaration)
         {
             var RelationSchema = GetRelationSchema();
-            var Compiled = RelationSchema.CompileToCSharpMySql(EntityNamespaceName, ContextNamespaceName);
+            var Compiled = RelationSchema.CompileToCSharpMySql(EntityNamespaceName, ContextNamespaceName, EnableNullableDeclaration);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
@@ -609,10 +627,10 @@ namespace Yuki.RelationSchemaManipulator
             Txt.WriteFile(CsCodePath, Compiled);
         }
 
-        public static void RelationSchemaToCSharpKrustallosCode(String CsCodePath, String EntityNamespaceName, String ContextNamespaceName)
+        public static void RelationSchemaToCSharpKrustallosCode(String CsCodePath, String EntityNamespaceName, String ContextNamespaceName, Boolean EnableNullableDeclaration)
         {
             var RelationSchema = GetRelationSchema();
-            var Compiled = RelationSchema.CompileToCSharpKrustallos(EntityNamespaceName, ContextNamespaceName);
+            var Compiled = RelationSchema.CompileToCSharpKrustallos(EntityNamespaceName, ContextNamespaceName, EnableNullableDeclaration);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);
@@ -626,10 +644,10 @@ namespace Yuki.RelationSchemaManipulator
             Txt.WriteFile(CsCodePath, Compiled);
         }
 
-        public static void RelationSchemaToCSharpCountedCode(String CsCodePath, String EntityNamespaceName, String ContextNamespaceName)
+        public static void RelationSchemaToCSharpCountedCode(String CsCodePath, String EntityNamespaceName, String ContextNamespaceName, Boolean EnableNullableDeclaration)
         {
             var RelationSchema = GetRelationSchema();
-            var Compiled = RelationSchema.CompileToCSharpCounted(EntityNamespaceName, ContextNamespaceName);
+            var Compiled = RelationSchema.CompileToCSharpCounted(EntityNamespaceName, ContextNamespaceName, EnableNullableDeclaration);
             if (File.Exists(CsCodePath))
             {
                 var Original = Txt.ReadFile(CsCodePath);

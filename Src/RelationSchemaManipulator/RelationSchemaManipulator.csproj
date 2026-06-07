@@ -3,13 +3,13 @@
     <TargetFrameworks>net48;net8.0</TargetFrameworks>
     <LangVersion>11.0</LangVersion>
     <ImplicitUsings>disable</ImplicitUsings>
-    <Nullable>disable</Nullable>
-    <RootNamespace>Yuki.RelationSchemaManipulator</RootNamespace>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Niveum.RelationSchemaManipulator</RootNamespace>
     <PackageId>RelationSchemaManipulator</PackageId>
-    <Product>Yuki.RelationSchemaManipulator</Product>
+    <Product>Niveum.RelationSchemaManipulator</Product>
     <Copyright>Copyright(C) F.R.C., under BSD license</Copyright>
     <AssemblyName>RelationSchemaManipulator</AssemblyName>
-    <AssemblyVersion>2026.06.06.0</AssemblyVersion>
+    <AssemblyVersion>2026.06.07.0</AssemblyVersion>
     <BaseIntermediateOutputPath>..\..\Obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
     <OutputType>Exe</OutputType>
     <OutputPath>..\..\Bin\</OutputPath>

@@ -3,7 +3,7 @@
 //  File:        CSharpMySql.cs
 //  Location:    Niveum.Relation <Visual C#>
 //  Description: 关系类型结构C# MySQL代码生成器
-//  Version:     2026.06.06.
+//  Version:     2026.06.07.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -20,9 +20,9 @@ namespace Niveum.RelationSchema.CSharpMySql
 {
     public static class CodeGenerator
     {
-        public static String CompileToCSharpMySql(this Schema Schema, String EntityNamespaceName, String ContextNamespaceName)
+        public static String CompileToCSharpMySql(this Schema Schema, String EntityNamespaceName, String ContextNamespaceName, Boolean EnableNullableDeclaration)
         {
-            var t = new Templates(Schema, EntityNamespaceName, ContextNamespaceName);
+            var t = new Templates(Schema, EntityNamespaceName, ContextNamespaceName, EnableNullableDeclaration);
             var Lines = t.GetSchema().Select(Line => Line.TrimEnd(' '));
             return String.Join("\r\n", Lines);
         }
@@ -36,12 +36,14 @@ namespace Niveum.RelationSchema.CSharpMySql
         private String NamespaceName;
         private OS.Schema InnerSchema;
         private Dictionary<String, TypeDef> TypeDict;
+        private Boolean EnableNullableDeclaration;
 
-        public Templates(Schema Schema, String EntityNamespaceName, String NamespaceName)
+        public Templates(Schema Schema, String EntityNamespaceName, String NamespaceName, Boolean EnableNullableDeclaration)
         {
             this.Schema = Schema;
             this.EntityNamespaceName = EntityNamespaceName;
             this.NamespaceName = NamespaceName;
+            this.EnableNullableDeclaration = EnableNullableDeclaration;
             InnerSchema = PlainObjectSchemaGenerator.Generate(Schema, EntityNamespaceName);
             TypeDict = Schema.GetMap().ToDictionary(p => p.Key, p => p.Value, StringComparer.OrdinalIgnoreCase);
 
@@ -419,7 +421,7 @@ namespace Niveum.RelationSchema.CSharpMySql
             var Primitives = GetPrimitives();
             var ComplexTypes = GetComplexTypes();
 
-            return Main(NamespaceName, Schema.Imports, Primitives, ComplexTypes);
+            return Main(NamespaceName, Schema.Imports, Primitives, ComplexTypes, EnableNullableDeclaration);
         }
     }
 }

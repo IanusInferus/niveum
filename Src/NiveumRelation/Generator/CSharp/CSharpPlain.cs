@@ -3,7 +3,7 @@
 //  File:        CSharpPlain.cs
 //  Location:    Niveum.Relation <Visual C#>
 //  Description: 关系类型结构C#简单类型代码生成器
-//  Version:     2026.06.06.
+//  Version:     2026.06.07.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -20,9 +20,9 @@ namespace Niveum.RelationSchema.CSharpPlain
 {
     public static class CodeGenerator
     {
-        public static String CompileToCSharpPlain(this Schema Schema, String NamespaceName, Boolean WithFirefly)
+        public static String CompileToCSharpPlain(this Schema Schema, String NamespaceName, Boolean WithFirefly, Boolean EnableNullableDeclaration)
         {
-            var t = new Templates(Schema, NamespaceName, WithFirefly);
+            var t = new Templates(Schema, NamespaceName, WithFirefly, EnableNullableDeclaration);
             var Lines = t.GetSchema().Select(Line => Line.TrimEnd(' '));
             return String.Join("\r\n", Lines);
         }
@@ -35,11 +35,13 @@ namespace Niveum.RelationSchema.CSharpPlain
         private String NamespaceName;
         private OS.Schema InnerSchema;
         private Dictionary<String, OS.TypeDef> TypeDict;
+        private Boolean EnableNullableDeclaration;
 
-        public Templates(Schema Schema, String NamespaceName, Boolean WithFirefly = true)
+        public Templates(Schema Schema, String NamespaceName, Boolean WithFirefly = true, Boolean EnableNullableDeclaration = false)
         {
             this.Schema = Schema;
             this.NamespaceName = NamespaceName;
+            this.EnableNullableDeclaration = EnableNullableDeclaration;
             InnerSchema = PlainObjectSchemaGenerator.Generate(Schema, NamespaceName);
             TypeDict = OS.ObjectSchemaExtensions.GetMap(InnerSchema).ToDictionary(p => p.Key.Split('.').Last(), p => p.Value, StringComparer.OrdinalIgnoreCase);
             Inner = new OS.CSharp.Templates(InnerSchema);
@@ -230,7 +232,7 @@ namespace Niveum.RelationSchema.CSharpPlain
         public IEnumerable<String> GetSchema()
         {
             var Types = GetTypes();
-            return Main(Schema.Imports, Types);
+            return Main(Schema.Imports, Types, EnableNullableDeclaration);
         }
     }
 }

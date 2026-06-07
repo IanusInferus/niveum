@@ -104,7 +104,7 @@ namespace Niveum.RelationSchema.CSharpPlain
                 yield return _Line;
             }
         }
-        public IEnumerable<String> Main(IEnumerable<String> Imports, IEnumerable<String> Types)
+        public IEnumerable<String> Main(IEnumerable<String> Imports, IEnumerable<String> Types, Boolean EnableNullableDeclaration)
         {
             yield return "//==========================================================================";
             yield return "//";
@@ -113,6 +113,11 @@ namespace Niveum.RelationSchema.CSharpPlain
             yield return "//";
             yield return "//==========================================================================";
             yield return "";
+            if (EnableNullableDeclaration)
+            {
+                yield return "#nullable disable";
+                yield return "";
+            }
             yield return "using System;";
             yield return "using System.Collections.Generic;";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "using "), Imports), ";"))

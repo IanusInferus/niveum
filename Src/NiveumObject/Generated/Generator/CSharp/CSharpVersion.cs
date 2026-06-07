@@ -83,7 +83,7 @@ namespace Niveum.ObjectSchema.CSharpVersion
                 yield return _Line;
             }
         }
-        public IEnumerable<String> Main(Schema Schema, String NamespaceName, IEnumerable<String> TypeNames)
+        public IEnumerable<String> Main(Schema Schema, String NamespaceName, IEnumerable<String> TypeNames, Boolean EnableNullableDeclaration)
         {
             yield return "//==========================================================================";
             yield return "//";
@@ -92,6 +92,11 @@ namespace Niveum.ObjectSchema.CSharpVersion
             yield return "//";
             yield return "//==========================================================================";
             yield return "";
+            if (EnableNullableDeclaration)
+            {
+                yield return "#nullable disable";
+                yield return "";
+            }
             yield return "using System;";
             yield return "";
             var TypeVersions = GetTypeVersions(Schema, TypeNames, NamespaceName);

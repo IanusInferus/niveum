@@ -3,7 +3,7 @@
 //  File:        CSharpLinqToEntities.cs
 //  Location:    Niveum.Relation <Visual C#>
 //  Description: 关系类型结构C# Linq to Entities数据库代码生成器
-//  Version:     2026.06.06.
+//  Version:     2026.06.07.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -21,9 +21,9 @@ namespace Niveum.RelationSchema.CSharpLinqToEntities
 {
     public static class CodeGenerator
     {
-        public static String CompileToCSharpLinqToEntities(this Schema Schema, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
+        public static String CompileToCSharpLinqToEntities(this Schema Schema, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName, Boolean EnableNullableDeclaration)
         {
-            var t = new Templates(Schema, DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName);
+            var t = new Templates(Schema, DatabaseName, EntityNamespaceName, ContextNamespaceName, ContextClassName, EnableNullableDeclaration);
             var Lines = t.GetSchema().Select(Line => Line.TrimEnd(' '));
             return String.Join("\r\n", Lines);
         }
@@ -37,11 +37,12 @@ namespace Niveum.RelationSchema.CSharpLinqToEntities
         private String EntityNamespaceName;
         private String ContextNamespaceName;
         private String ContextClassName;
+        private Boolean EnableNullableDeclaration;
 
         private Dictionary<String, EnumDef> Enums;
         private Dictionary<String, EntityDef> Records;
 
-        public Templates(Schema Schema, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName)
+        public Templates(Schema Schema, String DatabaseName, String EntityNamespaceName, String ContextNamespaceName, String ContextClassName, Boolean EnableNullableDeclaration)
         {
             this.Inner = new OS.CSharp.Templates(new OS.Schema
             {
@@ -59,6 +60,7 @@ namespace Niveum.RelationSchema.CSharpLinqToEntities
             this.EntityNamespaceName = EntityNamespaceName;
             this.ContextNamespaceName = ContextNamespaceName;
             this.ContextClassName = ContextClassName;
+            this.EnableNullableDeclaration = EnableNullableDeclaration;
 
             Enums = Schema.TypeRefs.Concat(Schema.Types).Where(t => t.OnEnum).Select(t => t.Enum).ToDictionary(e => e.Name, StringComparer.OrdinalIgnoreCase);
             Records = Schema.Types.Where(t => t.OnEntity).Select(t => t.Entity).ToDictionary(r => r.Name, StringComparer.OrdinalIgnoreCase);
@@ -547,7 +549,7 @@ namespace Niveum.RelationSchema.CSharpLinqToEntities
             var EntityComplexTypes = GetEntityComplexTypes().ToList();
             var ContextComplexTypes = GetContextComplexTypes().ToList();
 
-            return Main(EntityNamespaceName, ContextNamespaceName, Schema.Imports, Primitives, EntityComplexTypes, ContextComplexTypes);
+            return Main(EntityNamespaceName, ContextNamespaceName, Schema.Imports, Primitives, EntityComplexTypes, ContextComplexTypes, EnableNullableDeclaration);
         }
     }
 }

@@ -315,7 +315,7 @@ namespace Niveum.RelationSchema.CSharpLinqToEntities
             }
             yield return "}";
         }
-        public IEnumerable<String> Main(String EntityNamespaceName, String ContextNamespaceName, List<String> Imports, IEnumerable<String> Primitives, IEnumerable<String> EntityComplexTypes, IEnumerable<String> ContextComplexTypes)
+        public IEnumerable<String> Main(String EntityNamespaceName, String ContextNamespaceName, List<String> Imports, IEnumerable<String> Primitives, IEnumerable<String> EntityComplexTypes, IEnumerable<String> ContextComplexTypes, Boolean EnableNullableDeclaration)
         {
             yield return "//==========================================================================";
             yield return "//";
@@ -324,6 +324,11 @@ namespace Niveum.RelationSchema.CSharpLinqToEntities
             yield return "//";
             yield return "//==========================================================================";
             yield return "";
+            if (EnableNullableDeclaration)
+            {
+                yield return "#nullable disable";
+                yield return "";
+            }
             yield return "//Reference:";
             yield return "";
             yield return "using System;";

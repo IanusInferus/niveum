@@ -3,7 +3,7 @@
 //  File:        CSharpVersion.cs
 //  Location:    Niveum.Object <Visual C#>
 //  Description: 对象类型结构C#版本代码生成器
-//  Version:     2021.12.21.
+//  Version:     2026.06.07.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -18,15 +18,15 @@ namespace Niveum.ObjectSchema.CSharpVersion
 {
     public static class CodeGenerator
     {
-        public static String CompileToCSharpVersion(this Schema Schema, String NamespaceName, IEnumerable<String> TypeNames)
+        public static String CompileToCSharpVersion(this Schema Schema, String NamespaceName, IEnumerable<String> TypeNames, Boolean EnableNullableDeclaration)
         {
             var t = new Templates(Schema);
-            var Lines = t.Main(Schema, NamespaceName, TypeNames).Select(Line => Line.TrimEnd(' '));
+            var Lines = t.Main(Schema, NamespaceName, TypeNames, EnableNullableDeclaration).Select(Line => Line.TrimEnd(' '));
             return String.Join("\r\n", Lines);
         }
         public static String CompileToCSharpVersion(this Schema Schema, IEnumerable<String> TypeNames)
         {
-            return CompileToCSharpVersion(Schema, "", TypeNames);
+            return CompileToCSharpVersion(Schema, "", TypeNames, false);
         }
     }
 

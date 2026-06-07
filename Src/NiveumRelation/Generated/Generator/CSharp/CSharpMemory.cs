@@ -413,7 +413,7 @@ namespace Niveum.RelationSchema.CSharpMemory
             yield return "    }";
             yield return "}";
         }
-        public IEnumerable<String> Main(String NamespaceName, IEnumerable<String> Imports, IEnumerable<String> Primitives, IEnumerable<String> ComplexTypes)
+        public IEnumerable<String> Main(String NamespaceName, IEnumerable<String> Imports, IEnumerable<String> Primitives, IEnumerable<String> ComplexTypes, Boolean EnableNullableDeclaration)
         {
             yield return "//==========================================================================";
             yield return "//";
@@ -422,6 +422,11 @@ namespace Niveum.RelationSchema.CSharpMemory
             yield return "//";
             yield return "//==========================================================================";
             yield return "";
+            if (EnableNullableDeclaration)
+            {
+                yield return "#nullable disable";
+                yield return "";
+            }
             yield return "//Reference:";
             yield return "";
             yield return "using System;";
