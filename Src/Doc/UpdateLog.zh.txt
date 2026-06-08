@@ -1,6 +1,8 @@
 ﻿2026.06.08
 Niveum.Object, Examples:
 Rust二进制序列化使用anyhow报告错误，精确打印代码执行栈。
+Niveum.Relation, *:
+修复剩余的Yuki命名空间问题。
 
 2026.06.07
 Niveum.Object, Niveum.Relation, Niveum.SchemaManipulator, Niveum.RelationSchemaManipulator:

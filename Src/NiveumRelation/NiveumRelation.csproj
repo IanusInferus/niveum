@@ -9,7 +9,7 @@
     <Product>Niveum.Relation</Product>
     <Copyright>Copyright(C) F.R.C., under BSD license</Copyright>
     <AssemblyName>Niveum.Relation</AssemblyName>
-    <AssemblyVersion>2026.06.07.0</AssemblyVersion>
+    <AssemblyVersion>2026.06.08.0</AssemblyVersion>
     <BaseIntermediateOutputPath>..\..\Obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
     <OutputPath>..\..\Bin\</OutputPath>
   </PropertyGroup>

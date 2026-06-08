@@ -77,7 +77,7 @@ namespace Database.Krustallos
             public Optional<int> MaxBackupCount = Optional<int>.Empty;
             public int BackupInterval = 300;
             public KrustallosData Data;
-            public Yuki.RelationSchema.Schema Schema;
+            public Niveum.RelationSchema.Schema Schema;
             public Firefly.Mapping.Binary.BinarySerializer sbs;
             public Firefly.Mapping.Binary.BinarySerializer bs;
 

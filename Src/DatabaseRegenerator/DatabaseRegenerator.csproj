@@ -4,12 +4,12 @@
     <LangVersion>11.0</LangVersion>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
-    <RootNamespace>Yuki.DatabaseRegenerator</RootNamespace>
+    <RootNamespace>Niveum.DatabaseRegenerator</RootNamespace>
     <PackageId>DatabaseRegenerator</PackageId>
-    <Product>Yuki.DatabaseRegenerator</Product>
+    <Product>Niveum.DatabaseRegenerator</Product>
     <Copyright>Copyright(C) F.R.C., under BSD license</Copyright>
     <AssemblyName>DatabaseRegenerator</AssemblyName>
-    <AssemblyVersion>2026.06.07.0</AssemblyVersion>
+    <AssemblyVersion>2026.06.08.0</AssemblyVersion>
     <BaseIntermediateOutputPath>..\..\Obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
     <OutputType>Exe</OutputType>
     <OutputPath>..\..\Bin\</OutputPath>
