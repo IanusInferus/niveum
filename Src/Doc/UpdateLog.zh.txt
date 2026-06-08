@@ -3,6 +3,7 @@ Niveum.Object, Examples:
 Rust二进制序列化使用anyhow报告错误，精确打印代码执行栈。
 Niveum.Relation, *:
 修复剩余的Yuki命名空间问题。
+修正程序集签名。
 Krustallos:
 更新Common.cs。
 DatabaseRegenerator, Examples:
