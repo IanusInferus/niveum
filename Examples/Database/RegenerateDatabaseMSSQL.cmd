@@ -20,5 +20,11 @@ exit /b %EXIT_CODE%
 :main
 @PATH ..\..\Bin\net48;%PATH%
 
+@if not exist ..\..\Bin\net48\System.Data.SqlClient.dll (
+  @echo Niveum\Bin\net48ÖÐ²»´æÔÚSystem.Data.SqlClient.dll¡£
+  @pause
+  @exit
+)
+
 DatabaseRegenerator.exe /loadtyperef:CommonSchema /loadtype:MailSchema /connect:"Data Source=.;Integrated Security=True" /database:Mail /regenmssql:MailData
 DatabaseRegenerator.exe /loadtyperef:CommonSchema /loadtype:TestSchema /connect:"Data Source=.;Integrated Security=True" /database:Test /regenmssql:TestData

@@ -18,10 +18,10 @@ if not "%NO_PAUSE_SYMBOL%"=="1" pause
 exit /b %EXIT_CODE%
 
 :main
-@PATH ..\..\Bin\net48;%PATH%
+@PATH ..\..\Bin\net8.0;%PATH%
 
-@if not exist ..\..\Bin\net48\Microsoft.Data.Sqlite.dll (
-  @echo Niveum\Bin\net48中不存在Microsoft.Data.Sqlite.dll。
+@if not exist ..\..\Bin\net8.0\Microsoft.Data.Sqlite.dll (
+  @echo Niveum\Bin\net8.0中不存在Microsoft.Data.Sqlite.dll。
   @pause
   @exit
 )

@@ -5,6 +5,8 @@ Niveum.Relation, *:
 修复剩余的Yuki命名空间问题。
 Krustallos:
 更新Common.cs。
+DatabaseRegenerator, Examples:
+动态加载Sqlite和SQL Server客户端库，增加下载脚本。
 
 2026.06.07
 Niveum.Object, Niveum.Relation, Niveum.SchemaManipulator, Niveum.RelationSchemaManipulator:

@@ -3,7 +3,7 @@
 //  File:        Program.cs
 //  Location:    Yuki.DatabaseRegenerator <Visual C#>
 //  Description: 数据库重建工具
-//  Version:     2026.06.07.
+//  Version:     2026.06.08.
 //  Copyright(C) F.R.C.
 //
 //==========================================================================
@@ -55,6 +55,40 @@ namespace Yuki.DatabaseRegenerator
 
         public static int MainInner()
         {
+#if NETCOREAPP
+            // Modern .NET (8.0+) Dependency Resolver Hook
+            var DllDirectory = FileNameHandling.GetFileDirectory(Assembly.GetEntryAssembly().Location);
+            System.Runtime.Loader.AssemblyLoadContext.Default.Resolving += (context, AssemblyName) =>
+            {
+                String DependencyPath = System.IO.Path.Combine(DllDirectory, $"{AssemblyName.Name}.dll");
+                if (System.IO.File.Exists(DependencyPath))
+                {
+                    return context.LoadFromAssemblyPath(DependencyPath);
+                }
+                return null;
+            };
+
+            System.Runtime.Loader.AssemblyLoadContext.Default.ResolvingUnmanagedDll += (assembly, unmanagedDllName) =>
+            {
+                String rid = System.Runtime.InteropServices.RuntimeInformation.RuntimeIdentifier;
+                String RuntimeSubDir = System.IO.Path.Combine(DllDirectory, "runtimes", rid, "native");
+                var handle = IntPtr.Zero;
+
+                String FlatPath = System.IO.Path.Combine(DllDirectory, unmanagedDllName);
+                if (System.Runtime.InteropServices.NativeLibrary.TryLoad(FlatPath, out handle))
+                {
+                    return handle;
+                }
+                String RuntimeSubPath = System.IO.Path.Combine(RuntimeSubDir, unmanagedDllName);
+                if (System.Runtime.InteropServices.NativeLibrary.TryLoad(RuntimeSubPath, out handle))
+                {
+                    return handle;
+                }
+
+                return IntPtr.Zero;
+            };
+#endif
+
             var CmdLine = CommandLine.GetCmdLine();
             var argv = CmdLine.Arguments;
 
@@ -1197,11 +1231,18 @@ namespace Yuki.DatabaseRegenerator
 
         private static Func<String, IDbConnection> GetConnectionFactorySqlite()
         {
-            return ConnectionString => new Microsoft.Data.Sqlite.SqliteConnection(ConnectionString);
+            var Path = FileNameHandling.GetPath(FileNameHandling.GetFileDirectory(Assembly.GetEntryAssembly().Location), "Microsoft.Data.Sqlite.dll");
+            var asm = Assembly.Load(AssemblyName.GetAssemblyName(Path));
+            var t = asm.GetType("Microsoft.Data.Sqlite.SqliteConnection");
+            return ConnectionString => (IDbConnection)Activator.CreateInstance(t, ConnectionString);
         }
         private static Func<String, IDbConnection> GetConnectionFactorySqlServer()
         {
-            return ConnectionString => new System.Data.SqlClient.SqlConnection(ConnectionString);
+            var Path = FileNameHandling.GetPath(FileNameHandling.GetFileDirectory(Assembly.GetEntryAssembly().Location), "System.Data.SqlClient.dll");
+            var asm = Assembly.Load(AssemblyName.GetAssemblyName(Path));
+            var t = asm.GetType("System.Data.SqlClient.SqlConnection");
+            return ConnectionString => (IDbConnection)Activator.CreateInstance(t, ConnectionString);
+            // return ConnectionString => new System.Data.SqlClient.SqlConnection(ConnectionString);
         }
         private static Func<String, IDbConnection> GetConnectionFactoryPostgreSQL()
         {

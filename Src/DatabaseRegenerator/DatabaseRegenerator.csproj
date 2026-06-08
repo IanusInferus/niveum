@@ -40,11 +40,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.8" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.9.1" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\FireflyLite\FireflyLite.csproj" />
     <ProjectReference Include="..\NiveumObject\NiveumObject.csproj" />
     <ProjectReference Include="..\NiveumRelation\NiveumRelation.csproj" />

@@ -21,7 +21,7 @@ exit /b %EXIT_CODE%
 @PATH ..\..\Bin\net48;%PATH%
 
 @if not exist ..\..\Bin\net48\MySql.Data.dll (
-  @echo Niveum\Bin中不存在MySql.Data.dll。
+  @echo Niveum\Bin\net48中不存在MySql.Data.dll。
   @pause
   @exit
 )
