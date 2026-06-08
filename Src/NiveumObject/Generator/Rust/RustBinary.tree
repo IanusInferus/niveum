@@ -4,7 +4,7 @@
       File:        RustBinary.tree
       Location:    Niveum.Object <Tree>
       Description: 对象类型结构Rust二进制通讯模板
-      Version:     2026.06.07.
+      Version:     2026.06.08.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -20,15 +20,12 @@
     System.Linq
 
 #Template Streams
-    #[derive(Debug, Clone, PartialEq)]
-    pub struct BinaryError(pub String);
+    pub type BinaryError = anyhow::Error;
 
-    impl std::fmt::Display for BinaryError {
-        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            write!(f, "{}", self.0)
-        }
+    #[inline]
+    pub fn binary_error(msg: impl std::fmt::Display) -> BinaryError {
+        anyhow!("{msg}")
     }
-    impl std::error::Error for BinaryError {}
 
     pub trait ReadableStream {
         fn read_byte(&mut self) -> Result<u8, BinaryError>;
@@ -97,7 +94,7 @@
             }
             let upper = self.read_u32()?;
             if (upper & 0x80000000) != 0 {
-                return Err(BinaryError("out_of_range".to_string()));
+                return Err(binary_error("out_of_range"));
             }
             Ok(((upper as usize) << 31) | (lower as usize))
         }
@@ -171,7 +168,7 @@
 
         fn write_size(&mut self, v: i64) -> Result<(), BinaryError> {
             if (v < 0) || (v > 0x3FFFFFFFFFFFFFFF) {
-                return Err(BinaryError("out_of_range".to_string()));
+                return Err(binary_error("out_of_range"));
             }
             let lower = ((v as u64) & 0x7FFFFFFF) as u32;
             let upper = (((v as u64) >> 31) & 0x7FFFFFFF) as u32;
@@ -227,7 +224,7 @@
     impl ReadableStream for ByteArrayStream {
         fn read_byte(&mut self) -> Result<u8, BinaryError> {
             if self.position + 1 > self.buffer.len() {
-                return Err(BinaryError("out_of_range".to_string()));
+                return Err(binary_error("out_of_range"));
             }
             let b = self.buffer[self.position];
             self.position += 1;
@@ -236,7 +233,7 @@
 
         fn read_bytes(&mut self, size: usize) -> Result<Vec<u8>, BinaryError> {
             if self.position + size > self.buffer.len() {
-                return Err(BinaryError("out_of_range".to_string()));
+                return Err(binary_error("out_of_range"));
             }
             let l = self.buffer[self.position..self.position + size].to_vec();
             self.position += size;
@@ -406,10 +403,10 @@
 
 #Template BinaryTranslator_Primitive_Type
     pub fn Type_from_binary(_s: &mut dyn ReadableStream) -> Result<String, BinaryError> {
-        Err(BinaryError("NotSupported".to_string()))
+        Err(binary_error("NotSupported"))
     }
     pub fn Type_to_binary(_s: &mut dyn WritableStream, _v: &str) -> Result<(), BinaryError> {
-        Err(BinaryError("NotSupported".to_string()))
+        Err(binary_error("NotSupported"))
     }
 
 #Template BinaryTranslator_Alias a:AliasDef NamespaceName:String
@@ -478,7 +475,7 @@
                         k += 1;
                     }
                 }
-            _ => Err(BinaryError("InvalidOperation".to_string()))
+            _ => Err(binary_error("InvalidOperation"))
         }
     }
     pub fn [[${Name}_to_binary]](s: &mut dyn WritableStream, o: &${TypeString}) -> Result<(), BinaryError> {
@@ -692,6 +689,7 @@
     use std::collections::HashSet;
     #[allow(unused_imports)]
     use crate::world_types::World::*;
+    use anyhow::anyhow;
 
     ${GetTypes(Schema, NamespaceName)}
 

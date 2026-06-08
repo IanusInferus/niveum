@@ -3,7 +3,7 @@
 //  File:        main.rs
 //  Location:    Niveum.Examples <Rust>
 //  Description: 数据复制工具
-//  Version:     2026.06.07.
+//  Version:     2026.06.08.
 //  Author:      F.R.C.
 //  Copyright(C) Public Domain
 //
@@ -18,6 +18,8 @@ mod world_binary;
 use std::env;
 use std::fs;
 use std::process;
+
+use anyhow::{Context, Result};
 
 use world_binary::BinaryTranslator;
 use world_binary::ByteArrayStream;
@@ -40,10 +42,10 @@ fn display_info(prog_name: &str) {
     eprintln!("复制WorldData.bin。");
 }
 
-fn binary_to_binary(input_path: &str, output_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+fn binary_to_binary(input_path: &str, output_path: &str) -> Result<()> {
     // Read input file
     let data = fs::read(input_path)
-        .map_err(|e| format!("Failed to read {}: {}", input_path, e))?;
+        .with_context(|| format!("Failed to read {}", input_path))?;
 
     // Deserialize from binary
     let mut stream = ByteArrayStream::new();
@@ -58,7 +60,7 @@ fn binary_to_binary(input_path: &str, output_path: &str) -> Result<(), Box<dyn s
 
     // Write output file
     fs::write(output_path, &bytes)
-        .map_err(|e| format!("Failed to write {}: {}", output_path, e))?;
+        .with_context(|| format!("Failed to write {}", output_path))?;
 
     eprintln!("Successfully copied {} -> {}", input_path, output_path);
     Ok(())
@@ -77,7 +79,7 @@ fn main() {
     let output_path = &args[2];
 
     if let Err(e) = binary_to_binary(input_path, output_path) {
-        eprintln!("Error: {}", e);
+        eprintln!("Error: {:?}", e);
         process::exit(1);
     }
 }

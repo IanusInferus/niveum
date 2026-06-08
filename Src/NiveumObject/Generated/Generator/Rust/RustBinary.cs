@@ -78,15 +78,12 @@ namespace Niveum.ObjectSchema.RustBinary
         }
         public IEnumerable<String> Streams()
         {
-            yield return "#[derive(Debug, Clone, PartialEq)]";
-            yield return "pub struct BinaryError(pub String);";
+            yield return "pub type BinaryError = anyhow::Error;";
             yield return "";
-            yield return "impl std::fmt::Display for BinaryError {";
-            yield return "    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {";
-            yield return "        write!(f, \"{}\", self.0)";
-            yield return "    }";
+            yield return "#[inline]";
+            yield return "pub fn binary_error(msg: impl std::fmt::Display) -> BinaryError {";
+            yield return "    anyhow!(\"{msg}\")";
             yield return "}";
-            yield return "impl std::error::Error for BinaryError {}";
             yield return "";
             yield return "pub trait ReadableStream {";
             yield return "    fn read_byte(&mut self) -> Result<u8, BinaryError>;";
@@ -155,7 +152,7 @@ namespace Niveum.ObjectSchema.RustBinary
             yield return "        }";
             yield return "        let upper = self.read_u32()?;";
             yield return "        if (upper & 0x80000000) != 0 {";
-            yield return "            return Err(BinaryError(\"out_of_range\".to_string()));";
+            yield return "            return Err(binary_error(\"out_of_range\"));";
             yield return "        }";
             yield return "        Ok(((upper as usize) << 31) | (lower as usize))";
             yield return "    }";
@@ -229,7 +226,7 @@ namespace Niveum.ObjectSchema.RustBinary
             yield return "";
             yield return "    fn write_size(&mut self, v: i64) -> Result<(), BinaryError> {";
             yield return "        if (v < 0) || (v > 0x3FFFFFFFFFFFFFFF) {";
-            yield return "            return Err(BinaryError(\"out_of_range\".to_string()));";
+            yield return "            return Err(binary_error(\"out_of_range\"));";
             yield return "        }";
             yield return "        let lower = ((v as u64) & 0x7FFFFFFF) as u32;";
             yield return "        let upper = (((v as u64) >> 31) & 0x7FFFFFFF) as u32;";
@@ -285,7 +282,7 @@ namespace Niveum.ObjectSchema.RustBinary
             yield return "impl ReadableStream for ByteArrayStream {";
             yield return "    fn read_byte(&mut self) -> Result<u8, BinaryError> {";
             yield return "        if self.position + 1 > self.buffer.len() {";
-            yield return "            return Err(BinaryError(\"out_of_range\".to_string()));";
+            yield return "            return Err(binary_error(\"out_of_range\"));";
             yield return "        }";
             yield return "        let b = self.buffer[self.position];";
             yield return "        self.position += 1;";
@@ -294,7 +291,7 @@ namespace Niveum.ObjectSchema.RustBinary
             yield return "";
             yield return "    fn read_bytes(&mut self, size: usize) -> Result<Vec<u8>, BinaryError> {";
             yield return "        if self.position + size > self.buffer.len() {";
-            yield return "            return Err(BinaryError(\"out_of_range\".to_string()));";
+            yield return "            return Err(binary_error(\"out_of_range\"));";
             yield return "        }";
             yield return "        let l = self.buffer[self.position..self.position + size].to_vec();";
             yield return "        self.position += size;";
@@ -485,10 +482,10 @@ namespace Niveum.ObjectSchema.RustBinary
         public IEnumerable<String> BinaryTranslator_Primitive_Type()
         {
             yield return "pub fn Type_from_binary(_s: &mut dyn ReadableStream) -> Result<String, BinaryError> {";
-            yield return "    Err(BinaryError(\"NotSupported\".to_string()))";
+            yield return "    Err(binary_error(\"NotSupported\"))";
             yield return "}";
             yield return "pub fn Type_to_binary(_s: &mut dyn WritableStream, _v: &str) -> Result<(), BinaryError> {";
-            yield return "    Err(BinaryError(\"NotSupported\".to_string()))";
+            yield return "    Err(binary_error(\"NotSupported\"))";
             yield return "}";
         }
         public IEnumerable<String> BinaryTranslator_Alias(AliasDef a, String NamespaceName)
@@ -609,7 +606,7 @@ namespace Niveum.ObjectSchema.RustBinary
                     k += 1;
                 }
             }
-            yield return "        _ => Err(BinaryError(\"InvalidOperation\".to_string()))";
+            yield return "        _ => Err(binary_error(\"InvalidOperation\"))";
             yield return "    }";
             yield return "}";
             foreach (var _Line in Combine(Combine(Combine(Combine(Combine(Begin(), "pub fn "), GetEscapedIdentifier(Combine(Combine(Begin(), Name), "_to_binary"))), "(s: &mut dyn WritableStream, o: &"), TypeString), ") -> Result<(), BinaryError> {"))
@@ -931,6 +928,7 @@ namespace Niveum.ObjectSchema.RustBinary
             yield return "use std::collections::HashSet;";
             yield return "#[allow(unused_imports)]";
             yield return "use crate::world_types::World::*;";
+            yield return "use anyhow::anyhow;";
             yield return "";
             foreach (var _Line in Combine(Begin(), GetTypes(Schema, NamespaceName)))
             {

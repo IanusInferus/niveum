@@ -7,3 +7,8 @@ license = "Unlicense"
 authors = ["F.R.C."]
 
 [dependencies]
+anyhow = { version = "1", features = ["backtrace"] }
+
+[profile.release]
+debug = true
+split-debuginfo = "packed"

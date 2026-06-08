@@ -56,6 +56,7 @@ if exist CPP\Bin\DataCopy.exe (
 :: Rust
 @if not exist Rust\Data @md Rust\Data
 if exist Rust\target\release\data-copy.exe (
+  set RUST_BACKTRACE=1
   Rust\target\release\data-copy.exe SchemaManipulator\Data\WorldData.bin Rust\Data\WorldData.bin
   Rust\target\release\data-copy.exe Rust\Data\WorldData.bin Rust\Data\WorldData2.bin
 )
