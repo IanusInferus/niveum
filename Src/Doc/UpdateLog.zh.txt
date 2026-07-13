@@ -1,6 +1,8 @@
 ﻿2026.07.13
 Niveum.Object:
 修正C++二进制序列化中的长度。
+*:
+将Visual Studio改为2026。
 
 2026.06.08
 Niveum.Object, Examples:
