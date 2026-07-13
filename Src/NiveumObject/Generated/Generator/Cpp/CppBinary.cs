@@ -540,7 +540,7 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "        return *reinterpret_cast<double *>(&i);";
             yield return "    }";
             yield return "";
-            yield return "    std::size_t ReadSize()";
+            yield return "    std::uint64_t ReadSize()";
             yield return "    {";
             yield return "        auto Lower = ReadUInt32();";
             yield return "        if ((Lower & 0x80000000) == 0)";
@@ -552,16 +552,28 @@ namespace Niveum.ObjectSchema.CppBinary
             yield return "        {";
             yield return "            throw std::out_of_range(\"\");";
             yield return "        }";
-            yield return "        return (static_cast<std::size_t>(Upper) << 31) | static_cast<std::size_t>(Lower);";
+            yield return "        return (static_cast<std::uint64_t>(Upper) << 31) | static_cast<std::uint64_t>(Lower);";
             yield return "    }";
             yield return "";
             yield return "    String ReadString()";
             yield return "    {";
             yield return "        auto Length = ReadSize();";
             yield return "        auto n = Length / 2;";
+            yield return "        if (sizeof(std::size_t) >= 8)";
+            yield return "        {";
+            yield return "            if (Length > 0x7FFFFFFFFFFFFFFFULL) { throw std::logic_error(\"InvalidOperation\"); }";
+            yield return "        }";
+            yield return "        else if (sizeof(std::size_t) == 4)";
+            yield return "        {";
+            yield return "            if (Length > 0x7FFFFFFFULL) { throw std::logic_error(\"InvalidOperation\"); }";
+            yield return "        }";
+            yield return "        else";
+            yield return "        {";
+            yield return "            throw std::logic_error(\"InvalidOperation\");";
+            yield return "        }";
             yield return "        std::u16string v;";
             yield return "        v.reserve(n);";
-            yield return "        for (std::size_t k = 0; k < n; k += 1)";
+            yield return "        for (std::size_t k = 0; k < static_cast<std::size_t>(n); k += 1)";
             yield return "        {";
             yield return "            v.push_back(static_cast<char16_t>(ReadUInt16()));";
             yield return "        }";
@@ -1248,9 +1260,21 @@ namespace Niveum.ObjectSchema.CppBinary
             }
             yield return "{";
             yield return "    auto Length = s.ReadSize();";
+            yield return "    if (sizeof(std::size_t) >= 8)";
+            yield return "    {";
+            yield return "        if (Length > 0x7FFFFFFFFFFFFFFFULL) { throw std::logic_error(\"InvalidOperation\"); }";
+            yield return "    }";
+            yield return "    else if (sizeof(std::size_t) == 4)";
+            yield return "    {";
+            yield return "        if (Length > 0x7FFFFFFFULL) { throw std::logic_error(\"InvalidOperation\"); }";
+            yield return "    }";
+            yield return "    else";
+            yield return "    {";
+            yield return "        throw std::logic_error(\"InvalidOperation\");";
+            yield return "    }";
             if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
             {
-                yield return "    " + "auto l = s.ReadBytes(Length);";
+                yield return "    " + "auto l = s.ReadBytes(static_cast<std::size_t>(Length));";
             }
             else
             {
@@ -1258,8 +1282,8 @@ namespace Niveum.ObjectSchema.CppBinary
                 {
                     yield return _Line == "" ? "" : "    " + _Line;
                 }
-                yield return "    " + "l.reserve(Length);";
-                yield return "    " + "for (int k = 0; k < Length; k += 1)";
+                yield return "    " + "l.reserve(static_cast<std::size_t>(Length));";
+                yield return "    " + "for (std::size_t k = 0; k < static_cast<std::size_t>(Length); k += 1)";
                 yield return "    " + "{";
                 foreach (var _Line in Combine(Combine(Combine(Begin(), "    l.push_back("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementSimpleName), "FromBinary"))), "(s));"))
                 {
@@ -1302,12 +1326,24 @@ namespace Niveum.ObjectSchema.CppBinary
             }
             yield return "{";
             yield return "    auto Length = s.ReadSize();";
+            yield return "    if (sizeof(std::size_t) >= 8)";
+            yield return "    {";
+            yield return "        if (Length > 0x7FFFFFFFFFFFFFFFULL) { throw std::logic_error(\"InvalidOperation\"); }";
+            yield return "    }";
+            yield return "    else if (sizeof(std::size_t) == 4)";
+            yield return "    {";
+            yield return "        if (Length > 0x7FFFFFFFULL) { throw std::logic_error(\"InvalidOperation\"); }";
+            yield return "    }";
+            yield return "    else";
+            yield return "    {";
+            yield return "        throw std::logic_error(\"InvalidOperation\");";
+            yield return "    }";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "    "), TypeString), " l;"))
             {
                 yield return _Line;
             }
-            yield return "    l.reserve(Length);";
-            yield return "    for (int k = 0; k < Length; k += 1)";
+            yield return "    l.reserve(static_cast<std::size_t>(Length));";
+            yield return "    for (std::size_t k = 0; k < static_cast<std::size_t>(Length); k += 1)";
             yield return "    {";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        l.insert("), GetEscapedIdentifier(Combine(Combine(Begin(), ElementSimpleName), "FromBinary"))), "(s));"))
             {
@@ -1348,12 +1384,24 @@ namespace Niveum.ObjectSchema.CppBinary
             }
             yield return "{";
             yield return "    auto Length = s.ReadSize();";
+            yield return "    if (sizeof(std::size_t) >= 8)";
+            yield return "    {";
+            yield return "        if (Length > 0x7FFFFFFFFFFFFFFFULL) { throw std::logic_error(\"InvalidOperation\"); }";
+            yield return "    }";
+            yield return "    else if (sizeof(std::size_t) == 4)";
+            yield return "    {";
+            yield return "        if (Length > 0x7FFFFFFFULL) { throw std::logic_error(\"InvalidOperation\"); }";
+            yield return "    }";
+            yield return "    else";
+            yield return "    {";
+            yield return "        throw std::logic_error(\"InvalidOperation\");";
+            yield return "    }";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "    "), TypeString), " l;"))
             {
                 yield return _Line;
             }
-            yield return "    l.reserve(Length);";
-            yield return "    for (int k = 0; k < Length; k += 1)";
+            yield return "    l.reserve(static_cast<std::size_t>(Length));";
+            yield return "    for (std::size_t k = 0; k < static_cast<std::size_t>(Length); k += 1)";
             yield return "    {";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        auto Key = "), GetEscapedIdentifier(Combine(Combine(Begin(), KeySimpleName), "FromBinary"))), "(s);"))
             {

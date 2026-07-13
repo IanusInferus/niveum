@@ -4,7 +4,7 @@
       File:        CppBinary.tree
       Location:    Niveum.Object <Tree>
       Description: 对象类型结构C++二进制通讯模板
-      Version:     2025.08.07.
+      Version:     2026.07.13.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -419,7 +419,7 @@
             return *reinterpret_cast<double *>(&i);
         }
 
-        std::size_t ReadSize()
+        std::uint64_t ReadSize()
         {
             auto Lower = ReadUInt32();
             if ((Lower & 0x80000000) == 0)
@@ -431,16 +431,28 @@
             {
                 throw std::out_of_range("");
             }
-            return (static_cast<std::size_t>(Upper) << 31) | static_cast<std::size_t>(Lower);
+            return (static_cast<std::uint64_t>(Upper) << 31) | static_cast<std::uint64_t>(Lower);
         }
 
         String ReadString()
         {
             auto Length = ReadSize();
             auto n = Length / 2;
+            if (sizeof(std::size_t) >= 8)
+            {
+                if (Length > 0x7FFFFFFFFFFFFFFFULL) { throw std::logic_error("InvalidOperation"); }
+            }
+            else if (sizeof(std::size_t) == 4)
+            {
+                if (Length > 0x7FFFFFFFULL) { throw std::logic_error("InvalidOperation"); }
+            }
+            else
+            {
+                throw std::logic_error("InvalidOperation");
+            }
             std::u16string v;
             v.reserve(n);
-            for (std::size_t k = 0; k < n; k += 1)
+            for (std::size_t k = 0; k < static_cast<std::size_t>(n); k += 1)
             {
                 v.push_back(static_cast<char16_t>(ReadUInt16()));
             }
@@ -986,18 +998,30 @@
     static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream &s)
     {
         auto Length = s.ReadSize();
+        if (sizeof(std::size_t) >= 8)
+        {
+            if (Length > 0x7FFFFFFFFFFFFFFFULL) { throw std::logic_error("InvalidOperation"); }
+        }
+        else if (sizeof(std::size_t) == 4)
+        {
+            if (Length > 0x7FFFFFFFULL) { throw std::logic_error("InvalidOperation"); }
+        }
+        else
+        {
+            throw std::logic_error("InvalidOperation");
+        }
         $$
             if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
             {
                 ##
-                    auto l = s.ReadBytes(Length);
+                    auto l = s.ReadBytes(static_cast<std::size_t>(Length));
             }
             else
             {
                 ##
                     ${TypeString} l;
-                    l.reserve(Length);
-                    for (int k = 0; k < Length; k += 1)
+                    l.reserve(static_cast<std::size_t>(Length));
+                    for (std::size_t k = 0; k < static_cast<std::size_t>(Length); k += 1)
                     {
                         l.push_back([[${ElementSimpleName}FromBinary]](s));
                     }
@@ -1031,9 +1055,21 @@
     static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream &s)
     {
         auto Length = s.ReadSize();
+        if (sizeof(std::size_t) >= 8)
+        {
+            if (Length > 0x7FFFFFFFFFFFFFFFULL) { throw std::logic_error("InvalidOperation"); }
+        }
+        else if (sizeof(std::size_t) == 4)
+        {
+            if (Length > 0x7FFFFFFFULL) { throw std::logic_error("InvalidOperation"); }
+        }
+        else
+        {
+            throw std::logic_error("InvalidOperation");
+        }
         ${TypeString} l;
-        l.reserve(Length);
-        for (int k = 0; k < Length; k += 1)
+        l.reserve(static_cast<std::size_t>(Length));
+        for (std::size_t k = 0; k < static_cast<std::size_t>(Length); k += 1)
         {
             l.insert([[${ElementSimpleName}FromBinary]](s));
         }
@@ -1062,9 +1098,21 @@
     static ${TypeString} [[${SimpleName}FromBinary]](IReadableStream &s)
     {
         auto Length = s.ReadSize();
+        if (sizeof(std::size_t) >= 8)
+        {
+            if (Length > 0x7FFFFFFFFFFFFFFFULL) { throw std::logic_error("InvalidOperation"); }
+        }
+        else if (sizeof(std::size_t) == 4)
+        {
+            if (Length > 0x7FFFFFFFULL) { throw std::logic_error("InvalidOperation"); }
+        }
+        else
+        {
+            throw std::logic_error("InvalidOperation");
+        }
         ${TypeString} l;
-        l.reserve(Length);
-        for (int k = 0; k < Length; k += 1)
+        l.reserve(static_cast<std::size_t>(Length));
+        for (std::size_t k = 0; k < static_cast<std::size_t>(Length); k += 1)
         {
             auto Key = [[${KeySimpleName}FromBinary]](s);
             l[Key] = [[${ValueSimpleName}FromBinary]](s);

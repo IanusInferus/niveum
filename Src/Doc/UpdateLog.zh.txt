@@ -1,4 +1,8 @@
-﻿2026.06.08
+﻿2026.07.13
+Niveum.Object:
+修正C++二进制序列化中的长度。
+
+2026.06.08
 Niveum.Object, Examples:
 Rust二进制序列化使用anyhow报告错误，精确打印代码执行栈。
 Niveum.Relation, *:
