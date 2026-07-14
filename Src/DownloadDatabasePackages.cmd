@@ -23,7 +23,7 @@ setlocal enabledelayedexpansion
 if not exist "..\Libs\temp" md "..\Libs\temp"
 pushd "..\Libs\temp"
 
-set "PACKAGES=Microsoft.Data.Sqlite:net48#10.0.8,net8.0#10.0.8 System.Data.SqlClient:net48#4.9.1,net8.0#4.9.1 MySql.Data:net48#6.10.9,net8.0#9.7.0"
+set "PACKAGES=EntityFramework:net48#6.5.2,net8.0#6.5.2 Microsoft.Data.Sqlite:net48#10.0.8,net8.0#10.0.8 System.Data.SqlClient:net48#4.9.1,net8.0#4.9.1 MySql.Data:net48#6.10.9,net8.0#9.7.0"
 set "PACKAGES=%PACKAGES:,=@%"
 
 for %%I in (%PACKAGES%) do (
@@ -46,6 +46,7 @@ for %%I in (%PACKAGES%) do (
 
             if "!TFM!"=="net48" (
                 dotnet new classlib -f netstandard2.0
+                powershell -Command "(Get-Content temp.csproj) -replace 'netstandard2.0','net48' | Set-Content temp.csproj"
             ) else (
                 dotnet new classlib -f !TFM!
             )
