@@ -5,6 +5,7 @@ Niveum.Object:
 升级Visual Studio项目文件从sln到slnx。
 Examples:
 整理.Net项目的依赖，增加EntityFramework下载。
+在Rust示例的release版中增加算术溢出检查。
 
 2026.07.13
 Niveum.Object:

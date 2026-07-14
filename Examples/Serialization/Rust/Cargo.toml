@@ -11,4 +11,5 @@ anyhow = { version = "1", features = ["backtrace"] }
 
 [profile.release]
 debug = true
+overflow-checks = true
 split-debuginfo = "packed"
