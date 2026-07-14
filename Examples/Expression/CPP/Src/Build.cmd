@@ -20,7 +20,7 @@ exit /b %EXIT_CODE%
 :main
 if defined MSBuild goto MSBuild_Found
 for %%f in ("%ProgramFiles%" "%ProgramFiles(x86)%") do (
-  for %%v in (18 2022) do (
+  for %%v in (18) do (
     for %%p in (Enterprise Professional Community BuildTools) do (
       if exist "%%~f\Microsoft Visual Studio\%%v\%%p\MSBuild\Current\Bin\MSBuild.exe" (
         set "MSBuild=%%~f\Microsoft Visual Studio\%%v\%%p\MSBuild\Current\Bin\MSBuild.exe"
@@ -30,7 +30,7 @@ for %%f in ("%ProgramFiles%" "%ProgramFiles(x86)%") do (
   )
 )
 echo MSBuild not found.
-echo You need to install Visual Studio 2022/2026 or add MSBuild environment variable.
+echo You need to install Visual Studio 2026 or add MSBuild environment variable.
 exit /b 1
 :MSBuild_Found
 

@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="DatabaseKrustallos.csproj" />
+  <Project Path="DatabaseMemory.csproj" />
+  <Project Path="DatabaseMSSQL.csproj" />
+  <Project Path="DatabaseMySQL.csproj" />
+</Solution>

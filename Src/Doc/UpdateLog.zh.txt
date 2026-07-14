@@ -1,6 +1,8 @@
 ﻿2026.07.14
 Niveum.Object:
 修正C++和Rust二进制序列化中的长度。
+*:
+升级Visual Studio项目文件从sln到slnx。
 
 2026.07.13
 Niveum.Object:

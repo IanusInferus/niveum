@@ -18,4 +18,4 @@ if not "%NO_PAUSE_SYMBOL%"=="1" pause
 exit /b %EXIT_CODE%
 
 :main
-dotnet build Database.sln --configuration Release --no-incremental || exit /b 1
+dotnet build Database.slnx --configuration Release --no-incremental || exit /b 1

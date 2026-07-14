@@ -1,0 +1,14 @@
+<Solution>
+  <Project Path="DatabaseRegenerator/DatabaseRegenerator.csproj" />
+  <Project Path="ExpressionManipulator/ExpressionManipulator.csproj" />
+  <Project Path="FireflyLite/FireflyLite.csproj" />
+  <Project Path="Nivea/Nivea.csproj" />
+  <Project Path="NiveumExpression/NiveumExpression.csproj" />
+  <Project Path="NiveumJson/NiveumJson.csproj" />
+  <Project Path="NiveumObject/NiveumObject.csproj" />
+  <Project Path="NiveumRelation/NiveumRelation.csproj" />
+  <Project Path="RelationSchemaManipulator/RelationSchemaManipulator.csproj" />
+  <Project Path="SchemaManipulator/SchemaManipulator.csproj" />
+  <Project Path="TcpSendReceive/TcpSendReceive.csproj" />
+  <Project Path="Test/Test.csproj" />
+</Solution>
