@@ -145,20 +145,20 @@ namespace Niveum.ObjectSchema.RustBinary
             yield return "        Ok(f64::from_bits(i as u64))";
             yield return "    }";
             yield return "";
-            yield return "    fn read_size(&mut self) -> Result<usize, BinaryError> {";
+            yield return "    fn read_size(&mut self) -> Result<i64, BinaryError> {";
             yield return "        let lower = self.read_u32()?;";
             yield return "        if (lower & 0x80000000) == 0 {";
-            yield return "            return Ok(lower as usize);";
+            yield return "            return Ok(lower as i64);";
             yield return "        }";
             yield return "        let upper = self.read_u32()?;";
             yield return "        if (upper & 0x80000000) != 0 {";
             yield return "            return Err(binary_error(\"out_of_range\"));";
             yield return "        }";
-            yield return "        Ok(((upper as usize) << 31) | (lower as usize))";
+            yield return "        Ok(((upper as i64) << 31) | (lower as i64))";
             yield return "    }";
             yield return "";
             yield return "    fn read_string(&mut self) -> Result<String, BinaryError> {";
-            yield return "        let length = self.read_size()?;";
+            yield return "        let length: usize = self.read_size()?.try_into().map_err(|_| binary_error(\"conversion overflow\"))?;";
             yield return "        let n = length / 2;";
             yield return "        let mut v = String::with_capacity(n);";
             yield return "        for _ in 0..n {";
@@ -240,7 +240,7 @@ namespace Niveum.ObjectSchema.RustBinary
             yield return "    }";
             yield return "";
             yield return "    fn write_string(&mut self, v: &str) -> Result<(), BinaryError> {";
-            yield return "        self.write_size((v.chars().count() * 2) as i64)?;";
+            yield return "        self.write_size((v.chars().count() * 2).try_into().map_err(|_| binary_error(\"conversion overflow\"))?)?;";
             yield return "        for c in v.chars() {";
             yield return "            self.write_u16(c as u16)?;";
             yield return "        }";
@@ -781,7 +781,7 @@ namespace Niveum.ObjectSchema.RustBinary
             {
                 yield return _Line;
             }
-            yield return "    let length = s.read_size()?;";
+            yield return "    let length: usize = s.read_size()?.try_into().map_err(|_| binary_error(\"conversion overflow\"))?;";
             if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8")) {
                 yield return "    " + "s.read_bytes(length)";
             }
@@ -805,7 +805,7 @@ namespace Niveum.ObjectSchema.RustBinary
             {
                 yield return _Line;
             }
-            yield return "    s.write_size(l.len() as i64)?;";
+            yield return "    s.write_size(l.len().try_into().map_err(|_| binary_error(\"conversion overflow\"))?)?;";
             if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8")) {
                 yield return "    " + "s.write_bytes(l)?;";
             }
@@ -830,7 +830,7 @@ namespace Niveum.ObjectSchema.RustBinary
             {
                 yield return _Line;
             }
-            yield return "    let length = s.read_size()?;";
+            yield return "    let length: usize = s.read_size()?.try_into().map_err(|_| binary_error(\"conversion overflow\"))?;";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "    let mut l = "), GetGenericNew(TypeString)), ";"))
             {
                 yield return _Line;
@@ -848,7 +848,7 @@ namespace Niveum.ObjectSchema.RustBinary
             {
                 yield return _Line;
             }
-            yield return "    s.write_size(l.len() as i64)?;";
+            yield return "    s.write_size(l.len().try_into().map_err(|_| binary_error(\"conversion overflow\"))?)?;";
             yield return "    for e in l.iter() {";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        Self::"), GetEscapedIdentifier(Combine(Combine(Begin(), ElementSimpleName), "_to_binary"))), "(s, e)?;"))
             {
@@ -872,7 +872,7 @@ namespace Niveum.ObjectSchema.RustBinary
             {
                 yield return _Line;
             }
-            yield return "    let length = s.read_size()?;";
+            yield return "    let length: usize = s.read_size()?.try_into().map_err(|_| binary_error(\"conversion overflow\"))?;";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "    let mut l = "), GetGenericNew(TypeString)), ";"))
             {
                 yield return _Line;
@@ -895,7 +895,7 @@ namespace Niveum.ObjectSchema.RustBinary
             {
                 yield return _Line;
             }
-            yield return "    s.write_size(l.len() as i64)?;";
+            yield return "    s.write_size(l.len().try_into().map_err(|_| binary_error(\"conversion overflow\"))?)?;";
             yield return "    for (key, value) in l.iter() {";
             foreach (var _Line in Combine(Combine(Combine(Begin(), "        Self::"), GetEscapedIdentifier(Combine(Combine(Begin(), KeySimpleName), "_to_binary"))), "(s, key)?;"))
             {

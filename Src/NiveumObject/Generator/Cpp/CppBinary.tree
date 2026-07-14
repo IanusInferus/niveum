@@ -4,7 +4,7 @@
       File:        CppBinary.tree
       Location:    Niveum.Object <Tree>
       Description: 对象类型结构C++二进制通讯模板
-      Version:     2026.07.13.
+      Version:     2026.07.14.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -419,7 +419,7 @@
             return *reinterpret_cast<double *>(&i);
         }
 
-        std::uint64_t ReadSize()
+        std::int64_t ReadSize()
         {
             auto Lower = ReadUInt32();
             if ((Lower & 0x80000000) == 0)
@@ -431,7 +431,7 @@
             {
                 throw std::out_of_range("");
             }
-            return (static_cast<std::uint64_t>(Upper) << 31) | static_cast<std::uint64_t>(Lower);
+            return static_cast<std::int64_t>((static_cast<std::uint64_t>(Upper) << 31) | static_cast<std::uint64_t>(Lower));
         }
 
         String ReadString()
@@ -440,18 +440,18 @@
             auto n = Length / 2;
             if (sizeof(std::size_t) >= 8)
             {
-                if (Length > 0x7FFFFFFFFFFFFFFFULL) { throw std::logic_error("InvalidOperation"); }
+                if (Length < 0LL || Length > 0x3FFFFFFFFFFFFFFFLL) { throw std::logic_error("InvalidOperation"); }
             }
             else if (sizeof(std::size_t) == 4)
             {
-                if (Length > 0x7FFFFFFFULL) { throw std::logic_error("InvalidOperation"); }
+                if (Length < 0LL || Length > 0x7FFFFFFFLL) { throw std::logic_error("InvalidOperation"); }
             }
             else
             {
                 throw std::logic_error("InvalidOperation");
             }
             std::u16string v;
-            v.reserve(n);
+            v.reserve(static_cast<std::size_t>(n));
             for (std::size_t k = 0; k < static_cast<std::size_t>(n); k += 1)
             {
                 v.push_back(static_cast<char16_t>(ReadUInt16()));
@@ -547,14 +547,14 @@
             WriteInt64(*reinterpret_cast<std::int64_t *>(&v));
         }
 
-        void WriteSize(Int64 v)
+        void WriteSize(std::int64_t v)
         {
-            if ((v < 0) || (v > 0x3FFFFFFFFFFFFFFFL))
+            if ((v < 0) || (v > 0x3FFFFFFFFFFFFFFFLL))
             {
                 throw std::out_of_range("");
             }
-            auto Lower = static_cast<UInt32>(static_cast<UInt64>(v) & 0x7FFFFFFF);
-            auto Upper = static_cast<UInt32>((static_cast<UInt64>(v) >> 31) & 0x7FFFFFFF);
+            auto Lower = static_cast<std::uint32_t>(static_cast<std::uint64_t>(v) & 0x7FFFFFFF);
+            auto Upper = static_cast<std::uint32_t>((static_cast<std::uint64_t>(v) >> 31) & 0x7FFFFFFF);
             if (Upper != 0)
             {
                 Lower |= 0x80000000;
@@ -569,7 +569,7 @@
 
         void WriteString(String v)
         {
-            WriteSize(v.size() * 2);
+            WriteSize(static_cast<std::int64_t>(v.size() * 2));
             for (auto c : v)
             {
                 WriteUInt16(static_cast<std::uint16_t>(c));
@@ -1000,11 +1000,11 @@
         auto Length = s.ReadSize();
         if (sizeof(std::size_t) >= 8)
         {
-            if (Length > 0x7FFFFFFFFFFFFFFFULL) { throw std::logic_error("InvalidOperation"); }
+            if (Length < 0LL || Length > 0x3FFFFFFFFFFFFFFFLL) { throw std::logic_error("InvalidOperation"); }
         }
         else if (sizeof(std::size_t) == 4)
         {
-            if (Length > 0x7FFFFFFFULL) { throw std::logic_error("InvalidOperation"); }
+            if (Length < 0LL || Length > 0x7FFFFFFFLL) { throw std::logic_error("InvalidOperation"); }
         }
         else
         {
@@ -1030,7 +1030,7 @@
     }
     static void [[${SimpleName}ToBinary]](IWritableStream &s, const ${TypeString} &l)
     {
-        s.WriteSize(l.size());
+        s.WriteSize(static_cast<std::int64_t>(l.size()));
         $$
             if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8"))
             {
@@ -1057,11 +1057,11 @@
         auto Length = s.ReadSize();
         if (sizeof(std::size_t) >= 8)
         {
-            if (Length > 0x7FFFFFFFFFFFFFFFULL) { throw std::logic_error("InvalidOperation"); }
+            if (Length < 0LL || Length > 0x3FFFFFFFFFFFFFFFLL) { throw std::logic_error("InvalidOperation"); }
         }
         else if (sizeof(std::size_t) == 4)
         {
-            if (Length > 0x7FFFFFFFULL) { throw std::logic_error("InvalidOperation"); }
+            if (Length < 0LL || Length > 0x7FFFFFFFLL) { throw std::logic_error("InvalidOperation"); }
         }
         else
         {
@@ -1077,7 +1077,7 @@
     }
     static void [[${SimpleName}ToBinary]](IWritableStream &s, const ${TypeString} &l)
     {
-        s.WriteSize(l.size());
+        s.WriteSize(static_cast<std::int64_t>(l.size()));
         for (auto e : l)
         {
             [[${ElementSimpleName}ToBinary]](s, e);
@@ -1100,11 +1100,11 @@
         auto Length = s.ReadSize();
         if (sizeof(std::size_t) >= 8)
         {
-            if (Length > 0x7FFFFFFFFFFFFFFFULL) { throw std::logic_error("InvalidOperation"); }
+            if (Length < 0LL || Length > 0x3FFFFFFFFFFFFFFFLL) { throw std::logic_error("InvalidOperation"); }
         }
         else if (sizeof(std::size_t) == 4)
         {
-            if (Length > 0x7FFFFFFFULL) { throw std::logic_error("InvalidOperation"); }
+            if (Length < 0LL || Length > 0x7FFFFFFFLL) { throw std::logic_error("InvalidOperation"); }
         }
         else
         {
@@ -1121,7 +1121,7 @@
     }
     static void [[${SimpleName}ToBinary]](IWritableStream &s, const ${TypeString} &l)
     {
-        s.WriteSize(l.size());
+        s.WriteSize(static_cast<std::int64_t>(l.size()));
         for (auto p : l)
         {
             [[${KeySimpleName}ToBinary]](s, std::get<0>(p));

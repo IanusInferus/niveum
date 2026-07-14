@@ -4,7 +4,7 @@
       File:        RustBinary.tree
       Location:    Niveum.Object <Tree>
       Description: 对象类型结构Rust二进制通讯模板
-      Version:     2026.06.08.
+      Version:     2026.07.14.
       Copyright(C) F.R.C.
 
     ==========================================================================
@@ -87,20 +87,20 @@
             Ok(f64::from_bits(i as u64))
         }
 
-        fn read_size(&mut self) -> Result<usize, BinaryError> {
+        fn read_size(&mut self) -> Result<i64, BinaryError> {
             let lower = self.read_u32()?;
             if (lower & 0x80000000) == 0 {
-                return Ok(lower as usize);
+                return Ok(lower as i64);
             }
             let upper = self.read_u32()?;
             if (upper & 0x80000000) != 0 {
                 return Err(binary_error("out_of_range"));
             }
-            Ok(((upper as usize) << 31) | (lower as usize))
+            Ok(((upper as i64) << 31) | (lower as i64))
         }
 
         fn read_string(&mut self) -> Result<String, BinaryError> {
-            let length = self.read_size()?;
+            let length: usize = self.read_size()?.try_into().map_err(|_| binary_error("conversion overflow"))?;
             let n = length / 2;
             let mut v = String::with_capacity(n);
             for _ in 0..n {
@@ -182,7 +182,7 @@
         }
 
         fn write_string(&mut self, v: &str) -> Result<(), BinaryError> {
-            self.write_size((v.chars().count() * 2) as i64)?;
+            self.write_size((v.chars().count() * 2).try_into().map_err(|_| binary_error("conversion overflow"))?)?;
             for c in v.chars() {
                 self.write_u16(c as u16)?;
             }
@@ -585,7 +585,7 @@
         var ElementType = l.GenericTypeSpec.ParameterValues.Single();
         var ElementSimpleName = ElementType.SimpleName(NamespaceName);
     pub fn [[${SimpleName}_from_binary]](s: &mut dyn ReadableStream) -> Result<${TypeString}, BinaryError> {
-        let length = s.read_size()?;
+        let length: usize = s.read_size()?.try_into().map_err(|_| binary_error("conversion overflow"))?;
         $$
             if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8")) {
                 ##
@@ -603,7 +603,7 @@
             }
     }
     pub fn [[${SimpleName}_to_binary]](s: &mut dyn WritableStream, l: &${TypeString}) -> Result<(), BinaryError> {
-        s.write_size(l.len() as i64)?;
+        s.write_size(l.len().try_into().map_err(|_| binary_error("conversion overflow"))?)?;
         $$
             if (ElementType.OnTypeRef && ElementType.TypeRef.NameMatches("Byte", "UInt8")) {
                 ##
@@ -625,7 +625,7 @@
         var TypeString = GetTypeString(l, NamespaceName);
         var ElementSimpleName = l.GenericTypeSpec.ParameterValues.Single().SimpleName(NamespaceName);
     pub fn [[${SimpleName}_from_binary]](s: &mut dyn ReadableStream) -> Result<${TypeString}, BinaryError> {
-        let length = s.read_size()?;
+        let length: usize = s.read_size()?.try_into().map_err(|_| binary_error("conversion overflow"))?;
         let mut l = ${GetGenericNew(TypeString)};
         for _ in 0..length
         {
@@ -634,7 +634,7 @@
         Ok(l)
     }
     pub fn [[${SimpleName}_to_binary]](s: &mut dyn WritableStream, l: &${TypeString}) -> Result<(), BinaryError> {
-        s.write_size(l.len() as i64)?;
+        s.write_size(l.len().try_into().map_err(|_| binary_error("conversion overflow"))?)?;
         for e in l.iter() {
             Self::[[${ElementSimpleName}_to_binary]](s, e)?;
         }
@@ -652,7 +652,7 @@
         var KeySimpleName = gp[0].SimpleName(NamespaceName);
         var ValueSimpleName = gp[1].SimpleName(NamespaceName);
     pub fn [[${SimpleName}_from_binary]](s: &mut dyn ReadableStream) -> Result<${TypeString}, BinaryError> {
-        let length = s.read_size()?;
+        let length: usize = s.read_size()?.try_into().map_err(|_| binary_error("conversion overflow"))?;
         let mut l = ${GetGenericNew(TypeString)};
         for _ in 0..length
         {
@@ -663,7 +663,7 @@
         Ok(l)
     }
     pub fn [[${SimpleName}_to_binary]](s: &mut dyn WritableStream, l: &${TypeString}) -> Result<(), BinaryError> {
-        s.write_size(l.len() as i64)?;
+        s.write_size(l.len().try_into().map_err(|_| binary_error("conversion overflow"))?)?;
         for (key, value) in l.iter() {
             Self::[[${KeySimpleName}_to_binary]](s, key)?;
             Self::[[${ValueSimpleName}_to_binary]](s, value)?;
